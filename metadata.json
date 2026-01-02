@@ -1,0 +1,5 @@
+{
+  "name": "Latex hóa - Yuta",
+  "description": "A tool to generate standardized Vietnamese educational exam papers in LaTeX format using Gemini AI.",
+  "requestFramePermissions": []
+}
