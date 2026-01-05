@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { BookOpen, GraduationCap, Sparkles, Target, Users, Wand2, School, Calendar, Layout, Info } from 'lucide-react';
 import { LearningConfig, GenerationStatus } from '../types';
@@ -6,6 +7,17 @@ interface LearningFormProps {
   onSubmit: (data: LearningConfig) => void;
   status: GenerationStatus;
 }
+
+const COMMON_SCHOOLS = [
+  "Sở GD&ĐT Hà Nội",
+  "Sở GD&ĐT TP. Hồ Chí Minh",
+  "THPT Chuyên Hà Nội - Amsterdam",
+  "THPT Chuyên Lê Hồng Phong",
+  "THPT Bình Xuyên",
+  "THPT Chuyên Lam Sơn",
+  "THPT Chuyên Phan Bội Châu",
+  "Trường Đại học Sư phạm Hà Nội"
+];
 
 const LearningForm: React.FC<LearningFormProps> = ({ onSubmit, status }) => {
   const currentYear = new Date().getFullYear();
@@ -67,12 +79,16 @@ const LearningForm: React.FC<LearningFormProps> = ({ onSubmit, status }) => {
                         <School className={iconClass} />
                         <input
                             type="text"
+                            list="learning-schools-list"
                             className={inputClass}
-                            placeholder="Vd: THPT Chuyên..."
+                            placeholder="Chọn hoặc nhập tên trường"
                             value={config.school}
                             onChange={e => handleChange('school', e.target.value)}
                             required
                         />
+                        <datalist id="learning-schools-list">
+                          {COMMON_SCHOOLS.map(s => <option key={s} value={s} />)}
+                        </datalist>
                     </div>
                 </div>
 

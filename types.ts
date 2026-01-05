@@ -1,32 +1,33 @@
 export interface ExamConfig {
-  school: string;       // Tên Trường / Sở GD&ĐT
-  examName: string;     // Tên kỳ thi (VD: Giữa học kỳ I)
-  year: string;         // Năm học
+  school: string;       
+  examName: string;     
+  year: string;         
   subject: string;
   topic: string;
   grade: string;
   time: number;
   counts: {
-    mc: number; // Multiple choice count
-    essay: number; // Essay count
+    mc: number; 
+    essay: number; 
   };
   matrix: {
-    lv1: number; // Nhận biết (số câu)
-    lv2: number; // Thông hiểu (số câu)
-    lv3: number; // Vận dụng (số câu)
-    lv4: number; // Vận dụng cao (số câu)
+    lv1: number; 
+    lv2: number; 
+    lv3: number; 
+    lv4: number; 
   };
+  referenceContent?: string; // Nội dung bài học tham khảo để đồng bộ
 }
 
 export interface LearningConfig {
-  school: string; // Tên Trường / Sở GD&ĐT
-  year: string;   // Năm học
+  school: string; 
+  year: string;   
   subject: string;
   grade: string;
-  topic: string; // Chủ đề bài học
-  goal: 'summary' | 'detailed' | 'exercises'; // Mục tiêu: Tóm tắt, Chi tiết, Bài tập luyện tập
-  tone: 'academic' | 'creative' | 'simple'; // Phong cách: Hàn lâm, Sáng tạo, Dễ hiểu
-  audience: string; // Đối tượng học sinh (VD: Mất gốc, Khá giỏi)
+  topic: string; 
+  goal: 'summary' | 'detailed' | 'exercises'; 
+  tone: 'academic' | 'creative' | 'simple'; 
+  audience: string; 
 }
 
 export enum GenerationStatus {
