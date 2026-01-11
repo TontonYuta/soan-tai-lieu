@@ -1,4 +1,5 @@
-import { ExamConfig, LearningConfig } from "../types";
+
+import { ExamConfig, LearningConfig, RoadmapConfig } from "../types";
 
 export const generateExamPrompt = (config: ExamConfig): string => {
   const totalQuestions = config.counts.mc + config.counts.essay;
@@ -69,4 +70,35 @@ IV. OUTPUT YÊU CẦU:
 - Đảm bảo biên dịch thành công trên các trình biên dịch PDFLaTeX.
 
 Hãy soạn thảo tài liệu ngay.`;
+};
+
+export const generateRoadmapPrompt = (config: RoadmapConfig): string => {
+  return `Đóng vai trò là Chuyên gia tư vấn giáo dục và thiết kế lộ trình học tập chuyên sâu. Hãy soạn thảo mã nguồn LaTeX cho một "LỘ TRÌNH HỌC TẬP CHI TIẾT TỪNG NGÀY".
+
+I. THÔNG TIN ĐỊNH DANH (HEADER):
+- Môn học: ${config.subject}
+- Mục tiêu đề ra: ${config.topic}
+- Trình độ hiện tại: ${config.currentLevel}
+- Kết quả mong muốn: ${config.target}
+- Tổng thời gian: ${config.duration}
+
+II. NỘI DUNG & CẤU TRÚC (QUAN TRỌNG):
+1. Đánh giá tổng quan: Phân tích nhanh những gì cần học.
+2. LỘ TRÌNH CHI TIẾT THEO NGÀY: Liệt kê chính xác các đầu việc theo mẫu:
+   - Ngày 1: [Tên bài học] - Nội dung cụ thể.
+   - Ngày 2: [Tên bài học] - Nội dung cụ thể.
+   - ... (Lần lượt cho đến ngày cuối).
+3. BƯỚC ĐỆM TIẾP THEO (NEXT STEPS): Sau khi học xong lộ trình này, tôi nên học gì tiếp theo? Hãy đề xuất 2-3 chủ đề nâng cao hoặc các ứng dụng thực tế của kiến thức này để duy trì đà tiến bộ.
+4. Tài liệu tham khảo: Gợi ý các nguồn tài liệu bổ trợ.
+
+III. YÊU CẦU KỸ THUẬT LATEX (BẮT BUỘC):
+1. Định dạng Header: Bảng trang trọng 2 cột.
+2. Trình bày: Dùng tcolorbox cho mục "BƯỚC ĐỆM TIẾP THEO" để làm nổi bật định hướng tương lai.
+3. Gói lệnh: fontenc[T5], inputenc[utf8], vietnam, amsmath, geometry (top=2cm, bottom=2cm), tcolorbox.
+
+IV. OUTPUT YÊU CẦU:
+- Trả về mã nguồn LaTeX hoàn chỉnh trong một block code duy nhất.
+- Đảm bảo tính liên tục của việc học bằng cách gợi ý hướng đi mới sau khi kết thúc lộ trình.
+
+Hãy thiết kế lộ trình ngay.`;
 };

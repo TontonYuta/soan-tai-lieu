@@ -1,3 +1,4 @@
+
 export interface ExamConfig {
   school: string;       
   examName: string;     
@@ -16,7 +17,7 @@ export interface ExamConfig {
     lv3: number; 
     lv4: number; 
   };
-  referenceContent?: string; // Nội dung bài học tham khảo để đồng bộ
+  referenceContent?: string;
 }
 
 export interface LearningConfig {
@@ -28,6 +29,14 @@ export interface LearningConfig {
   goal: 'summary' | 'detailed' | 'exercises'; 
   tone: 'academic' | 'creative' | 'simple'; 
   audience: string; 
+}
+
+export interface RoadmapConfig {
+  subject: string;
+  topic: string;
+  duration: string; // Vd: 4 tuần, 3 tháng
+  currentLevel: string; // Vd: Mất gốc, Đã có căn bản
+  target: string; // Vd: Thi HSG, Đạt điểm 8+
 }
 
 export enum GenerationStatus {
