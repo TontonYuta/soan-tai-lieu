@@ -1,76 +1,70 @@
 
 import { ExamConfig, LearningConfig, RoadmapConfig } from "../types";
 
+const LATEX_TECHNICAL_RULES = `
+QUY TẮC KỸ THUẬT LATEX (BẮT BUỘC):
+1. KHÔNG SỬ DỤNG MARKDOWN: Tuyệt đối không dùng **, *, #, - (dấu gạch đầu dòng markdown) bên trong mã nguồn LaTeX. Thay vào đó hãy dùng \textbf{}, \textit{}, \section{}, \begin{itemize}.
+2. TIẾNG VIỆT: Sử dụng gói lệnh \\usepackage[utf8]{inputenc} và \\usepackage[vietnam]{babel} hoặc \\usepackage{vietnam}.
+3. TOÁN HỌC: Tất cả công thức phải nằm trong $...$ hoặc \\[ ... \\]. Sử dụng amsmath, amssymb.
+4. CẤU TRÚC: Phải bao gồm đầy đủ từ \\documentclass{article} cho đến \\end{document}.
+5. TRÁNH LỖI BIÊN DỊCH: Không tự chế các lệnh không tồn tại. Nếu dùng tcolorbox, phải khai báo \\usepackage[most]{tcolorbox}.
+`;
+
 export const generateExamPrompt = (config: ExamConfig): string => {
   const totalQuestions = config.counts.mc + config.counts.essay;
-  const matrixInfo = `Nhận biết: ${config.matrix.lv1}, Thông hiểu: ${config.matrix.lv2}, Vận dụng: ${config.matrix.lv3}, Vận dụng cao: ${config.matrix.lv4}`;
+  const matrixInfo = `NB: ${config.matrix.lv1}, TH: ${config.matrix.lv2}, VD: ${config.matrix.lv3}, VDC: ${config.matrix.lv4}`;
 
-  return `Hãy đóng vai là một Chuyên gia soạn thảo đề thi chuẩn hóa của Bộ Giáo dục và Đào tạo Việt Nam. Nhiệm vụ của bạn là viết mã nguồn LaTeX hoàn chỉnh cho một đề thi.
+  return `Đóng vai Chuyên gia soạn đề thi Bộ GD&ĐT Việt Nam. Hãy soạn mã LaTeX cho đề thi sau:
 
-I. NGỮ CẢNH HỆ THỐNG (QUAN TRỌNG):
-- Bạn đang trong một chuỗi học tập khép kín. Đề thi này PHẢI dựa trên nội dung đã được đề ra trong lộ trình và bài học trước đó.
-- Chủ đề: ${config.topic}
-- Môn học: ${config.subject} (Lớp ${config.grade})
+I. THÔNG TIN:
+- Trường: ${config.school} | Kỳ thi: ${config.examName} | Môn: ${config.subject} (Lớp ${config.grade})
+- Chủ đề: ${config.topic} | Thời gian: ${config.time} phút.
+- Cấu trúc: ${config.counts.mc} câu trắc nghiệm (4 lựa chọn A,B,C,D), ${config.counts.essay} câu tự luận.
+- Ma trận độ khó: ${matrixInfo}.
+${config.referenceContent ? `- NGỮ CẢNH: Dựa vào nội dung đã học: ${config.referenceContent}` : ''}
 
-II. CẤU TRÚC & ĐỘ KHÓ:
-- Tổng số: ${totalQuestions} câu. (Trắc nghiệm: ${config.counts.mc}, Tự luận: ${config.counts.essay}).
-- Ma trận: ${matrixInfo}.
-${config.referenceContent ? `- KIẾN THỨC ĐÃ DẠY: ${config.referenceContent}. (Tuyệt đối chỉ ra đề trong phạm vi này, không ra đề vào kiến thức chưa học).` : ''}
+II. YÊU CẦU NỘI DUNG:
+- Câu hỏi trắc nghiệm phải rõ ràng, các phương án nhiễu phải hợp lý.
+- Bố cục đáp án trắc nghiệm: Nếu phương án ngắn thì chia 4 cột (multicols{4}), phương án dài thì chia 2 hoặc 1 cột.
+- Cuối đề phải có BẢNG ĐÁP ÁN trắc nghiệm và HƯỚNG DẪN GIẢI tự luận.
 
-III. YÊU CẦU KỸ THUẬT LATEX:
-- Sử dụng phông chữ đồng bộ với các tài liệu học tập trước đó.
-- Bảng đáp án và hướng dẫn giải chi tiết.
+${LATEX_TECHNICAL_RULES}
 
-Hãy soạn đề ngay.`;
+Hãy xuất bản mã nguồn hoàn chỉnh ngay.`;
 };
 
 export const generateLearningPrompt = (config: LearningConfig): string => {
-  const goalsMap = {
-    summary: 'Tóm tắt kiến thức cốt lõi (Cheat sheet)',
-    detailed: 'Bài giảng chi tiết (Lý thuyết + Ví dụ)',
-    exercises: 'Phiếu bài tập rèn luyện (Có đáp án chi tiết)'
-  };
+  return `Đóng vai Chuyên gia biên soạn học liệu. Hãy soạn mã LaTeX cho bài học sau:
 
-  return `Đóng vai trò là Chuyên gia biên soạn học liệu. Hãy giúp tôi soạn thảo mã nguồn LaTeX cho một bài học nằm trong một lộ trình tổng thể.
+I. THÔNG TIN BÀI HỌC:
+- Môn: ${config.subject} (Lớp ${config.grade}) | Chủ đề: ${config.topic}
+- Mục tiêu: ${config.goal} | Đối tượng: ${config.audience}
+- Yêu cầu: Kết nối kiến thức cũ, dẫn dắt vào kiến thức mới một cách logic, không trùng lặp.
 
-I. ĐẢM BẢO TÍNH LIÊN KẾT:
-- Bạn phải xem xét bài học này là một mắt xích trong lộ trình học tập ${config.subject}. 
-- Nội dung: ${config.topic}
-- Mục tiêu: ${goalsMap[config.goal]}
-- Yêu cầu: Không lặp lại các ví dụ hoặc định nghĩa đã quá cơ bản nếu đây là bài học nâng cao. Hãy gối đầu kiến thức cũ và mở rộng kiến thức mới.
+II. CẤU TRÚC TÀI LIỆU:
+1. Lý thuyết: Trình bày trong các tcolorbox có tiêu đề rõ ràng.
+2. Ví dụ minh họa: Ít nhất 3 ví dụ từ dễ đến khó, có lời giải chi tiết.
+3. Bài tập tự luyện: Phân chia theo cấp độ nhận thức.
 
-II. NỘI DUNG & CẤU TRÚC:
-1. Kết nối: Nhắc lại nhanh 1 câu về kiến thức liên quan từ bài trước.
-2. Nội dung chính: Lý thuyết + 3 Ví dụ thực tế.
-3. Bài tập: Củng cố đúng mục tiêu đề ra.
+${LATEX_TECHNICAL_RULES}
 
-III. YÊU CẦU KỸ THUẬT LATEX:
-- Sử dụng tcolorbox đồng bộ. 
-- Trả về mã nguồn hoàn chỉnh trong 1 block code.
-
-Hãy soạn thảo bài học ngay.`;
+Hãy xuất bản mã nguồn hoàn chỉnh ngay.`;
 };
 
 export const generateRoadmapPrompt = (config: RoadmapConfig): string => {
-  return `Đóng vai trò là Kiến trúc sư Giáo dục. Hãy soạn thảo mã nguồn LaTeX cho một "HỆ THỐNG LỘ TRÌNH HỌC TẬP ĐỒNG BỘ".
+  return `Đóng vai Kiến trúc sư Giáo dục. Hãy soạn mã LaTeX cho lộ trình học tập sau:
 
-I. THÔNG TIN:
-- Môn học: ${config.subject}
-- Mục tiêu: ${config.topic}
-- Thời gian: ${config.duration}
+I. THÔNG TIN LỘ TRÌNH:
+- Môn học: ${config.subject} | Mục tiêu: ${config.topic}
+- Thời gian: ${config.duration} | Trình độ: ${config.currentLevel} -> Đích đến: ${config.target}
 
-II. YÊU CẦU VỀ TÍNH RÕ RÀNG & LIÊN KẾT (BẮT BUỘC):
-1. KHÔNG TRÙNG LẶP: Mỗi ngày phải là một bước tiến mới. Không ghi "Học tiếp bài cũ" chung chung.
-2. LIÊN KẾT DÂY CHUYỀN: Ngày hôm sau phải sử dụng công cụ hoặc kiến thức của ngày hôm trước để giải quyết vấn đề khó hơn.
-3. CHI TIẾT TỪNG NGÀY:
-   - Ngày 1: [Tên cụ thể] - [Công việc cụ thể]
-   - Ngày 2: [Tên cụ thể] - [Công việc cụ thể]
-   ...
-4. BƯỚC ĐỆM TIẾP THEO: Sau lộ trình này, gợi ý 2 hướng đi chuyên sâu tiếp theo để người học không bị ngắt quãng.
+II. YÊU CẦU CHI TIẾT:
+1. Phân bổ kiến thức: Chia nhỏ theo từng ngày/tuần. Ngày sau kế thừa ngày trước.
+2. Tuyệt đối không trùng lặp: Mỗi ngày phải có một từ khóa kiến thức mới.
+3. Phần "BƯỚC ĐỆM TIẾP THEO": Đề xuất hướng học tập nâng cao sau khi hoàn thành lộ trình này.
 
-III. YÊU CẦU KỸ THUẬT LATEX:
-- Sử dụng định dạng bảng hoặc danh sách trang trọng.
-- Trả về mã nguồn hoàn chỉnh.
+${LATEX_TECHNICAL_RULES}
+- Sử dụng môi trường tabularx hoặc longtable để làm bảng lộ trình đẹp mắt.
 
-Hãy thiết kế lộ trình ngay.`;
+Hãy xuất bản mã nguồn hoàn chỉnh ngay.`;
 };

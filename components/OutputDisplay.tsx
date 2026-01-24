@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Copy, Check, ExternalLink, Bot, AlertCircle, Zap, ShieldCheck, Sparkles } from 'lucide-react';
+import { Copy, Check, ExternalLink, Bot, AlertCircle, Zap, ShieldCheck, Sparkles, Terminal } from 'lucide-react';
 import { GenerationStatus } from '../types';
 
 interface OutputDisplayProps {
@@ -39,7 +39,7 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({ content, status, error })
         </div>
         <h3 className="relative z-10 text-2xl font-bold text-slate-800 mb-3">Sẵn sàng thiết kế</h3>
         <p className="relative z-10 text-slate-500 text-base max-w-sm leading-relaxed">
-          AI đã được huấn luyện để xử lý bố cục trắc nghiệm thông minh. Hãy nhập thông tin đề thi.
+          Hệ thống đã được tối ưu để loại bỏ lỗi Markdown và đảm bảo mã nguồn LaTeX chuẩn PDFLaTeX.
         </p>
       </div>
     );
@@ -68,8 +68,8 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({ content, status, error })
                 <div className="w-3 h-3 rounded-full bg-emerald-400"></div>
             </div>
             <div className="flex items-center gap-2 text-slate-700 bg-white px-3 py-1 rounded-lg border border-slate-200 shadow-sm">
-                <Zap className="w-3.5 h-3.5 text-amber-500" />
-                <span className="text-xs font-bold uppercase tracking-tight">Smart LaTeX Engine</span>
+                <Terminal className="w-3.5 h-3.5 text-indigo-600" />
+                <span className="text-xs font-bold uppercase tracking-tight">LaTeX Pure Source</span>
             </div>
         </div>
 
@@ -94,16 +94,16 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({ content, status, error })
         </div>
       </div>
 
-      {/* Compiler Notice & Layout Info */}
-      <div className="px-6 py-4 bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-indigo-100 flex items-center justify-between">
+      {/* Compiler Notice */}
+      <div className="px-6 py-4 bg-indigo-900 border-b border-indigo-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <ShieldCheck className="w-5 h-5 text-indigo-600" />
-            <p className="text-xs font-bold text-slate-600">
-                Chế độ: <span className="text-indigo-600 underline">Bố cục trắc nghiệm tự thích ứng (Adaptive Layout)</span>
+            <ShieldCheck className="w-5 h-5 text-emerald-400" />
+            <p className="text-xs font-bold text-indigo-100">
+                Compiler: <span className="text-emerald-400">PDFLaTeX</span> | <span className="opacity-60">No Markdown Syntax Detected</span>
             </p>
           </div>
-          <div className="hidden md:flex items-center gap-2 text-[10px] font-black text-indigo-400 bg-white px-3 py-1 rounded-full border border-indigo-100 shadow-sm">
-             OVERLEAF: PDFLATEX
+          <div className="flex items-center gap-2 text-[10px] font-black text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">
+             CLEAN FOR OVERLEAF
           </div>
       </div>
       
@@ -116,11 +116,8 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({ content, status, error })
             spellCheck={false}
         />
         <div className="absolute right-6 bottom-6 flex flex-col items-end gap-2">
-            <span className="px-3 py-1 bg-emerald-500/20 backdrop-blur-md rounded-lg text-[10px] font-bold text-emerald-400 border border-emerald-500/20">
-                TỐI ƯU CHO PHƯƠNG ÁN DÀI
-            </span>
-            <span className="px-3 py-1 bg-white/5 backdrop-blur-md rounded-lg text-[10px] font-bold text-white/30 border border-white/5 uppercase">
-                Clean Code - No Meta Info
+            <span className="px-3 py-1 bg-indigo-500/20 backdrop-blur-md rounded-lg text-[10px] font-bold text-indigo-400 border border-indigo-500/20 uppercase">
+                Strict LaTeX Rules Applied
             </span>
         </div>
       </div>
