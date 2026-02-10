@@ -52,19 +52,28 @@ Hãy xuất bản mã nguồn hoàn chỉnh ngay.`;
 };
 
 export const generateRoadmapPrompt = (config: RoadmapConfig): string => {
-  return `Đóng vai Kiến trúc sư Giáo dục. Hãy soạn mã LaTeX cho lộ trình học tập sau:
+  const syllabusContext = config.syllabus 
+    ? `DỰA TRÊN ĐỀ CƯƠNG CHI TIẾT SAU:
+    ${config.syllabus}
+    (Yêu cầu: Phải bám sát thứ tự chương/mục và các từ khóa kiến thức có trong đề cương này để lập lộ trình).` 
+    : '';
+
+  return `Đóng vai Kiến trúc sư Giáo dục chuyên nghiệp. Hãy soạn mã LaTeX cho một lộ trình học tập khoa học.
 
 I. THÔNG TIN LỘ TRÌNH:
-- Môn học: ${config.subject} | Mục tiêu: ${config.topic}
-- Thời gian: ${config.duration} | Trình độ: ${config.currentLevel} -> Đích đến: ${config.target}
+- Môn học: ${config.subject} | Mục tiêu chính: ${config.topic}
+- Thời gian: ${config.duration} | Trình độ hiện tại: ${config.currentLevel}
+- Đích đến mong muốn: ${config.target}
 
-II. YÊU CẦU CHI TIẾT:
-1. Phân bổ kiến thức: Chia nhỏ theo từng ngày/tuần. Ngày sau kế thừa ngày trước.
-2. Tuyệt đối không trùng lặp: Mỗi ngày phải có một từ khóa kiến thức mới.
-3. Phần "BƯỚC ĐỆM TIẾP THEO": Đề xuất hướng học tập nâng cao sau khi hoàn thành lộ trình này.
+II. BỐ CỤC LỘ TRÌNH:
+${syllabusContext}
+1. Phân bổ kiến thức: Chia nhỏ theo từng ngày/tuần một cách hợp lý để người học không bị quá tải.
+2. Logic kế thừa: Ngày sau phải sử dụng hoặc nâng cao kiến thức của ngày trước.
+3. Tài liệu tham khảo: Gợi ý các nguồn tài liệu (Sách, giáo trình) phù hợp với mục tiêu.
 
+III. YÊU CẦU KỸ THUẬT:
 ${LATEX_TECHNICAL_RULES}
-- Sử dụng môi trường tabularx hoặc longtable để làm bảng lộ trình đẹp mắt.
+- Sử dụng tabularx để tạo bảng lộ trình gồm các cột: Thời gian, Chủ đề chính, Nội dung chi tiết, Lưu ý quan trọng.
 
 Hãy xuất bản mã nguồn hoàn chỉnh ngay.`;
 };

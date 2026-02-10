@@ -37,6 +37,7 @@ export interface RoadmapConfig {
   duration: string; // Vd: 4 tuần, 3 tháng
   currentLevel: string; // Vd: Mất gốc, Đã có căn bản
   target: string; // Vd: Thi HSG, Đạt điểm 8+
+  syllabus?: string; // Đề cương có sẵn (Tùy chọn)
 }
 
 export enum GenerationStatus {
