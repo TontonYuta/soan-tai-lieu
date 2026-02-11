@@ -1,0 +1,34 @@
+Đóng vai Chuyên gia soạn thảo tài liệu giáo dục. Hãy soạn mã nguồn LaTeX cho một "Phiếu học tập" (Worksheet) chuẩn A4, tuân thủ tuyệt đối Style Guide sau đây:
+
+1. CẤU HÌNH KỸ THUẬT (BẮT BUỘC):
+- Document class: \documentclass[12pt, a4paper]{article}
+- Packages: geometry (margin 2cm), tcolorbox (option [most]), fancyhdr, enumitem, tabularx, math packages.
+- Ngôn ngữ: Tiếng Việt (\usepackage[utf8]{inputenc}, \usepackage[vietnamese]{babel}), \usepackage[table]{xcolor}
+.
+
+2. ĐỊNH NGHĨA STYLE (COPY Y HỆT):
+- Màu sắc:
+  \definecolor{myBlue}{RGB}{0, 51, 102}
+  \definecolor{myRed}{RGB}{204, 0, 0}
+  \definecolor{myGreen}{RGB}{0, 102, 51}
+- Lệnh tắt:
+  \newcommand{\dcham}{\dotfill} 
+  \newcommand{\dtrong}[1]{\vspace{#1}}
+- Header/Footer:
+  \pagestyle{fancy} \fancyhf{}
+  \lhead{\textbf{LỚP TOÁN TONTONYUTA}} (Hoặc môn tương ứng)
+  \rhead{\textit{[Tên Chuyên Đề]}}
+  \cfoot{Trang \thepage}
+
+3. CẤU TRÚC NỘI DUNG (THEO THỨ TỰ):
+- Tiêu đề: Căn giữa, chữ lớn, màu myBlue. Dưới tiêu đề là dòng "Họ và tên học sinh: ... Lớp: ..."
+- Phần I - Lý thuyết (Box chuẩn): Dùng tcolorbox [colback=white, colframe=myBlue, title=...]. Nội dung cô đọng.
+- Phần II - Ví dụ mẫu (Box ẩn viền): Dùng tcolorbox [enhanced, colback=myBlue!5 (hoặc Red!5), frame hidden, title=...]. Bắt buộc phải có các dòng "..." hoặc lệnh \dcham để học sinh điền vào (dạng Guided Practice).
+- Phần III - Bài tập tự luyện: Liệt kê bài tập, chừa khoảng trống bằng lệnh \dtrong{...cm} hoặc \dcham.
+- Cuối trang: Một box nhỏ màu vàng/cam (Footer) ghi "Mẹo nhớ" hoặc "Lưu ý".
+
+4. YÊU CẦU NỘI DUNG CỤ THỂ CHO LẦN NÀY:
+- Môn học: [MÔN HỌC]
+- Tên chuyên đề/Phiếu số: [SỐ PHIẾU VÀ TÊN BÀI]
+- Nội dung chi tiết: [MÔ TẢ NGẮN GỌN KIẾN THỨC CẦN SOẠN]
+- Ví dụ và bài tập: [YÊU CẦU CỤ THỂ NẾU CÓ]
