@@ -34,17 +34,39 @@ Hãy xuất bản mã nguồn hoàn chỉnh ngay.`;
 };
 
 export const generateLearningPrompt = (config: LearningConfig): string => {
-  return `Đóng vai Chuyên gia biên soạn học liệu. Hãy soạn mã LaTeX cho bài học sau:
+  return `Đóng vai Chuyên gia soạn thảo tài liệu giáo dục. Hãy soạn mã nguồn LaTeX cho một "Phiếu học tập" (Worksheet) chuẩn A4, tuân thủ tuyệt đối Style Guide sau đây:
 
-I. THÔNG TIN BÀI HỌC:
-- Môn: ${config.subject} (Lớp ${config.grade}) | Chủ đề: ${config.topic}
-- Mục tiêu: ${config.goal} | Đối tượng: ${config.audience}
-- Yêu cầu: Kết nối kiến thức cũ, dẫn dắt vào kiến thức mới một cách logic, không trùng lặp.
+1. CẤU HÌNH KỸ THUẬT (BẮT BUỘC):
+- Document class: \\documentclass[12pt, a4paper]{article}
+- Packages: geometry (margin 2cm), tcolorbox (option [most]), fancyhdr, enumitem, tabularx, math packages (amsmath, amssymb).
+- Ngôn ngữ: Tiếng Việt (\\usepackage[utf8]{inputenc}, \\usepackage[vietnamese]{babel}), \\usepackage[table]{xcolor}.
 
-II. CẤU TRÚC TÀI LIỆU:
-1. Lý thuyết: Trình bày trong các tcolorbox có tiêu đề rõ ràng.
-2. Ví dụ minh họa: Ít nhất 3 ví dụ từ dễ đến khó, có lời giải chi tiết.
-3. Bài tập tự luyện: Phân chia theo cấp độ nhận thức.
+2. ĐỊNH NGHĨA STYLE (COPY Y HỆT):
+- Màu sắc:
+  \\definecolor{myBlue}{RGB}{0, 51, 102}
+  \\definecolor{myRed}{RGB}{204, 0, 0}
+  \\definecolor{myGreen}{RGB}{0, 102, 51}
+- Lệnh tắt:
+  \\newcommand{\\dcham}{\\dotfill} 
+  \\newcommand{\\dtrong}[1]{\\vspace{#1}}
+- Header/Footer:
+  \\pagestyle{fancy} \\fancyhf{}
+  \\lhead{\\textbf{LỚP ${config.subject.toUpperCase()} TONTONYUTA}}
+  \\rhead{\\textit{${config.topic}}}
+  \\cfoot{Trang \\thepage}
+
+3. CẤU TRÚC NỘI DUNG (THEO THỨ TỰ):
+- Tiêu đề: Căn giữa, chữ lớn, màu myBlue. Dưới tiêu đề là dòng "Họ và tên học sinh: ... Lớp: ..."
+- Phần I - Lý thuyết (Box chuẩn): Dùng tcolorbox [colback=white, colframe=myBlue, title=...]. Nội dung cô đọng.
+- Phần II - Ví dụ mẫu (Box ẩn viền): Dùng tcolorbox [enhanced, colback=myBlue!5, frame hidden, title=...]. Bắt buộc phải có các dòng "..." hoặc lệnh \\dcham để học sinh điền vào (dạng Guided Practice).
+- Phần III - Bài tập tự luyện: Liệt kê bài tập, chừa khoảng trống bằng lệnh \\dtrong{...cm} hoặc \\dcham.
+- Cuối trang: Một box nhỏ màu vàng/cam (Footer) ghi "Mẹo nhớ" hoặc "Lưu ý".
+
+4. YÊU CẦU NỘI DUNG CỤ THỂ CHO LẦN NÀY:
+- Môn học: ${config.subject} (Lớp ${config.grade})
+- Tên chuyên đề/Phiếu số: ${config.topic}
+- Nội dung chi tiết: ${config.goal === 'summary' ? 'Tóm tắt kiến thức trọng tâm' : config.goal === 'detailed' ? 'Chi tiết kiến thức và phương pháp giải' : 'Tập trung vào hệ thống bài tập thực hành'}.
+- Ví dụ và bài tập: Soạn thảo dựa trên đối tượng ${config.audience} với phong cách ${config.tone === 'academic' ? 'hàn lâm' : config.tone === 'creative' ? 'sáng tạo' : 'đơn giản'}.
 
 ${LATEX_TECHNICAL_RULES}
 
