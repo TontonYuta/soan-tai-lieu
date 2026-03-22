@@ -1,5 +1,5 @@
 
-import { ExamConfig, LearningConfig, RoadmapConfig } from "../types";
+import { ExamConfig, LearningConfig, RoadmapConfig, TTSConfig, SimilarExerciseConfig } from "../types";
 
 const LATEX_TECHNICAL_RULES = `
 QUY TẮC KỸ THUẬT LATEX (BẮT BUỘC):
@@ -96,6 +96,71 @@ ${syllabusContext}
 III. YÊU CẦU KỸ THUẬT:
 ${LATEX_TECHNICAL_RULES}
 - Sử dụng tabularx để tạo bảng lộ trình gồm các cột: Thời gian, Chủ đề chính, Nội dung chi tiết, Lưu ý quan trọng.
+
+Hãy xuất bản mã nguồn hoàn chỉnh ngay.`;
+};
+
+export const generateTTSPrompt = (config: TTSConfig): string => {
+  const styleNote = config.style === 'slow' ? '“giọng chậm”' : 
+                   config.style === 'teaching' ? '“giọng giảng bài”' : 
+                   config.style === 'podcast' ? '“giọng podcast”' : '';
+  const emphasizeNote = config.emphasize ? '“có nhấn ý chính”' : '';
+  const keepTermsNote = config.keepTerms ? '“giữ nguyên thuật ngữ”' : '';
+
+  const additionalNotes = [styleNote, emphasizeNote, keepTermsNote].filter(n => n).join(', ');
+
+  return `Từ bây giờ, mỗi khi tôi gửi tên môn học, chủ đề, đoạn văn, ghi chú, slide, công thức, bảng, mã LaTeX, hoặc tài liệu học tập, hãy luôn chuyển nó thành phiên bản để TTS đọc tự nhiên nhất bằng tiếng Việt.
+
+Yêu cầu bắt buộc:
+1. Không cắt bớt nội dung, không tóm tắt nếu tôi không yêu cầu.
+2. Loại bỏ ký tự đặc biệt, lệnh định dạng, mã LaTeX, markdown, ký hiệu trang trí, và mọi thứ khiến TTS đọc khó nghe.
+3. Viết lại thành văn phong nói tự nhiên, mượt, dễ nghe như giáo viên đang giảng bài.
+4. Giữ nguyên đầy đủ ý nghĩa, cấu trúc logic và toàn bộ thông tin quan trọng.
+5. Với công thức, ký hiệu, bảng, danh sách, chữ viết tắt, đơn vị, URL, DOI, tên biến, hãy chuyển thành cách đọc thành tiếng tự nhiên nhất.
+6. Với bảng, hãy đổi sang câu hoặc danh sách để giọng đọc nghe rõ ràng.
+7. Với ký hiệu toán, lý, hóa, lập trình, hãy ưu tiên cách đọc dễ hiểu cho người học bằng giọng nói.
+8. Nếu nội dung dài, hãy chia thành các phần và tiêu đề rõ ràng để tiện nghe, nhưng vẫn không được lược bớt.
+9. Nếu có thuật ngữ tiếng Anh quan trọng, hãy giữ lại khi cần nhưng viết theo cách để TTS đọc mượt, kèm giải thích ngắn nếu cần hiểu bài.
+10. Mặc định đầu ra phải là “bản để nghe”, không phải “bản để đọc”.
+
+Cách trình bày đầu ra:
+- Chỉ xuất ra bản văn đã tối ưu cho TTS.
+- Không thêm lời mở đầu kiểu “dưới đây là…”, “mình đã chuyển…”, trừ khi tôi yêu cầu.
+- Không chèn ký hiệu thừa.
+- Ưu tiên câu ngắn, rõ nhịp, dễ nghe, dễ học thuộc.
+
+${additionalNotes ? `Ghi chú thêm: ${additionalNotes}` : ''}
+
+Thông tin cụ thể:
+- Môn học: ${config.subject}
+- Chủ đề: ${config.topic}
+- Nội dung cần chuyển đổi:
+${config.content}
+
+Khi tôi chỉ gửi một chủ đề ngắn, hãy tự triển khai thành bài giải thích để nghe dễ hiểu.
+Khi tôi gửi nguyên văn tài liệu, hãy chuyển nguyên tài liệu đó sang bản nghe, không rút gọn.`;
+};
+
+export const generateSimilarExercisePrompt = (config: SimilarExerciseConfig): string => {
+  const difficultyNote = config.difficulty === 'easier' ? 'Dễ hơn một chút' : 
+                        config.difficulty === 'harder' ? 'Khó hơn một chút' : 'Giữ nguyên độ khó';
+
+  return `Đóng vai Chuyên gia biên soạn đề thi và bài tập. Hãy tạo các bài tập tương tự dựa trên các bài tập mẫu được cung cấp dưới đây.
+
+I. THÔNG TIN YÊU CẦU:
+- Môn học: ${config.subject} | Chủ đề: ${config.topic}
+- Số lượng bài tập cần tạo: ${config.count} bài.
+- Yêu cầu độ khó: ${difficultyNote}.
+- Giải chi tiết: ${config.includeSolution ? 'BẮT BUỘC có lời giải chi tiết cho từng bài.' : 'Không cần lời giải.'}
+
+II. BÀI TẬP MẪU (DỰA VÀO ĐÂY ĐỂ TẠO BÀI TƯƠNG TỰ):
+${config.sourceExercises}
+
+III. YÊU CẦU KỸ THUẬT LATEX:
+${LATEX_TECHNICAL_RULES}
+- Trình bày mỗi bài tập trong một tcolorbox hoặc môi trường enumerate rõ ràng.
+- Các công thức toán học, hóa học phải chuẩn LaTeX.
+- Nếu có hình vẽ, hãy mô tả bằng mã TikZ hoặc chừa trống bằng lệnh \\dtrong{...cm}.
 
 Hãy xuất bản mã nguồn hoàn chỉnh ngay.`;
 };

@@ -40,6 +40,24 @@ export interface RoadmapConfig {
   syllabus?: string; // Đề cương có sẵn (Tùy chọn)
 }
 
+export interface TTSConfig {
+  subject: string;
+  topic: string;
+  content: string;
+  style: 'normal' | 'slow' | 'teaching' | 'podcast';
+  emphasize: boolean;
+  keepTerms: boolean;
+}
+
+export interface SimilarExerciseConfig {
+  subject: string;
+  topic: string;
+  count: number;
+  difficulty: 'keep' | 'easier' | 'harder';
+  sourceExercises: string;
+  includeSolution: boolean;
+}
+
 export enum GenerationStatus {
   IDLE = 'IDLE',
   LOADING = 'LOADING',

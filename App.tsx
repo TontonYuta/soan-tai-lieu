@@ -4,13 +4,15 @@ import Header from './components/Header';
 import ExamForm from './components/ExamForm';
 import LearningForm from './components/LearningForm';
 import RoadmapForm from './components/RoadmapForm';
+import TTSForm from './components/TTSForm';
+import SimilarExerciseForm from './components/SimilarExerciseForm';
 import OutputDisplay from './components/OutputDisplay';
-import { generateExamPrompt, generateLearningPrompt, generateRoadmapPrompt } from './services/gemini';
-import { ExamConfig, LearningConfig, RoadmapConfig, GenerationStatus } from './types';
-import { Sparkles, GraduationCap, BookOpen, Link as LinkIcon, Trash2, ArrowRight, Map, Zap, Lightbulb, ClipboardCheck, MessageSquareText, Info, ExternalLink, Save } from 'lucide-react';
+import { generateExamPrompt, generateLearningPrompt, generateRoadmapPrompt, generateTTSPrompt, generateSimilarExercisePrompt } from './services/gemini';
+import { ExamConfig, LearningConfig, RoadmapConfig, TTSConfig, SimilarExerciseConfig, GenerationStatus } from './types';
+import { Sparkles, GraduationCap, BookOpen, Link as LinkIcon, Trash2, ArrowRight, Map, Zap, Lightbulb, ClipboardCheck, MessageSquareText, Info, ExternalLink, Save, Volume2, PlusCircle } from 'lucide-react';
 
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'exam' | 'learning' | 'roadmap'>('roadmap');
+  const [activeTab, setActiveTab] = useState<'exam' | 'learning' | 'roadmap' | 'tts' | 'similar'>('roadmap');
   const [status, setStatus] = useState<GenerationStatus>(GenerationStatus.IDLE);
   const [promptContent, setPromptContent] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
@@ -69,6 +71,34 @@ const App: React.FC = () => {
         } catch (err) {
             setStatus(GenerationStatus.ERROR);
             setError('Lỗi khi thiết kế Lộ trình học.');
+        }
+    }, 400);
+  };
+
+  const handleTTSGenerate = (config: TTSConfig) => {
+    setStatus(GenerationStatus.LOADING);
+    setError(null);
+    setTimeout(() => {
+        try {
+            setPromptContent(generateTTSPrompt(config));
+            setStatus(GenerationStatus.SUCCESS);
+        } catch (err) {
+            setStatus(GenerationStatus.ERROR);
+            setError('Lỗi khi tối ưu văn bản TTS.');
+        }
+    }, 400);
+  };
+
+  const handleSimilarGenerate = (config: SimilarExerciseConfig) => {
+    setStatus(GenerationStatus.LOADING);
+    setError(null);
+    setTimeout(() => {
+        try {
+            setPromptContent(generateSimilarExercisePrompt(config));
+            setStatus(GenerationStatus.SUCCESS);
+        } catch (err) {
+            setStatus(GenerationStatus.ERROR);
+            setError('Lỗi khi tạo bài tập tương tự.');
         }
     }, 400);
   };
@@ -142,6 +172,14 @@ const App: React.FC = () => {
                 <div className={`flex items-center gap-2 text-[10px] font-bold uppercase tracking-tighter ${activeTab === 'exam' ? 'text-indigo-600' : 'text-slate-400'}`}>
                     3. Đề Thi
                 </div>
+                <ArrowRight className="w-3 h-3 text-slate-300" />
+                <div className={`flex items-center gap-2 text-[10px] font-bold uppercase tracking-tighter ${activeTab === 'tts' ? 'text-purple-600' : 'text-slate-400'}`}>
+                    4. Nghe (TTS)
+                </div>
+                <ArrowRight className="w-3 h-3 text-slate-300" />
+                <div className={`flex items-center gap-2 text-[10px] font-bold uppercase tracking-tighter ${activeTab === 'similar' ? 'text-amber-600' : 'text-slate-400'}`}>
+                    5. Tương tự
+                </div>
             </div>
 
             <div className="bg-white/40 backdrop-blur-md p-1.5 rounded-[2rem] border border-white shadow-2xl flex items-center gap-2">
@@ -169,6 +207,22 @@ const App: React.FC = () => {
                     <GraduationCap className="w-4 h-4" />
                     Đề thi
                 </button>
+                <button
+                    onClick={() => setActiveTab('tts')}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-[1.5rem] text-sm font-extrabold transition-all
+                    ${activeTab === 'tts' ? 'bg-purple-600 text-white shadow-lg' : 'text-slate-500 hover:bg-white'}`}
+                >
+                    <Volume2 className="w-4 h-4" />
+                    Nghe (TTS)
+                </button>
+                <button
+                    onClick={() => setActiveTab('similar')}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-[1.5rem] text-sm font-extrabold transition-all
+                    ${activeTab === 'similar' ? 'bg-amber-600 text-white shadow-lg' : 'text-slate-500 hover:bg-white'}`}
+                >
+                    <PlusCircle className="w-4 h-4" />
+                    Tương tự
+                </button>
             </div>
 
             {learningContext && (
@@ -195,7 +249,7 @@ const App: React.FC = () => {
                 <RoadmapForm onSubmit={handleRoadmapGenerate} status={status} />
             ) : activeTab === 'learning' ? (
                 <LearningForm onSubmit={handleLearningGenerate} status={status} />
-            ) : (
+            ) : activeTab === 'exam' ? (
                 <ExamForm 
                     onSubmit={handleExamGenerate} 
                     status={status} 
@@ -204,6 +258,10 @@ const App: React.FC = () => {
                     contextSubject={contextMetadata?.subject}
                     contextGrade={contextMetadata?.grade}
                 />
+            ) : activeTab === 'tts' ? (
+                <TTSForm onSubmit={handleTTSGenerate} status={status} />
+            ) : (
+                <SimilarExerciseForm onSubmit={handleSimilarGenerate} status={status} />
             )}
             
             {/* TIP BOX */}
