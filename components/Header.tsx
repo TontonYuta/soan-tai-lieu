@@ -3,34 +3,33 @@ import { FileEdit, Sparkles } from 'lucide-react';
 
 const Header: React.FC = () => {
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-white/20 shadow-sm supports-[backdrop-filter]:bg-white/60">
+    <header className="sticky top-0 z-50 bg-[#FEF9C3] border-b-4 border-black shadow-[0_8px_0_0_rgba(0,0,0,1)] hover:shadow-none transition-shadow duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 group cursor-pointer">
             <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-violet-600 rounded-2xl blur opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
-                <div className="relative bg-gradient-to-br from-indigo-600 to-violet-700 p-2.5 rounded-2xl shadow-xl shadow-indigo-200 ring-1 ring-white/20">
-                  <FileEdit className="w-6 h-6 text-white" />
+                <div className="relative bg-[#FF5E5B] border-4 border-black p-2.5 rounded-none shadow-[4px_4px_0_0_rgba(0,0,0,1)] group-hover:translate-x-1 group-hover:translate-y-1 group-hover:-ml-1 group-hover:-mt-1 group-hover:shadow-none transition-all">
+                  <FileEdit className="w-6 h-6 text-black stroke-[3]" />
                 </div>
             </div>
             <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-800 via-indigo-800 to-slate-800 bg-clip-text text-transparent tracking-tight">
-                Latex Builder
+              <h1 className="text-2xl font-black text-black tracking-widest uppercase">
+                Yuta<span className="text-[#00CECB]">!</span>LaTeX
               </h1>
-              <p className="text-xs text-slate-500 font-semibold tracking-wider uppercase flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+              <p className="text-[10px] text-black font-black tracking-widest uppercase flex items-center gap-1">
+                <span className="w-2 h-2 border-2 border-black rounded-none bg-[#A3E635]"></span>
                 Powered by Gemini
               </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-             <div className="hidden sm:flex flex-col items-end mr-2">
-                <span className="text-xs font-bold text-slate-700">Yuta Education</span>
-                <span className="text-[10px] text-slate-400 font-medium">Standardized Exams</span>
+             <div className="hidden sm:flex flex-col items-end mr-4">
+                <span className="text-xs font-black text-black uppercase tracking-widest">Yuta Education</span>
+                <span className="text-[10px] text-black font-bold uppercase border-b-2 border-black">Standardized Exams</span>
              </div>
-             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-b from-white to-slate-50 border border-indigo-100 shadow-sm shadow-indigo-100/50">
-                <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500" />
-                <span className="text-sm font-bold text-slate-700">Pro</span>
+             <div className="flex items-center gap-2 px-4 py-2 rounded-none bg-[#FFED66] border-4 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
+                <Sparkles className="w-4 h-4 text-black stroke-[3]" />
+                <span className="text-sm font-black text-black uppercase">Pro</span>
              </div>
           </div>
         </div>

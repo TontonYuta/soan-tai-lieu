@@ -7,9 +7,10 @@ interface OutputDisplayProps {
   content: string;
   status: GenerationStatus;
   error?: string | null;
+  isLatex?: boolean;
 }
 
-const OutputDisplay: React.FC<OutputDisplayProps> = ({ content, status, error }) => {
+const OutputDisplay: React.FC<OutputDisplayProps> = ({ content, status, error, isLatex = true }) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -32,14 +33,14 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({ content, status, error })
 
   if (status === GenerationStatus.IDLE) {
     return (
-      <div className="h-full min-h-[600px] flex flex-col items-center justify-center bg-white/60 backdrop-blur-xl rounded-[2.5rem] border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-12 text-center relative overflow-hidden group">
-        <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/5 via-purple-500/5 to-pink-500/5 opacity-50 group-hover:opacity-100 transition-opacity duration-700"></div>
-        <div className="relative z-10 bg-white p-6 rounded-3xl shadow-xl shadow-indigo-100 mb-8 border border-indigo-50 animate-float">
-          <Bot className="w-16 h-16 text-indigo-600" />
+      <div className="h-full min-h-[600px] flex flex-col items-center justify-center brutal-card p-12 text-center relative overflow-hidden group border-4 border-black shadow-[8px_8px_0_0_rgba(0,0,0,1)]">
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/notebook.png')] opacity-20 group-hover:opacity-40 transition-opacity duration-700"></div>
+        <div className="relative z-10 bg-[#A3E635] p-6 border-4 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] mb-8">
+          <Bot className="w-16 h-16 text-black stroke-[3]" />
         </div>
-        <h3 className="relative z-10 text-2xl font-bold text-slate-800 mb-3">Sẵn sàng thiết kế</h3>
-        <p className="relative z-10 text-slate-500 text-base max-w-sm leading-relaxed">
-          Hệ thống đã được tối ưu để loại bỏ lỗi Markdown và đảm bảo mã nguồn LaTeX chuẩn PDFLaTeX.
+        <h3 className="relative z-10 text-2xl font-black text-black mb-3 uppercase tracking-widest">Sẵn sàng thiết kế</h3>
+        <p className="relative z-10 text-black font-bold text-base max-w-sm leading-relaxed border-b-4 border-black pb-2">
+          Hệ thống loại bỏ lỗi Markdown, đảm bảo mã LaTeX chuẩn.
         </p>
       </div>
     );
@@ -47,10 +48,10 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({ content, status, error })
 
   if (status === GenerationStatus.ERROR) {
     return (
-      <div className="h-full min-h-[600px] flex flex-col items-center justify-center bg-red-50/80 backdrop-blur-xl rounded-[2.5rem] border border-red-100 p-8 text-center">
-        <AlertCircle className="w-12 h-12 text-red-600 mb-4" />
-        <h3 className="text-xl font-bold text-red-900 mb-2">Đã xảy ra lỗi</h3>
-        <p className="text-red-700 max-w-md">{error}</p>
+      <div className="h-full min-h-[600px] flex flex-col items-center justify-center bg-[#FF5E5B] border-4 border-black shadow-[8px_8px_0_0_rgba(0,0,0,1)] p-8 text-center">
+        <AlertCircle className="w-16 h-16 text-black stroke-[3] mb-4" />
+        <h3 className="text-2xl font-black text-black uppercase tracking-widest mb-2">Đã xảy ra lỗi</h3>
+        <p className="text-black font-bold uppercase">{error}</p>
       </div>
     );
   }
@@ -58,67 +59,73 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({ content, status, error })
   const isFixedLinkSet = !!localStorage.getItem('gemini_fixed_link');
 
   return (
-    <div className="bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-xl border border-white/50 overflow-hidden flex flex-col h-full min-h-[600px]">
+    <div className="brutal-card border-4 border-black shadow-[8px_8px_0_0_rgba(0,0,0,1)] overflow-hidden flex flex-col h-full min-h-[600px]">
       {/* Editor Header */}
-      <div className="border-b border-slate-200 bg-slate-50/80 p-4 flex flex-wrap gap-4 justify-between items-center">
+      <div className="border-b-4 border-black bg-[#FFED66] p-4 flex flex-wrap gap-4 justify-between items-center">
         <div className="flex items-center gap-4">
-            <div className="flex gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-red-400"></div>
-                <div className="w-3 h-3 rounded-full bg-amber-400"></div>
-                <div className="w-3 h-3 rounded-full bg-emerald-400"></div>
+            <div className="flex gap-1.5 border-4 border-black p-1 bg-[#FEF9C3]">
+                <div className="w-4 h-4 rounded-none border-2 border-black bg-[#FF5E5B]"></div>
+                <div className="w-4 h-4 rounded-none border-2 border-black bg-[#FFED66]"></div>
+                <div className="w-4 h-4 rounded-none border-2 border-black bg-[#00CECB]"></div>
             </div>
-            <div className="flex items-center gap-2 text-slate-700 bg-white px-3 py-1 rounded-lg border border-slate-200 shadow-sm">
-                <Terminal className="w-3.5 h-3.5 text-indigo-600" />
-                <span className="text-xs font-bold uppercase tracking-tight">LaTeX Pure Source</span>
+            <div className="flex items-center gap-2 text-black bg-[#FEF9C3] px-3 py-1 border-4 border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]">
+                <Terminal className="w-4 h-4 text-black stroke-[3]" />
+                <span className="text-xs font-black uppercase tracking-widest">{isLatex ? 'LaTeX Source' : 'Markdown Source'}</span>
             </div>
         </div>
 
         <div className="flex gap-2">
           <button
             onClick={handleCopy}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all
-              ${copied ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-100' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'}`}
+            className={`flex items-center gap-2 px-4 py-2 border-4 border-black text-xs font-black uppercase tracking-widest transition-all
+              ${copied ? 'bg-[#00CECB] text-black shadow-none translate-x-[4px] translate-y-[4px]' : 'bg-[#FFF9D2] text-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:bg-[#FFECA1] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none'}`}
           >
-            {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? <Check className="w-4 h-4 stroke-[3]" /> : <Copy className="w-4 h-4 stroke-[3]" />}
             {copied ? 'Đã chép!' : 'Sao chép mã'}
           </button>
           
           <button
             onClick={handleCopyAndOpenGemini}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg
-              ${isFixedLinkSet ? 'bg-indigo-900 hover:bg-indigo-950 text-indigo-100 shadow-indigo-200' : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-100'}`}
+            className={`flex items-center gap-2 px-4 py-2 border-4 border-black text-xs font-black uppercase tracking-widest transition-all
+              ${isFixedLinkSet ? 'bg-[#A3E635] text-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none' : 'bg-[#FF90E8] text-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none'}`}
           >
-            <ExternalLink className="w-3.5 h-3.5" />
-            {isFixedLinkSet ? 'Vào Kênh Cố Định' : 'Mở Gemini'}
+            <ExternalLink className="w-4 h-4 stroke-[3]" />
+            {isFixedLinkSet ? 'Kênh Cố Định' : 'Mở Gemini'}
           </button>
         </div>
       </div>
 
       {/* Compiler Notice */}
-      <div className="px-6 py-4 bg-indigo-900 border-b border-indigo-800 flex items-center justify-between">
+      <div className={`px-6 py-4 border-b-4 border-black flex items-center justify-between ${isLatex ? 'bg-[#FF5E5B]' : 'bg-[#00CECB]'}`}>
           <div className="flex items-center gap-3">
-            <ShieldCheck className="w-5 h-5 text-emerald-400" />
-            <p className="text-xs font-bold text-indigo-100">
-                Compiler: <span className="text-emerald-400">PDFLaTeX</span> | <span className="opacity-60">No Markdown Syntax Detected</span>
+            <ShieldCheck className="w-5 h-5 text-black stroke-[3]" />
+            <p className="text-xs font-black text-black uppercase">
+                {isLatex ? (
+                  <>Compiler: <span className="bg-[#FEF9C3] px-1 border-2 border-black">PDFLaTeX</span> | No Markdown</>
+                ) : (
+                  <>Format: <span className="bg-[#FEF9C3] px-1 border-2 border-black">Markdown</span></>
+                )}
             </p>
           </div>
-          <div className="flex items-center gap-2 text-[10px] font-black text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">
-             CLEAN FOR OVERLEAF
+          <div className="flex items-center gap-2 text-[10px] font-black text-black bg-[#FEF9C3] px-3 py-1 border-2 border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]">
+             {isLatex ? 'CLEAN FOR OVERLEAF' : 'READY FOR CHAT'}
           </div>
       </div>
       
       {/* Editor Content */}
-      <div className="relative flex-1 bg-[#0F172A] group">
+      <div className="relative flex-1 bg-[#000000] group">
         <textarea 
             readOnly
-            className="w-full h-full p-8 font-mono text-sm leading-relaxed text-blue-100 bg-transparent resize-none focus:outline-none selection:bg-indigo-500/30"
+            className={`w-full h-full p-8 font-mono text-sm leading-relaxed ${isLatex ? 'text-[#A3E635]' : 'text-[#FFF9D2]'} bg-transparent resize-none focus:outline-none selection:bg-[#FF90E8]/50 border-none !shadow-none`}
             value={content}
             spellCheck={false}
         />
         <div className="absolute right-6 bottom-6 flex flex-col items-end gap-2">
-            <span className="px-3 py-1 bg-indigo-500/20 backdrop-blur-md rounded-lg text-[10px] font-bold text-indigo-400 border border-indigo-500/20 uppercase">
-                Strict LaTeX Rules Applied
-            </span>
+            {isLatex && (
+              <span className="px-3 py-1 bg-[#111111] text-[10px] font-black text-[#FFED66] border-2 border-[#FFED66] uppercase">
+                  Strict LaTeX Rules Applied
+              </span>
+            )}
         </div>
       </div>
     </div>

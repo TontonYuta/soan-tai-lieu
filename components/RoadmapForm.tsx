@@ -29,12 +29,12 @@ const RoadmapForm: React.FC<RoadmapFormProps> = ({ onSubmit, status }) => {
     setConfig(prev => ({ ...prev, [field]: value }));
   };
 
-  const inputClass = "w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all text-sm font-semibold text-slate-700 placeholder:text-slate-400 shadow-sm";
+  const inputClass = "w-full pl-10 pr-4 py-2.5 bg-[#FEF9C3] border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all text-sm font-semibold text-slate-700 placeholder:text-slate-400 shadow-sm";
   const labelClass = "block text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-wider";
   const iconClass = "absolute left-3.5 top-3 w-4 h-4 text-slate-400 group-hover:text-amber-500 transition-colors";
 
   return (
-    <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-xl border border-white/60 p-6 lg:p-8 animate-in slide-in-from-left-4 duration-500 scrollbar-hide">
+    <div className="bg-[#FEF9C3]/80 backdrop-blur-xl rounded-[2rem] shadow-xl border border-white/60 p-6 lg:p-8 animate-in slide-in-from-left-4 duration-500 scrollbar-hide">
       <div className="flex items-center gap-4 mb-8">
         <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600 shadow-sm ring-4 ring-amber-50/50">
             <Map className="w-6 h-6" />

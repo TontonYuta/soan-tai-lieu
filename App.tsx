@@ -4,15 +4,14 @@ import Header from './components/Header';
 import ExamForm from './components/ExamForm';
 import LearningForm from './components/LearningForm';
 import RoadmapForm from './components/RoadmapForm';
-import TTSForm from './components/TTSForm';
-import SimilarExerciseForm from './components/SimilarExerciseForm';
+import WorksheetForm from './components/WorksheetForm';
 import OutputDisplay from './components/OutputDisplay';
-import { generateExamPrompt, generateLearningPrompt, generateRoadmapPrompt, generateTTSPrompt, generateSimilarExercisePrompt } from './services/gemini';
-import { ExamConfig, LearningConfig, RoadmapConfig, TTSConfig, SimilarExerciseConfig, GenerationStatus } from './types';
-import { Sparkles, GraduationCap, BookOpen, Link as LinkIcon, Trash2, ArrowRight, Map, Zap, Lightbulb, ClipboardCheck, MessageSquareText, Info, ExternalLink, Save, Volume2, PlusCircle } from 'lucide-react';
+import { generateExamPrompt, generateLearningPrompt, generateRoadmapPrompt, generateWorksheetPrompt } from './services/gemini';
+import { ExamConfig, LearningConfig, RoadmapConfig, WorksheetConfig, GenerationStatus } from './types';
+import { Sparkles, GraduationCap, BookOpen, Link as LinkIcon, Trash2, ArrowRight, Map, Zap, Lightbulb, ClipboardCheck, MessageSquareText, Info, ExternalLink, Save, Book } from 'lucide-react';
 
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'exam' | 'learning' | 'roadmap' | 'tts' | 'similar'>('roadmap');
+  const [activeTab, setActiveTab] = useState<'exam' | 'learning' | 'roadmap' | 'worksheet'>('worksheet');
   const [status, setStatus] = useState<GenerationStatus>(GenerationStatus.IDLE);
   const [promptContent, setPromptContent] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
@@ -75,30 +74,16 @@ const App: React.FC = () => {
     }, 400);
   };
 
-  const handleTTSGenerate = (config: TTSConfig) => {
+  const handleWorksheetGenerate = (config: WorksheetConfig) => {
     setStatus(GenerationStatus.LOADING);
     setError(null);
     setTimeout(() => {
         try {
-            setPromptContent(generateTTSPrompt(config));
+            setPromptContent(generateWorksheetPrompt(config));
             setStatus(GenerationStatus.SUCCESS);
         } catch (err) {
             setStatus(GenerationStatus.ERROR);
-            setError('Lỗi khi tối ưu văn bản TTS.');
-        }
-    }, 400);
-  };
-
-  const handleSimilarGenerate = (config: SimilarExerciseConfig) => {
-    setStatus(GenerationStatus.LOADING);
-    setError(null);
-    setTimeout(() => {
-        try {
-            setPromptContent(generateSimilarExercisePrompt(config));
-            setStatus(GenerationStatus.SUCCESS);
-        } catch (err) {
-            setStatus(GenerationStatus.ERROR);
-            setError('Lỗi khi tạo bài tập tương tự.');
+            setError('Lỗi khi thiết kế cấu trúc phiếu bài tập.');
         }
     }, 400);
   };
@@ -109,7 +94,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8FAFC]">
+    <div className="min-h-screen flex flex-col">
       <Header />
       
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -134,9 +119,9 @@ const App: React.FC = () => {
                     {isEditingLink && (
                         <button 
                             onClick={handleSaveLink}
-                            className="absolute right-2 top-1.5 p-1.5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-lg transition-colors shadow-lg"
+                            className="absolute right-2 top-1.5 p-1.5 bg-[#A3E635] hover:bg-[#86EFAC] text-black border-2 border-black transition-colors shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
                         >
-                            <Save className="w-4 h-4" />
+                            <Save className="w-4 h-4 stroke-[3]" />
                         </button>
                     )}
                 </div>
@@ -146,98 +131,86 @@ const App: React.FC = () => {
                         href={geminiLink} 
                         target="_blank" 
                         rel="noreferrer"
-                        className="flex items-center gap-2 px-6 py-2.5 bg-white text-indigo-900 rounded-xl text-xs font-black hover:bg-indigo-50 transition-all shadow-lg shrink-0"
+                        className="flex items-center gap-2 px-6 py-2.5 bg-[#FFED66] text-black border-4 border-black text-xs font-black uppercase tracking-widest hover:bg-[#FFECA1] transition-all shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none shrink-0"
                     >
-                        <ExternalLink className="w-4 h-4" />
+                        <ExternalLink className="w-4 h-4 stroke-[3]" />
                         VÀO ĐOẠN CHAT
                     </a>
                 )}
             </div>
-            <p className="text-[10px] text-slate-400 font-bold mt-2 px-6 flex items-center gap-2">
-                <Info className="w-3 h-3" />
-                Dán link này để AI ghi nhớ bài học cũ, tránh trùng lặp kiến thức khi sinh Prompt mới.
+            <p className="text-[10px] text-black font-bold uppercase mt-2 px-6 flex items-center gap-2 bg-[#FF90E8] w-fit border-2 border-black py-1 px-2 shadow-[2px_2px_0_0_rgba(0,0,0,1)]">
+                <Info className="w-3 h-3 stroke-[3]" />
+                Dán link này để AI ghi nhớ bài học cũ, tránh trùng lặp kiến thức.
             </p>
         </div>
 
         <div className="flex flex-col items-center mb-12">
-            <div className="flex items-center gap-3 mb-6 bg-white px-4 py-2 rounded-2xl shadow-sm border border-slate-100">
-                <div className={`flex items-center gap-2 text-[10px] font-bold uppercase tracking-tighter ${activeTab === 'roadmap' ? 'text-amber-600' : 'text-slate-400'}`}>
+            <div className="flex items-center gap-3 mb-6 bg-[#FEF9C3] px-4 py-2 border-4 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
+                <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${activeTab === 'roadmap' ? 'text-[#FF5E5B]' : 'text-black opacity-50'}`}>
                     1. Lộ trình
                 </div>
-                <ArrowRight className="w-3 h-3 text-slate-300" />
-                <div className={`flex items-center gap-2 text-[10px] font-bold uppercase tracking-tighter ${activeTab === 'learning' ? 'text-teal-600' : 'text-slate-400'}`}>
-                    2. Bài Học
+                <ArrowRight className="w-3 h-3 text-black" />
+                <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${activeTab === 'learning' ? 'text-[#00CECB]' : 'text-black opacity-50'}`}>
+                    2. Bài học
                 </div>
-                <ArrowRight className="w-3 h-3 text-slate-300" />
-                <div className={`flex items-center gap-2 text-[10px] font-bold uppercase tracking-tighter ${activeTab === 'exam' ? 'text-indigo-600' : 'text-slate-400'}`}>
-                    3. Đề Thi
+                <ArrowRight className="w-3 h-3 text-black" />
+                <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${activeTab === 'worksheet' ? 'text-[#A3E635]' : 'text-black opacity-50'}`}>
+                    3. Bài tập
                 </div>
-                <ArrowRight className="w-3 h-3 text-slate-300" />
-                <div className={`flex items-center gap-2 text-[10px] font-bold uppercase tracking-tighter ${activeTab === 'tts' ? 'text-purple-600' : 'text-slate-400'}`}>
-                    4. Nghe (TTS)
-                </div>
-                <ArrowRight className="w-3 h-3 text-slate-300" />
-                <div className={`flex items-center gap-2 text-[10px] font-bold uppercase tracking-tighter ${activeTab === 'similar' ? 'text-amber-600' : 'text-slate-400'}`}>
-                    5. Tương tự
+                <ArrowRight className="w-3 h-3 text-black" />
+                <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${activeTab === 'exam' ? 'text-[#FF90E8]' : 'text-black opacity-50'}`}>
+                    4. Đề thi
                 </div>
             </div>
 
-            <div className="bg-white/40 backdrop-blur-md p-1.5 rounded-[2rem] border border-white shadow-2xl flex items-center gap-2">
+            <div className="brutal-card p-2 border-4 border-black shadow-[8px_8px_0_0_rgba(0,0,0,1)] flex items-center gap-2 flex-wrap justify-center bg-[#FEF9C3]">
                 <button
                     onClick={() => setActiveTab('roadmap')}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-[1.5rem] text-sm font-extrabold transition-all
-                    ${activeTab === 'roadmap' ? 'bg-amber-500 text-white shadow-lg' : 'text-slate-500 hover:bg-white'}`}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-none text-sm font-black uppercase tracking-widest transition-all
+                    ${activeTab === 'roadmap' ? 'bg-[#FF5E5B] text-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-4 border-black' : 'text-black hover:bg-[#FFF9D2] hover:border-4 hover:border-black'}`}
                 >
-                    <Map className="w-4 h-4" />
+                    <Map className="w-4 h-4 stroke-[3]" />
                     Lộ trình
                 </button>
                 <button
                     onClick={() => setActiveTab('learning')}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-[1.5rem] text-sm font-extrabold transition-all
-                    ${activeTab === 'learning' ? 'bg-teal-600 text-white shadow-lg' : 'text-slate-500 hover:bg-white'}`}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-none text-sm font-black uppercase tracking-widest transition-all
+                    ${activeTab === 'learning' ? 'bg-[#00CECB] text-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-4 border-black' : 'text-black hover:bg-[#FFF9D2] hover:border-4 hover:border-black'}`}
                 >
-                    <BookOpen className="w-4 h-4" />
+                    <BookOpen className="w-4 h-4 stroke-[3]" />
                     Bài học
                 </button>
                 <button
+                    onClick={() => setActiveTab('worksheet')}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-none text-sm font-black uppercase tracking-widest transition-all
+                    ${activeTab === 'worksheet' ? 'bg-[#A3E635] text-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-4 border-black' : 'text-black hover:bg-[#FFF9D2] hover:border-4 hover:border-black'}`}
+                >
+                    <Book className="w-4 h-4 stroke-[3]" />
+                    Bài tập
+                </button>
+                <button
                     onClick={() => setActiveTab('exam')}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-[1.5rem] text-sm font-extrabold transition-all
-                    ${activeTab === 'exam' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:bg-white'}`}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-none text-sm font-black uppercase tracking-widest transition-all
+                    ${activeTab === 'exam' ? 'bg-[#FF90E8] text-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-4 border-black' : 'text-black hover:bg-[#FFF9D2] hover:border-4 hover:border-black'}`}
                 >
-                    <GraduationCap className="w-4 h-4" />
+                    <GraduationCap className="w-4 h-4 stroke-[3]" />
                     Đề thi
-                </button>
-                <button
-                    onClick={() => setActiveTab('tts')}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-[1.5rem] text-sm font-extrabold transition-all
-                    ${activeTab === 'tts' ? 'bg-purple-600 text-white shadow-lg' : 'text-slate-500 hover:bg-white'}`}
-                >
-                    <Volume2 className="w-4 h-4" />
-                    Nghe (TTS)
-                </button>
-                <button
-                    onClick={() => setActiveTab('similar')}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-[1.5rem] text-sm font-extrabold transition-all
-                    ${activeTab === 'similar' ? 'bg-amber-600 text-white shadow-lg' : 'text-slate-500 hover:bg-white'}`}
-                >
-                    <PlusCircle className="w-4 h-4" />
-                    Tương tự
                 </button>
             </div>
 
             {learningContext && (
-                <div className="mt-8 w-full max-w-2xl bg-gradient-to-br from-indigo-500 to-purple-600 p-[1px] rounded-3xl shadow-lg animate-in zoom-in-95 duration-300">
-                    <div className="bg-white/95 px-6 py-4 rounded-[calc(1.5rem-1px)] flex items-center justify-between">
+                <div className="mt-8 w-full max-w-2xl">
+                    <div className="bg-[#FEF9C3] border-4 border-black px-6 py-4 flex items-center justify-between shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
                         <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600">
-                                <LinkIcon className="w-5 h-5" />
+                            <div className="w-10 h-10 border-2 border-black bg-[#A3E635] flex items-center justify-center text-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]">
+                                <LinkIcon className="w-5 h-5 stroke-[3]" />
                             </div>
                             <div>
-                                <h4 className="text-[10px] font-black text-indigo-800 uppercase tracking-widest">Đang giữ ngữ cảnh đồng bộ</h4>
-                                <p className="text-sm text-slate-600 font-semibold">{contextMetadata?.topic}</p>
+                                <h4 className="text-[10px] font-black text-black uppercase tracking-widest border-b-2 border-black inline-block mb-1">Đang giữ ngữ cảnh đồng bộ</h4>
+                                <p className="text-sm text-black font-bold uppercase">{contextMetadata?.topic}</p>
                             </div>
                         </div>
-                        <button onClick={clearContext} className="p-2 text-slate-300 hover:text-red-500 transition-colors"><Trash2 className="w-5 h-5" /></button>
+                        <button onClick={clearContext} className="p-2 text-black hover:text-[#FF5E5B] transition-colors"><Trash2 className="w-5 h-5 stroke-[3]" /></button>
                     </div>
                 </div>
             )}
@@ -245,11 +218,13 @@ const App: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-4">
-            {activeTab === 'roadmap' ? (
+            {activeTab === 'worksheet' ? (
+                <WorksheetForm onSubmit={handleWorksheetGenerate} status={status} />
+            ) : activeTab === 'roadmap' ? (
                 <RoadmapForm onSubmit={handleRoadmapGenerate} status={status} />
             ) : activeTab === 'learning' ? (
                 <LearningForm onSubmit={handleLearningGenerate} status={status} />
-            ) : activeTab === 'exam' ? (
+            ) : (
                 <ExamForm 
                     onSubmit={handleExamGenerate} 
                     status={status} 
@@ -258,10 +233,6 @@ const App: React.FC = () => {
                     contextSubject={contextMetadata?.subject}
                     contextGrade={contextMetadata?.grade}
                 />
-            ) : activeTab === 'tts' ? (
-                <TTSForm onSubmit={handleTTSGenerate} status={status} />
-            ) : (
-                <SimilarExerciseForm onSubmit={handleSimilarGenerate} status={status} />
             )}
             
             {/* TIP BOX */}
@@ -274,30 +245,30 @@ const App: React.FC = () => {
           </div>
 
           <div className="lg:col-span-8 space-y-6">
-            <OutputDisplay content={promptContent} status={status} error={error} />
+            <OutputDisplay content={promptContent} status={status} error={error} isLatex={activeTab !== 'roadmap'} />
             
-            <div className="p-8 bg-slate-900 rounded-[3rem] text-white shadow-2xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 blur-[80px] rounded-full -mr-20 -mt-20 group-hover:bg-indigo-500/20 transition-all"></div>
+            <div className="p-8 bg-[#111111] border-4 border-black text-white shadow-[8px_8px_0_0_rgba(0,0,0,1)] relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF90E8]/10 blur-[80px] rounded-none -mr-20 -mt-20 group-hover:bg-[#FF90E8]/20 transition-all"></div>
                 <div className="relative z-10">
                     <div className="flex items-center gap-4 mb-8">
-                        <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 flex items-center justify-center text-indigo-400">
-                            <Zap className="w-6 h-6" />
+                        <div className="w-12 h-12 bg-[#FEF9C3] border-4 border-black flex items-center justify-center text-black">
+                            <Zap className="w-6 h-6 stroke-[3]" />
                         </div>
-                        <h3 className="text-2xl font-black tracking-tight">Chiến thuật "Sợi chỉ đỏ"</h3>
+                        <h3 className="text-2xl font-black tracking-widest uppercase">Chiến thuật "Sợi chỉ đỏ"</h3>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 transition-all">
-                            <h5 className="font-bold text-amber-400 mb-2">Bước 1: Link Cố định</h5>
-                            <p className="text-slate-400 text-sm">Sau khi gõ Prompt đầu tiên vào Gemini, hãy copy link đoạn chat đó dán vào ô "Kênh Gemini Cố định" phía trên.</p>
+                        <div className="p-6 bg-[#A3E635] text-black border-4 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_rgba(0,0,0,1)] transition-all">
+                            <h5 className="font-black text-black uppercase mb-2">Bước 1: Link Cố định</h5>
+                            <p className="text-black text-sm font-bold">Sau khi gõ Prompt đầu tiên vào Gemini, hãy copy link đoạn chat đó dán vào ô "Kênh Gemini Cố định" phía trên.</p>
                         </div>
-                        <div className="p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 transition-all">
-                            <h5 className="font-bold text-teal-400 mb-2">Bước 2: Dán nối tiếp</h5>
-                            <p className="text-slate-400 text-sm">Với các Prompt Bài học & Đề thi sau đó, chỉ cần dán nối tiếp vào cùng một chat. AI sẽ biết bạn đã dạy gì để không trùng bài.</p>
+                        <div className="p-6 bg-[#00CECB] text-black border-4 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_rgba(0,0,0,1)] transition-all">
+                            <h5 className="font-black text-black uppercase mb-2">Bước 2: Dán nối tiếp</h5>
+                            <p className="text-black text-sm font-bold">Với các Prompt Bài học & Đề thi sau đó, chỉ cần dán nối tiếp vào cùng một chat. AI sẽ biết bạn đã dạy gì để không trùng bài.</p>
                         </div>
                     </div>
 
-                    <div className="mt-8 flex items-center gap-3 text-[10px] font-black text-indigo-400 uppercase tracking-widest bg-indigo-500/10 w-fit px-5 py-2.5 rounded-full border border-indigo-500/20">
+                    <div className="mt-8 flex items-center gap-3 text-xs font-black text-black uppercase tracking-widest bg-[#FFED66] border-4 border-black shadow-[2px_2px_0_0_rgba(255,255,255,1)] w-fit px-5 py-2.5">
                         <Sparkles className="w-4 h-4" />
                         Đảm bảo hệ thống kiến thức Logic & Khoa học
                     </div>

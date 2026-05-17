@@ -1,0 +1,105 @@
+/* Neo-brutalist Overrides */
+body {
+  background-color: #FEF9C3 !important; /* Light yellow */
+  background-image: 
+    radial-gradient(#FDE047 2px, transparent 2px),
+    radial-gradient(#FDE047 2px, transparent 2px) !important;
+  background-size: 32px 32px;
+  background-position: 0 0, 16px 16px;
+  font-family: 'Space Mono', monospace !important;
+  color: #111827 !important; 
+}
+
+/* Reset border radiuses to strict square for brutalism */
+.rounded-\[1\.5rem\], .rounded-\[2rem\], .rounded-\[2\.5rem\], .rounded-\[3rem\], .rounded-xl, .rounded-2xl, .rounded-3xl, .rounded-lg, .rounded-md {
+  border-radius: 0 !important;
+}
+
+/* Make translucent whites solid for readability */
+.brutal-card, .bg-white\/80, .bg-white\/60, .bg-white\/40, .bg-white\/90, .bg-white\/95 {
+  background-color: #FEF9C3 !important; /* Light yellow */
+  backdrop-filter: none !important;
+  border: 4px solid #000 !important;
+  box-shadow: 8px 8px 0px 0px #000 !important;
+  color: #000 !important;
+}
+
+.bg-white, .bg-slate-50 {
+  background-color: #FEF9C3 !important;
+  color: #000 !important;
+}
+
+/* Universal Shadows & Borders */
+.shadow-\[0_8px_30px_rgb\(0\,0\,0\,0\.04\)\], .shadow-2xl, .shadow-xl, .shadow-lg, .shadow-md, .shadow-sm {
+  box-shadow: 6px 6px 0px 0px #000 !important;
+  border: 3px solid #000 !important;
+}
+
+/* Base button states */
+button {
+  border-radius: 0 !important;
+  font-weight: 900 !important;
+  text-transform: uppercase;
+  transition: all 0.15s ease-out !important;
+}
+
+/* Override existing gradients with solid vibrant colors */
+.bg-gradient-to-r, .bg-gradient-to-br, .from-indigo-500, .to-purple-600 {
+  background-image: none !important;
+  background-color: #A3E635 !important; /* Striking Lime Green */
+  border: 4px solid #000 !important;
+  box-shadow: 6px 6px 0px 0px #000 !important;
+  color: #000 !important;
+}
+
+button:active:not(:disabled), .bg-gradient-to-r:active:not(:disabled) {
+  transform: translate(6px, 6px) !important;
+  box-shadow: none !important;
+}
+
+/* Dark components adaptation (e.g. Code Editor) */
+.bg-indigo-900, .bg-slate-900, .bg-\[\#0F172A\] {
+  background-color: #111827 !important;
+  color: #F8F9FA !important;
+  border: 4px solid #000 !important;
+}
+
+.text-indigo-100 {
+  color: #FCD34D !important; /* Retro Yellow for dark backgrounds */
+}
+
+.border-white, .border-white\/60, .border-slate-100, .border-slate-200, .border-gray-100, .border-gray-200 {
+  border-color: #000 !important;
+}
+
+/* Typography Overrides */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Space Mono', monospace;
+  font-weight: 900 !important;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: #000 !important;
+}
+
+/* Fix text contrast */
+.text-slate-300, .text-slate-400, .text-slate-500, .text-slate-600, .text-slate-700, .text-gray-400, .text-gray-500 {
+  color: #111827 !important;
+}
+
+/* Input Fields */
+input, select, textarea {
+  border: 4px solid #000 !important;
+  border-radius: 0 !important;
+  box-shadow: 4px 4px 0px 0px #000 !important;
+  font-family: 'Space Mono', monospace !important;
+  font-weight: 700 !important;
+  color: #000 !important;
+  transition: all 0.1s ease-in-out;
+  background-color: #FFF9D2 !important; /* Lighter yellow for inputs */
+}
+
+input:focus, select:focus, textarea:focus {
+  transform: translate(4px, 4px) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}

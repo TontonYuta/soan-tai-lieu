@@ -28,7 +28,8 @@ export interface LearningConfig {
   topic: string; 
   goal: 'summary' | 'detailed' | 'exercises'; 
   tone: 'academic' | 'creative' | 'simple'; 
-  audience: string; 
+  audience: string;
+  language?: 'bilingual' | 'vietnamese';
 }
 
 export interface RoadmapConfig {
@@ -40,22 +41,12 @@ export interface RoadmapConfig {
   syllabus?: string; // Đề cương có sẵn (Tùy chọn)
 }
 
-export interface TTSConfig {
+export interface WorksheetConfig {
   subject: string;
   topic: string;
-  content: string;
-  style: 'normal' | 'slow' | 'teaching' | 'podcast';
-  emphasize: boolean;
-  keepTerms: boolean;
-}
-
-export interface SimilarExerciseConfig {
-  subject: string;
-  topic: string;
-  count: number;
-  difficulty: 'keep' | 'easier' | 'harder';
-  sourceExercises: string;
-  includeSolution: boolean;
+  grade: string;
+  teacherName: string;
+  language?: 'bilingual' | 'vietnamese';
 }
 
 export enum GenerationStatus {
