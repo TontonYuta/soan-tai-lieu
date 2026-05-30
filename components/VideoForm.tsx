@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { VideoConfig, GenerationStatus } from '../types';
-import { Video, Type, Clock, Users, BookOpen, Wand2 } from 'lucide-react';
+import { Video, Type, Clock, Users, BookOpen, Wand2, MonitorPlay } from 'lucide-react';
 
 interface VideoFormProps {
   onGenerateManim: (config: VideoConfig) => void;
@@ -14,7 +14,8 @@ const VideoForm: React.FC<VideoFormProps> = ({ onGenerateManim, onGenerateScript
     topic: '',
     duration: '3-5 phút',
     tone: 'academic',
-    audience: 'Học sinh trung học'
+    audience: 'Học sinh trung học',
+    format: 'horizontal'
   });
 
   const isLoading = status === GenerationStatus.LOADING;
@@ -118,7 +119,7 @@ const VideoForm: React.FC<VideoFormProps> = ({ onGenerateManim, onGenerateScript
               </div>
             </div>
 
-            <div className="group flex flex-col md:col-span-2">
+            <div className="group relative">
               <label className={labelClass}>Giọng văn / Phong cách</label>
               <div className="relative">
                 <Wand2 className={iconClass} />
@@ -130,6 +131,21 @@ const VideoForm: React.FC<VideoFormProps> = ({ onGenerateManim, onGenerateScript
                   <option value="academic">Học thuật / Chuyên sâu</option>
                   <option value="creative">Sáng tạo / Hấp dẫn</option>
                   <option value="simple">Đơn giản / Dễ hiểu</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="group relative">
+              <label className={labelClass}>Định dạng Video</label>
+              <div className="relative">
+                <MonitorPlay className={iconClass} />
+                <select
+                  className={selectClass}
+                  value={config.format}
+                  onChange={e => handleChange('format', e.target.value as any)}
+                >
+                  <option value="horizontal">Ngang (16:9 - YouTube)</option>
+                  <option value="vertical">Dọc (9:16 - TikTok/Shorts)</option>
                 </select>
               </div>
             </div>

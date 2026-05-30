@@ -290,7 +290,7 @@ const App: React.FC = () => {
           </div>
 
           <div className="lg:col-span-8 space-y-6">
-            <OutputDisplay content={promptContent} status={status} error={error} isLatex={activeTab !== 'roadmap' && activeTab !== 'video'} />
+            <OutputDisplay content={promptContent} status={status} error={error} isLatex={activeTab !== 'video'} />
             
             <div className="p-8 bg-[#ffffff] border-4 border-black text-black shadow-[8px_8px_0_0_rgba(0,0,0,1)] relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF90E8]/10 blur-[80px] rounded-none -mr-20 -mt-20 group-hover:bg-[#FF90E8]/20 transition-all"></div>

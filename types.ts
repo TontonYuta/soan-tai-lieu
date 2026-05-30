@@ -55,6 +55,7 @@ export interface VideoConfig {
   duration: string;
   tone: 'academic' | 'creative' | 'simple';
   audience: string;
+  format: 'horizontal' | 'vertical';
 }
 
 export enum GenerationStatus {

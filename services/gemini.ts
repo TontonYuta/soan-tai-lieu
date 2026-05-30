@@ -3,20 +3,22 @@ import { ExamConfig, LearningConfig, RoadmapConfig, WorksheetConfig, VideoConfig
 const LATEX_TECHNICAL_RULES = `
 QUY TẮC KỸ THUẬT LATEX (BẮT BUỘC):
 1. KHÔNG SỬ DỤNG MARKDOWN: Tuyệt đối không dùng **, *, #, - (dấu gạch đầu dòng markdown) bên trong mã nguồn LaTeX. Thay vào đó hãy dùng \\textbf{}, \\textit{}, \\section{}, \\begin{itemize}.
-2. TIẾNG VIỆT: Sử dụng gói lệnh \\usepackage[utf8]{inputenc} và \\usepackage[vietnamese]{babel} hoặc \\usepackage{vietnam}. Nếu lỗi font, có thể linh hoạt dùng font khác hỗ trợ tiếng Việt.
+2. TIẾNG VIỆT & TRÌNH BIÊN DỊCH: Bắt buộc thiết kế để biên dịch bằng pdfLaTeX. Sử dụng gói lệnh \\usepackage[utf8]{inputenc} và \\usepackage[T1]{fontenc}, kết hợp \\usepackage{vietnam}. KHÔNG dùng fontspec hay xelatex.
 3. TOÁN HỌC: Tất cả công thức phải nằm trong $...$ hoặc \\[ ... \\]. Sử dụng amsmath, amssymb.
 4. CẤU TRÚC: Phải bao gồm đầy đủ từ \\documentclass cho đến \\end{document}.
 5. TRÁNH LỖI BIÊN DỊCH: Không tự ý dùng ký tự đặc biệt như % (trừ khi comment), &, _, $, {, } mà không escape tương ứng.
-6. HỖ TRỢ ĐỒ HỌA: Tích cực sử dụng môi trường tcolorbox, tikz, tabularx để trình bày đẹp mắt, chuyên nghiệp.
+6. THIẾT KẾ UI (HỘP & TIÊU ĐỀ): Giảm thiểu tối đa số lượng box. Nếu dùng tcolorbox thì BẮT BUỘC thiết lập viền vuông vức (dùng tùy chọn sharp corners, ví dụ: \\begin{tcolorbox}[sharp corners]), KHÔNG ĐƯỢC bo tròn. Các tiêu đề \\section, \\subsection mặc định phải tô màu xanh dương (kiểu color{myblue} hoặc color{blue}).
 `;
 
 const PRE_ALGEBRA_TEMPLATE = `
-% !TEX program = xelatex
+% !TEX program = pdflatex
 \\documentclass[12pt,a4paper]{article}
 
 \\usepackage[a4paper,top=1.8cm,bottom=1.8cm,left=1.8cm,right=1.8cm]{geometry}
-\\usepackage{fontspec}
-\\usepackage[vietnamese]{babel}
+\\usepackage[utf8]{inputenc}
+\\usepackage[T1]{fontenc}
+\\usepackage{vietnam}
+\\usepackage{mathptmx}
 \\usepackage{amsmath,amssymb}
 \\usepackage{enumitem}
 \\usepackage{multicol}
@@ -30,8 +32,8 @@ const PRE_ALGEBRA_TEMPLATE = `
 \\definecolor{myblue}{RGB}{0,112,192}
 \\usetikzlibrary{arrows.meta}
 
-\\setmainfont{TeX Gyre Termes}
-\\setsansfont{TeX Gyre Heros}
+\\usepackage[most]{tcolorbox}
+\\tcbset{sharp corners} % Yeu cau box vuong vuc
 
 \\setlength{\\parindent}{0pt}
 \\setlength{\\parskip}{5pt}
@@ -213,7 +215,7 @@ export const generateRoadmapPrompt = (config: RoadmapConfig): string => {
     (Yêu cầu: Phải bám sát thứ tự chương/mục và các từ khóa kiến thức có trong đề cương này để lập lộ trình).\n` 
     : '';
 
-  return `Đóng vai Kiến trúc sư Giáo dục và Cố vấn học tập giàu kinh nghiệm. Hãy LẬP MỘT LỘ TRÌNH HỌC TẬP TỪ CƠ BẢN ĐẾN CHI TIẾT VÀ TÂM LÝ bằng định dạng MARKDOWN.
+  return `Đóng vai Kiến trúc sư Giáo dục và Cố vấn học tập giàu kinh nghiệm. Hãy LẬP MỘT LỘ TRÌNH HỌC TẬP TỪ CƠ BẢN ĐẾN CHI TIẾT VÀ TÂM LÝ bằng định dạng LATEX (sử dụng trình biên dịch pdfLaTeX). Mọi thiết kế UI phải hạn chế dùng box, nếu có dùng thì phải là box vuông vức (sharp corners), các tiêu đề (section) màu xanh dương.
 
 I. THÔNG TIN LỘ TRÌNH:
 - Môn học: ${config.subject} | Mục tiêu chính: ${config.topic}
@@ -227,25 +229,74 @@ II. YÊU CẦU HỢP LÝ BIÊN SỌAN (ĐẶC BIỆT THIẾT KẾ CHO NGƯỜI M
 
 III. BỐ CỤC LỘ TRÌNH BẾN BỮNG:
 ${syllabusContext}
-1. 🌟 **Tổng quan và Định hướng (Mindset):** Lời khuyên chuẩn bị cho người mới, làm sao để bắt đầu mà không bị ngợp.
-2. 🗺️ **Bản đồ Lộ trình Tổng thể:** Bảng phân bổ tuần/tháng (Phase) ngắn gọn.
-3. 🚀 **Chi tiết từng chặng (Phá vỡ kiến thức thành các mảnh nhỏ):**
-   - Chia thành các Giai đoạn (Phase 1, 2, 3...)
-   - Trọng tâm cần đạt
-   - Nội dung học chi tiết (cắt nhỏ từng khái niệm để dễ "tiêu hóa")
-   - Action Items: Phương pháp & Bài tập luyện tập cụ thể (Nhấn mạnh thực hành, nhẹ nhàng từ dễ đến khó)
-   - Tín hiệu xanh: Dấu hiệu cho thấy đã nắm vững và sẵn sàng chuyển giai đoạn mới.
-4. 💡 **Tài nguyên & Lời khuyên thực chiến:** Sai lầm phổ biến cần tránh, tips duy trì kỷ luật dài hạn.
+1. Tổng quan và Định hướng (Mindset): Lời khuyên chuẩn bị cho người mới.
+2. Bản đồ Lộ trình Tổng thể: Bảng phân bổ tuần/tháng (Phase) ngắn gọn.
+3. Chi tiết từng chặng (Phá vỡ kiến thức thành các mảnh nhỏ): Giai đoạn, Trọng tâm, Nội dung học, Phương pháp & Bài tập luyện tập, Dấu hiệu chuyển tiếp.
+4. Tài nguyên & Lời khuyên thực chiến.
 
-Sử dụng định dạng Markdown đẹp, chuyên nghiệp, bảng biểu, in đậm và emoji đúng mực để tài liệu dễ đọc, tối ưu UI/UX.
-TRẢ VỀ NỘI DUNG MARKDOWN HOÀN CHỈNH.`;
+${LATEX_TECHNICAL_RULES}
+
+TRẢ VỀ NỘI DUNG MÃ NGUỒN LATEX HOÀN CHỈNH (Từ \\documentclass đến \\end{document}).`;
 };
 
 
 export const generateVideoManimPrompt = (config: VideoConfig): string => {
-  return `Đóng vai là một lập trình viên Python chuyên nghiệp và chuyên gia tạo animation toán học với Manim.\nHãy viết mã nguồn Manim để tạo một video giảng dạy.\n\nI. THÔNG TIN CHUNG:\n- Môn học: ${config.subject}\n- Chủ đề: ${config.topic}\n- Thời lượng dự kiến: ${config.duration}\n- Đối tượng: ${config.audience}\n- Giọng văn/Phong cách: ${config.tone}\n\nII. YÊU CẦU CODE MANIM:\n- Tạo Scene đầy đủ với imports: \`from manim import *\`\n- Cấu trúc animation rõ ràng, mượt mà.\n- Chú thích code chi tiết từng block.\n- Đảm bảo code chạy được trên phiên bản Manim CE mới nhất.\n\nTrình bày vào trong block code Python.`;
+  return `Đóng vai: Bạn là một lập trình viên Python lão luyện, chuyên gia về thư viện Manim CE (Manim Community) và là một nhà truyền đạt toán học/khoa học trực quan đầy sáng tạo (như kênh 3Blue1Brown). Nhiệm vụ của bạn là viết mã nguồn Manim để tạo ra một video giảng dạy trực quan, dễ hiểu và đẹp mắt.
+
+I. THÔNG TIN CHUNG:
+- Môn học / Chủ đề: ${config.subject} / ${config.topic}
+- Đối tượng người xem: ${config.audience}
+- Thời lượng dự kiến: ${config.duration}
+- Phong cách/Giọng điệu: ${config.tone}
+- Định dạng Video: ${config.format === 'vertical' ? 'Dọc (9:16 - TikTok/Shorts)' : 'Ngang (16:9 - YouTube)'}
+
+II. KỊCH BẢN CHI TIẾT (STORYBOARD):
+Hãy cấu trúc video thành một \`Scene\` duy nhất, chia làm các phần sau (sử dụng comment trong code để phân chia):
+1. Mở đầu (Intro): Hiển thị tiêu đề bài học, thu hút sự chú ý bằng một hình ảnh/chuyển động ấn tượng.
+2. Khái niệm/Vấn đề: Đưa ra định nghĩa, hiển thị công thức bằng màu sắc nổi bật.
+3. Trực quan hóa (Phần quan trọng nhất): Minh họa trực quan chi tiết, thay đổi liên tục.
+4. Kết luận (Outro): Nhấn mạnh lại công thức cuối cùng, hiển thị logo.
+
+III. YÊU CẦU KỸ THUẬT KHẮT KHE (BẮT BUỘC TUÂN THỦ):
+- Phiên bản: Code phải tương thích hoàn toàn với Manim CE mới nhất (\`from manim import *\`).
+- Định dạng: ${config.format === 'vertical' ? 'Vì là video DỌC (9:16), HÃY set `config.pixel_width = 1080` và `config.pixel_height = 1920` HOẶC sử dụng cờ CLI `--resolution 1080,1920`. Sắp xếp bố cục UI theo chiều dọc.' : 'Video ngang (16:9) mặc định.'}
+- Cấu trúc code: Sử dụng \`VGroup\` để nhóm các đối tượng logic lại với nhau. Căn chỉnh vị trí gọn gàng bằng \`.arrange()\`, \`.next_to()\`, hoặc \`.move_to()\`.
+- Xử lý tiếng Việt (Quan trọng):
+  * TUYỆT ĐỐI KHÔNG dùng tiếng Việt có dấu trực tiếp bên trong \`MathTex\` hoặc \`Tex\` để tránh lỗi biên dịch LaTeX (Unicode error).
+  * Với công thức toán học: Chỉ dùng ký hiệu toán học thuần túy trong \`MathTex\`.
+  * Với văn bản diễn giải tiếng Việt: BẮT BUỘC dùng class \`Text("Nội dung tiếng Việt")\`. Nếu cần kết hợp chữ và công thức, hãy tạo các đối tượng \`Text\` và \`MathTex\` riêng biệt rồi dùng \`VGroup\` để ghép chúng lại theo chiều ngang.
+- Màu sắc & Hiệu ứng: Tô màu các biến số trong công thức (ví dụ: biến $x$ màu Vàng, biến $y$ màu Đỏ) để người xem dễ theo dõi. Sử dụng đa dạng hiệu ứng như \`Write\`, \`Create\`, \`FadeIn\`, \`Transform\`, \`TransformFromCopy\` thay vì chỉ cho xuất hiện đột ngột.
+- Thời gian: Chèn các khoảng \`self.wait(...)\` hợp lý để người xem kịp đọc và giáo viên kịp lồng tiếng.
+
+IV. ĐỊNH DẠNG ĐẦU RA:
+- Chỉ xuất ra một khối mã (code block) Python duy nhất chứa toàn bộ mã nguồn.
+- Chú thích tiếng Việt rõ ràng từng bước trong code.
+- Thêm lời khuyên bằng lệnh CLI để render video ở độ phân giải 1080p, 60fps (có sử dụng cờ \`--flush_cache\`).`;
 };
 
 export const generateVideoScriptPrompt = (config: VideoConfig): string => {
-  return `Đóng vai là một chuyên gia giáo dục thiết kế kịch bản video giảng dạy (Edutainment Script Writer).\nHãy thiết kế kịch bản cho một video học tập.\n\nI. THÔNG TIN CHUNG:\n- Môn học: ${config.subject}\n- Chủ đề: ${config.topic}\n- Thời lượng dự kiến: ${config.duration}\n- Đối tượng: ${config.audience}\n- Giọng văn/Phong cách: ${config.tone}\n\nII. YÊU CẦU KỊCH BẢN:\n- Viết một kịch bản chia thành 2 cột hoặc dạng bảng (Visual / Âm thanh & Khung hình).\n- Visual: Mô tả chi tiết hình ảnh animation sẽ xuất hiện.\n- Audio (Script): Lời dẫn của giáo viên/A.I voice dễ hiểu, thu hút, có điểm nhấn.\n- Thời lượng ước tính cho từng đoạn.\n\nTrả về bằng định dạng Markdown đẹp, chuyên nghiệp, cấu trúc rõ ràng.`;
+  return `Đóng vai là một chuyên gia giáo dục thiết kế kịch bản video giảng dạy (Edutainment Script Writer) và một đạo diễn trực quan (như kênh 3Blue1Brown).
+Nhiệm vụ của bạn là thiết kế một kịch bản chi tiết cho video học tập của môn học này.
+
+I. THÔNG TIN CHUNG:
+- Môn học / Chủ đề: ${config.subject} / ${config.topic}
+- Đối tượng người xem: ${config.audience}
+- Thời lượng dự kiến: ${config.duration}
+- Phong cách/Giọng điệu: ${config.tone}
+- Định dạng Video: ${config.format === 'vertical' ? 'Dọc (9:16 - TikTok/Shorts)' : 'Ngang (16:9 - YouTube)'}
+
+II. CẤU TRÚC KỊCH BẢN (STORYBOARD):
+Kịch bản cần chia làm 4 phần:
+1. Mở đầu (Intro): Đặt vấn đề, thu hút sự chú ý.
+2. Khái niệm/Vấn đề: Đưa ra định nghĩa cốt lõi.
+3. Trực quan hóa (Phần quan trọng nhất): Giải thích chi tiết bằng animation.
+4. Kết luận (Outro): Tóm tắt nội dung.
+
+III. YÊU CẦU KỊCH BẢN:
+- Viết kịch bản dưới dạng BẢNG (Table - dùng Markdown) gồm 3 cột:
+  * Cột 1: Thời lượng (VD: 0:00 - 0:15) / Phần (Intro, ...)
+  * Cột 2: Visual (Hình ảnh / Animation Manim) - Mô tả thật chi tiết màu sắc, chuyển động. Chú ý tối ưu bố cục cho định dạng ${config.format === 'vertical' ? 'DỌC (9:16)' : 'NGANG (16:9)'}.
+  * Cột 3: Audio (Voiceover) - Lời dẫn của giáo viên dễ hiểu, truyền cảm.
+
+Trả về định dạng Markdown hoàn chỉnh, chuyên nghiệp.`;
 };
