@@ -5,13 +5,14 @@ import ExamForm from './components/ExamForm';
 import LearningForm from './components/LearningForm';
 import RoadmapForm from './components/RoadmapForm';
 import WorksheetForm from './components/WorksheetForm';
+import VideoForm from './components/VideoForm';
 import OutputDisplay from './components/OutputDisplay';
-import { generateExamPrompt, generateLearningPrompt, generateRoadmapPrompt, generateWorksheetPrompt } from './services/gemini';
-import { ExamConfig, LearningConfig, RoadmapConfig, WorksheetConfig, GenerationStatus } from './types';
-import { Sparkles, GraduationCap, BookOpen, Link as LinkIcon, Trash2, ArrowRight, Map, Zap, Lightbulb, ClipboardCheck, MessageSquareText, Info, ExternalLink, Save, Book } from 'lucide-react';
+import { generateExamPrompt, generateLearningPrompt, generateRoadmapPrompt, generateWorksheetPrompt, generateVideoManimPrompt, generateVideoScriptPrompt } from './services/gemini';
+import { ExamConfig, LearningConfig, RoadmapConfig, WorksheetConfig, VideoConfig, GenerationStatus } from './types';
+import { Sparkles, GraduationCap, BookOpen, Link as LinkIcon, Trash2, ArrowRight, Map, Zap, Lightbulb, ClipboardCheck, MessageSquareText, Info, ExternalLink, Save, Book, Video as VideoIcon } from 'lucide-react';
 
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'exam' | 'learning' | 'roadmap' | 'worksheet'>('worksheet');
+  const [activeTab, setActiveTab] = useState<'exam' | 'learning' | 'roadmap' | 'worksheet' | 'video'>('worksheet');
   const [status, setStatus] = useState<GenerationStatus>(GenerationStatus.IDLE);
   const [promptContent, setPromptContent] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
@@ -70,6 +71,35 @@ const App: React.FC = () => {
         } catch (err) {
             setStatus(GenerationStatus.ERROR);
             setError('Lỗi khi thiết kế Lộ trình học.');
+        }
+    }, 400);
+  };
+
+  
+  const handleVideoScriptGenerate = (config: VideoConfig) => {
+    setStatus(GenerationStatus.LOADING);
+    setError(null);
+    setTimeout(() => {
+        try {
+            setPromptContent(generateVideoScriptPrompt(config));
+            setStatus(GenerationStatus.SUCCESS);
+        } catch (err) {
+            setStatus(GenerationStatus.ERROR);
+            setError('Lỗi khi thiết kế kịch bản video.');
+        }
+    }, 400);
+  };
+
+  const handleVideoManimGenerate = (config: VideoConfig) => {
+    setStatus(GenerationStatus.LOADING);
+    setError(null);
+    setTimeout(() => {
+        try {
+            setPromptContent(generateVideoManimPrompt(config));
+            setStatus(GenerationStatus.SUCCESS);
+        } catch (err) {
+            setStatus(GenerationStatus.ERROR);
+            setError('Lỗi khi biên soạn code Manim.');
         }
     }, 400);
   };
@@ -145,7 +175,7 @@ const App: React.FC = () => {
         </div>
 
         <div className="flex flex-col items-center mb-12">
-            <div className="flex items-center gap-3 mb-6 bg-[#FEF9C3] px-4 py-2 border-4 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
+            <div className="flex items-center gap-3 mb-6 bg-[#ffffff] px-4 py-2 border-4 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
                 <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${activeTab === 'roadmap' ? 'text-[#FF5E5B]' : 'text-black opacity-50'}`}>
                     1. Lộ trình
                 </div>
@@ -161,21 +191,34 @@ const App: React.FC = () => {
                 <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${activeTab === 'exam' ? 'text-[#FF90E8]' : 'text-black opacity-50'}`}>
                     4. Đề thi
                 </div>
+                <ArrowRight className="w-3 h-3 text-black" />
+                <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${activeTab === 'video' ? 'text-[#9333EA]' : 'text-black opacity-50'}`}>
+                    5. Video
+                </div>
             </div>
 
-            <div className="brutal-card p-2 border-4 border-black shadow-[8px_8px_0_0_rgba(0,0,0,1)] flex items-center gap-2 flex-wrap justify-center bg-[#FEF9C3]">
+            <div className="brutal-card p-2 border-4 border-black shadow-[8px_8px_0_0_rgba(0,0,0,1)] flex items-center gap-2 flex-wrap justify-center bg-[#ffffff]">
                 <button
                     onClick={() => setActiveTab('roadmap')}
                     className={`flex items-center gap-2 px-6 py-3 rounded-none text-sm font-black uppercase tracking-widest transition-all
-                    ${activeTab === 'roadmap' ? 'bg-[#FF5E5B] text-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-4 border-black' : 'text-black hover:bg-[#FFF9D2] hover:border-4 hover:border-black'}`}
+                    ${activeTab === 'roadmap' ? 'bg-[#FF5E5B] text-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-4 border-black' : 'text-black hover:bg-[#ffffff] hover:border-4 hover:border-black'}`}
                 >
                     <Map className="w-4 h-4 stroke-[3]" />
                     Lộ trình
                 </button>
                 <button
+                    onClick={() => setActiveTab('video')}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-none text-sm font-black uppercase tracking-widest transition-all
+                    ${activeTab === 'video' ? 'bg-[#9333EA] text-white shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-4 border-black' : 'text-black hover:bg-[#ffffff] hover:border-4 hover:border-black'}`}
+                >
+                    <VideoIcon className="w-4 h-4 stroke-[3]" />
+                    Video
+                </button>
+  
+                <button
                     onClick={() => setActiveTab('learning')}
                     className={`flex items-center gap-2 px-6 py-3 rounded-none text-sm font-black uppercase tracking-widest transition-all
-                    ${activeTab === 'learning' ? 'bg-[#00CECB] text-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-4 border-black' : 'text-black hover:bg-[#FFF9D2] hover:border-4 hover:border-black'}`}
+                    ${activeTab === 'learning' ? 'bg-[#00CECB] text-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-4 border-black' : 'text-black hover:bg-[#ffffff] hover:border-4 hover:border-black'}`}
                 >
                     <BookOpen className="w-4 h-4 stroke-[3]" />
                     Bài học
@@ -183,7 +226,7 @@ const App: React.FC = () => {
                 <button
                     onClick={() => setActiveTab('worksheet')}
                     className={`flex items-center gap-2 px-6 py-3 rounded-none text-sm font-black uppercase tracking-widest transition-all
-                    ${activeTab === 'worksheet' ? 'bg-[#A3E635] text-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-4 border-black' : 'text-black hover:bg-[#FFF9D2] hover:border-4 hover:border-black'}`}
+                    ${activeTab === 'worksheet' ? 'bg-[#A3E635] text-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-4 border-black' : 'text-black hover:bg-[#ffffff] hover:border-4 hover:border-black'}`}
                 >
                     <Book className="w-4 h-4 stroke-[3]" />
                     Bài tập
@@ -191,7 +234,7 @@ const App: React.FC = () => {
                 <button
                     onClick={() => setActiveTab('exam')}
                     className={`flex items-center gap-2 px-6 py-3 rounded-none text-sm font-black uppercase tracking-widest transition-all
-                    ${activeTab === 'exam' ? 'bg-[#FF90E8] text-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-4 border-black' : 'text-black hover:bg-[#FFF9D2] hover:border-4 hover:border-black'}`}
+                    ${activeTab === 'exam' ? 'bg-[#FF90E8] text-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-4 border-black' : 'text-black hover:bg-[#ffffff] hover:border-4 hover:border-black'}`}
                 >
                     <GraduationCap className="w-4 h-4 stroke-[3]" />
                     Đề thi
@@ -200,7 +243,7 @@ const App: React.FC = () => {
 
             {learningContext && (
                 <div className="mt-8 w-full max-w-2xl">
-                    <div className="bg-[#FEF9C3] border-4 border-black px-6 py-4 flex items-center justify-between shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
+                    <div className="bg-[#ffffff] border-4 border-black px-6 py-4 flex items-center justify-between shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
                         <div className="flex items-center gap-4">
                             <div className="w-10 h-10 border-2 border-black bg-[#A3E635] flex items-center justify-center text-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]">
                                 <LinkIcon className="w-5 h-5 stroke-[3]" />
@@ -220,6 +263,8 @@ const App: React.FC = () => {
           <div className="lg:col-span-4">
             {activeTab === 'worksheet' ? (
                 <WorksheetForm onSubmit={handleWorksheetGenerate} status={status} />
+            ) : activeTab === 'video' ? (
+                <VideoForm onGenerateScript={handleVideoScriptGenerate} onGenerateManim={handleVideoManimGenerate} status={status} />
             ) : activeTab === 'roadmap' ? (
                 <RoadmapForm onSubmit={handleRoadmapGenerate} status={status} />
             ) : activeTab === 'learning' ? (
@@ -245,13 +290,13 @@ const App: React.FC = () => {
           </div>
 
           <div className="lg:col-span-8 space-y-6">
-            <OutputDisplay content={promptContent} status={status} error={error} isLatex={activeTab !== 'roadmap'} />
+            <OutputDisplay content={promptContent} status={status} error={error} isLatex={activeTab !== 'roadmap' && activeTab !== 'video'} />
             
-            <div className="p-8 bg-[#111111] border-4 border-black text-white shadow-[8px_8px_0_0_rgba(0,0,0,1)] relative overflow-hidden group">
+            <div className="p-8 bg-[#ffffff] border-4 border-black text-black shadow-[8px_8px_0_0_rgba(0,0,0,1)] relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF90E8]/10 blur-[80px] rounded-none -mr-20 -mt-20 group-hover:bg-[#FF90E8]/20 transition-all"></div>
                 <div className="relative z-10">
                     <div className="flex items-center gap-4 mb-8">
-                        <div className="w-12 h-12 bg-[#FEF9C3] border-4 border-black flex items-center justify-center text-black">
+                        <div className="w-12 h-12 bg-[#ffffff] border-4 border-black flex items-center justify-center text-black">
                             <Zap className="w-6 h-6 stroke-[3]" />
                         </div>
                         <h3 className="text-2xl font-black tracking-widest uppercase">Chiến thuật "Sợi chỉ đỏ"</h3>
@@ -268,7 +313,7 @@ const App: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="mt-8 flex items-center gap-3 text-xs font-black text-black uppercase tracking-widest bg-[#FFED66] border-4 border-black shadow-[2px_2px_0_0_rgba(255,255,255,1)] w-fit px-5 py-2.5">
+                    <div className="mt-8 flex items-center gap-3 text-xs font-black text-black uppercase tracking-widest bg-[#FFED66] border-4 border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] w-fit px-5 py-2.5">
                         <Sparkles className="w-4 h-4" />
                         Đảm bảo hệ thống kiến thức Logic & Khoa học
                     </div>

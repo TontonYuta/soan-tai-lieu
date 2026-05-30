@@ -29,24 +29,24 @@ const RoadmapForm: React.FC<RoadmapFormProps> = ({ onSubmit, status }) => {
     setConfig(prev => ({ ...prev, [field]: value }));
   };
 
-  const inputClass = "w-full pl-10 pr-4 py-2.5 bg-[#FEF9C3] border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all text-sm font-semibold text-slate-700 placeholder:text-slate-400 shadow-sm";
-  const labelClass = "block text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-wider";
-  const iconClass = "absolute left-3.5 top-3 w-4 h-4 text-slate-400 group-hover:text-amber-500 transition-colors";
+  const inputClass = "w-full pl-10 pr-4 py-2.5 bg-[#ffffff] border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all text-sm font-semibold text-slate-700 placeholder:text-slate-600 shadow-sm";
+  const labelClass = "block text-[11px] font-bold text-slate-700 mb-1.5 uppercase tracking-wider";
+  const iconClass = "absolute left-3.5 top-3 w-4 h-4 text-slate-600 group-hover:text-amber-500 transition-colors";
 
   return (
-    <div className="bg-[#FEF9C3]/80 backdrop-blur-xl rounded-[2rem] shadow-xl border border-white/60 p-6 lg:p-8 animate-in slide-in-from-left-4 duration-500 scrollbar-hide">
+    <div className="bg-[#ffffff]/80 backdrop-blur-xl rounded-[2rem] shadow-xl border border-white/60 p-6 lg:p-8 animate-in slide-in-from-left-4 duration-500 scrollbar-hide">
       <div className="flex items-center gap-4 mb-8">
         <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600 shadow-sm ring-4 ring-amber-50/50">
             <Map className="w-6 h-6" />
         </div>
         <div>
             <h2 className="text-xl font-bold text-slate-800">Lộ trình Học tập</h2>
-            <p className="text-xs text-slate-500 font-medium">Cá nhân hóa theo đề cương có sẵn</p>
+            <p className="text-xs text-slate-700 font-medium">Cá nhân hóa theo đề cương có sẵn</p>
         </div>
       </div>
       
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="p-5 rounded-2xl bg-slate-50/80 border border-slate-100 space-y-4">
+        <div className="p-5 rounded-2xl bg-white border border-slate-100 space-y-4">
             <div className="group relative">
                 <label className={labelClass}>Môn học</label>
                 <div className="relative">
@@ -118,7 +118,7 @@ const RoadmapForm: React.FC<RoadmapFormProps> = ({ onSubmit, status }) => {
                         onChange={e => handleChange('syllabus', e.target.value)}
                     />
                 </div>
-                <p className="text-[9px] text-slate-400 font-bold mt-1.5 flex items-center gap-1 uppercase">
+                <p className="text-[9px] text-slate-600 font-bold mt-1.5 flex items-center gap-1 uppercase">
                     <FileText className="w-3 h-3" />
                     AI sẽ lập lộ trình dựa trên thứ tự chương mục trong đề cương.
                 </p>

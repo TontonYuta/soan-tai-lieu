@@ -49,6 +49,14 @@ export interface WorksheetConfig {
   language?: 'bilingual' | 'vietnamese';
 }
 
+export interface VideoConfig {
+  subject: string;
+  topic: string;
+  duration: string;
+  tone: 'academic' | 'creative' | 'simple';
+  audience: string;
+}
+
 export enum GenerationStatus {
   IDLE = 'IDLE',
   LOADING = 'LOADING',

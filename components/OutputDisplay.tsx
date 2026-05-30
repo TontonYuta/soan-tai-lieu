@@ -63,12 +63,12 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({ content, status, error, i
       {/* Editor Header */}
       <div className="border-b-4 border-black bg-[#FFED66] p-4 flex flex-wrap gap-4 justify-between items-center">
         <div className="flex items-center gap-4">
-            <div className="flex gap-1.5 border-4 border-black p-1 bg-[#FEF9C3]">
+            <div className="flex gap-1.5 border-4 border-black p-1 bg-[#ffffff]">
                 <div className="w-4 h-4 rounded-none border-2 border-black bg-[#FF5E5B]"></div>
                 <div className="w-4 h-4 rounded-none border-2 border-black bg-[#FFED66]"></div>
                 <div className="w-4 h-4 rounded-none border-2 border-black bg-[#00CECB]"></div>
             </div>
-            <div className="flex items-center gap-2 text-black bg-[#FEF9C3] px-3 py-1 border-4 border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]">
+            <div className="flex items-center gap-2 text-black bg-[#ffffff] px-3 py-1 border-4 border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]">
                 <Terminal className="w-4 h-4 text-black stroke-[3]" />
                 <span className="text-xs font-black uppercase tracking-widest">{isLatex ? 'LaTeX Source' : 'Markdown Source'}</span>
             </div>
@@ -78,7 +78,7 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({ content, status, error, i
           <button
             onClick={handleCopy}
             className={`flex items-center gap-2 px-4 py-2 border-4 border-black text-xs font-black uppercase tracking-widest transition-all
-              ${copied ? 'bg-[#00CECB] text-black shadow-none translate-x-[4px] translate-y-[4px]' : 'bg-[#FFF9D2] text-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:bg-[#FFECA1] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none'}`}
+              ${copied ? 'bg-[#00CECB] text-black shadow-none translate-x-[4px] translate-y-[4px]' : 'bg-[#ffffff] text-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:bg-[#FFECA1] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none'}`}
           >
             {copied ? <Check className="w-4 h-4 stroke-[3]" /> : <Copy className="w-4 h-4 stroke-[3]" />}
             {copied ? 'Đã chép!' : 'Sao chép mã'}
@@ -101,28 +101,28 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({ content, status, error, i
             <ShieldCheck className="w-5 h-5 text-black stroke-[3]" />
             <p className="text-xs font-black text-black uppercase">
                 {isLatex ? (
-                  <>Compiler: <span className="bg-[#FEF9C3] px-1 border-2 border-black">PDFLaTeX</span> | No Markdown</>
+                  <>Compiler: <span className="bg-[#ffffff] px-1 border-2 border-black">PDFLaTeX</span> | No Markdown</>
                 ) : (
-                  <>Format: <span className="bg-[#FEF9C3] px-1 border-2 border-black">Markdown</span></>
+                  <>Format: <span className="bg-[#ffffff] px-1 border-2 border-black">Markdown</span></>
                 )}
             </p>
           </div>
-          <div className="flex items-center gap-2 text-[10px] font-black text-black bg-[#FEF9C3] px-3 py-1 border-2 border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]">
+          <div className="flex items-center gap-2 text-[10px] font-black text-black bg-[#ffffff] px-3 py-1 border-2 border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]">
              {isLatex ? 'CLEAN FOR OVERLEAF' : 'READY FOR CHAT'}
           </div>
       </div>
       
       {/* Editor Content */}
-      <div className="relative flex-1 bg-[#000000] group">
+      <div className="relative flex-1 bg-[#ffffff] group">
         <textarea 
             readOnly
-            className={`w-full h-full p-8 font-mono text-sm leading-relaxed ${isLatex ? 'text-[#A3E635]' : 'text-[#FFF9D2]'} bg-transparent resize-none focus:outline-none selection:bg-[#FF90E8]/50 border-none !shadow-none`}
+            className={`w-full h-full p-8 font-mono text-sm leading-relaxed ${isLatex ? 'text-[#1e88e5]' : 'text-[#000000]'} bg-transparent resize-none focus:outline-none selection:bg-[#FF90E8]/50 border-none !shadow-none`}
             value={content}
             spellCheck={false}
         />
         <div className="absolute right-6 bottom-6 flex flex-col items-end gap-2">
             {isLatex && (
-              <span className="px-3 py-1 bg-[#111111] text-[10px] font-black text-[#FFED66] border-2 border-[#FFED66] uppercase">
+              <span className="px-3 py-1 bg-[#ffffff] text-[10px] font-black text-[#000000] border-2 border-[#000000] uppercase">
                   Strict LaTeX Rules Applied
               </span>
             )}

@@ -89,8 +89,8 @@ const ExamForm: React.FC<ExamFormProps> = ({ onSubmit, status, initialContext, c
     setConfig(prev => ({ ...prev, matrix: { ...prev.matrix, [key]: num } }));
   };
 
-  const inputClass = "w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-[#FEF9C3] transition-all text-sm font-bold text-slate-700 placeholder:text-slate-300 shadow-sm";
-  const labelClass = "block text-[10px] font-black text-slate-400 mb-1.5 uppercase tracking-[0.15em]";
+  const inputClass = "w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-[#ffffff] transition-all text-sm font-bold text-slate-700 placeholder:text-slate-300 shadow-sm";
+  const labelClass = "block text-[10px] font-black text-slate-600 mb-1.5 uppercase tracking-[0.15em]";
   const iconClass = "absolute left-4 top-3.5 w-4.5 h-4.5 text-slate-300 group-focus-within:text-indigo-500 transition-colors";
 
   return (
@@ -102,7 +102,7 @@ const ExamForm: React.FC<ExamFormProps> = ({ onSubmit, status, initialContext, c
         </div>
         <div>
             <h2 className="text-2xl font-black text-indigo-950 tracking-tight">Cấu hình Đề thi</h2>
-            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Ma trận chuẩn LaTeX</p>
+            <p className="text-xs text-slate-600 font-bold uppercase tracking-widest">Ma trận chuẩn LaTeX</p>
         </div>
       </div>
 
@@ -112,15 +112,15 @@ const ExamForm: React.FC<ExamFormProps> = ({ onSubmit, status, initialContext, c
             className={`cursor-pointer p-5 rounded-3xl border-2 transition-all duration-300 flex items-center justify-between group
             ${useContext 
                 ? 'bg-indigo-50 border-indigo-200 shadow-inner translate-x-1' 
-                : 'bg-slate-50 border-slate-100 hover:border-indigo-100 hover:bg-[#FEF9C3]'}`}
+                : 'bg-white border-slate-100 hover:border-indigo-100 hover:bg-[#ffffff]'}`}
           >
             <div className="flex items-center gap-4">
-                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${useContext ? 'bg-indigo-600 text-white scale-110 rotate-12' : 'bg-slate-200 text-slate-400 group-hover:bg-indigo-100'}`}>
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${useContext ? 'bg-indigo-600 text-white scale-110 rotate-12' : 'bg-slate-200 text-slate-600 group-hover:bg-indigo-100'}`}>
                     <LinkIcon className="w-5 h-5" />
                 </div>
                 <div>
-                    <h5 className={`text-xs font-black uppercase tracking-wider ${useContext ? 'text-indigo-800' : 'text-slate-500'}`}>Đồng bộ hóa kiến thức</h5>
-                    <p className="text-[10px] font-bold text-slate-400 truncate max-w-[140px]">Dựa trên bài học đã soạn</p>
+                    <h5 className={`text-xs font-black uppercase tracking-wider ${useContext ? 'text-indigo-800' : 'text-slate-700'}`}>Đồng bộ hóa kiến thức</h5>
+                    <p className="text-[10px] font-bold text-slate-600 truncate max-w-[140px]">Dựa trên bài học đã soạn</p>
                 </div>
             </div>
             {useContext ? <CheckCircle2 className="w-6 h-6 text-indigo-600 fill-indigo-50" /> : <Circle className="w-6 h-6 text-slate-300" />}
@@ -203,13 +203,13 @@ const ExamForm: React.FC<ExamFormProps> = ({ onSubmit, status, initialContext, c
             </div>
         </div>
 
-        <div className="p-6 bg-slate-50/50 rounded-[2rem] border border-slate-100 space-y-6">
+        <div className="p-6 bg-white/50 rounded-[2rem] border border-slate-100 space-y-6">
             <div className="grid grid-cols-2 gap-4">
-                <div className="bg-[#FEF9C3] p-4 rounded-2xl shadow-sm border border-slate-100 group transition-all hover:ring-2 hover:ring-indigo-500/20">
+                <div className="bg-[#ffffff] p-4 rounded-2xl shadow-sm border border-slate-100 group transition-all hover:ring-2 hover:ring-indigo-500/20">
                     <span className={labelClass}>Trắc nghiệm</span>
                     <input type="number" className="w-full text-2xl font-black bg-transparent border-none p-0 focus:ring-0 text-indigo-900" value={config.counts.mc} onChange={e => handleCountChange('mc', e.target.value)} />
                 </div>
-                <div className="bg-[#FEF9C3] p-4 rounded-2xl shadow-sm border border-slate-100 group transition-all hover:ring-2 hover:ring-indigo-500/20">
+                <div className="bg-[#ffffff] p-4 rounded-2xl shadow-sm border border-slate-100 group transition-all hover:ring-2 hover:ring-indigo-500/20">
                     <span className={labelClass}>Tự luận</span>
                     <input type="number" className="w-full text-2xl font-black bg-transparent border-none p-0 focus:ring-0 text-indigo-900" value={config.counts.essay} onChange={e => handleCountChange('essay', e.target.value)} />
                 </div>
@@ -240,7 +240,7 @@ const ExamForm: React.FC<ExamFormProps> = ({ onSubmit, status, initialContext, c
           disabled={isLoading || !config.subject || !config.topic || !isMatrixValid}
           className={`w-full group flex items-center justify-center gap-4 py-5 px-8 rounded-3xl text-white font-black shadow-xl transition-all duration-300 transform hover:-translate-y-1 active:scale-95
             ${(isLoading || !isMatrixValid)
-              ? 'bg-slate-200 cursor-not-allowed text-slate-400' 
+              ? 'bg-slate-200 cursor-not-allowed text-slate-600' 
               : 'bg-gradient-to-r from-indigo-600 to-violet-700 hover:shadow-indigo-500/40'}`}
         >
           {isLoading ? (

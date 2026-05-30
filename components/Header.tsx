@@ -3,7 +3,7 @@ import { FileEdit, Sparkles } from 'lucide-react';
 
 const Header: React.FC = () => {
   return (
-    <header className="sticky top-0 z-50 bg-[#FEF9C3] border-b-4 border-black shadow-[0_8px_0_0_rgba(0,0,0,1)] hover:shadow-none transition-shadow duration-300">
+    <header className="sticky top-0 z-50 bg-[#ffffff] border-b-4 border-black shadow-[0_8px_0_0_rgba(0,0,0,1)] hover:shadow-none transition-shadow duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           <div className="flex items-center gap-4 group cursor-pointer">

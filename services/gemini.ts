@@ -1,4 +1,4 @@
-import { ExamConfig, LearningConfig, RoadmapConfig, WorksheetConfig } from "../types";
+import { ExamConfig, LearningConfig, RoadmapConfig, WorksheetConfig, VideoConfig } from "../types";
 
 const LATEX_TECHNICAL_RULES = `
 QUY TẮC KỸ THUẬT LATEX (BẮT BUỘC):
@@ -239,4 +239,13 @@ ${syllabusContext}
 
 Sử dụng định dạng Markdown đẹp, chuyên nghiệp, bảng biểu, in đậm và emoji đúng mực để tài liệu dễ đọc, tối ưu UI/UX.
 TRẢ VỀ NỘI DUNG MARKDOWN HOÀN CHỈNH.`;
+};
+
+
+export const generateVideoManimPrompt = (config: VideoConfig): string => {
+  return `Đóng vai là một lập trình viên Python chuyên nghiệp và chuyên gia tạo animation toán học với Manim.\nHãy viết mã nguồn Manim để tạo một video giảng dạy.\n\nI. THÔNG TIN CHUNG:\n- Môn học: ${config.subject}\n- Chủ đề: ${config.topic}\n- Thời lượng dự kiến: ${config.duration}\n- Đối tượng: ${config.audience}\n- Giọng văn/Phong cách: ${config.tone}\n\nII. YÊU CẦU CODE MANIM:\n- Tạo Scene đầy đủ với imports: \`from manim import *\`\n- Cấu trúc animation rõ ràng, mượt mà.\n- Chú thích code chi tiết từng block.\n- Đảm bảo code chạy được trên phiên bản Manim CE mới nhất.\n\nTrình bày vào trong block code Python.`;
+};
+
+export const generateVideoScriptPrompt = (config: VideoConfig): string => {
+  return `Đóng vai là một chuyên gia giáo dục thiết kế kịch bản video giảng dạy (Edutainment Script Writer).\nHãy thiết kế kịch bản cho một video học tập.\n\nI. THÔNG TIN CHUNG:\n- Môn học: ${config.subject}\n- Chủ đề: ${config.topic}\n- Thời lượng dự kiến: ${config.duration}\n- Đối tượng: ${config.audience}\n- Giọng văn/Phong cách: ${config.tone}\n\nII. YÊU CẦU KỊCH BẢN:\n- Viết một kịch bản chia thành 2 cột hoặc dạng bảng (Visual / Âm thanh & Khung hình).\n- Visual: Mô tả chi tiết hình ảnh animation sẽ xuất hiện.\n- Audio (Script): Lời dẫn của giáo viên/A.I voice dễ hiểu, thu hút, có điểm nhấn.\n- Thời lượng ước tính cho từng đoạn.\n\nTrả về bằng định dạng Markdown đẹp, chuyên nghiệp, cấu trúc rõ ràng.`;
 };
