@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { VideoConfig, GenerationStatus } from '../types';
-import { Video, Type, Clock, Users, BookOpen, Wand2, MonitorPlay } from 'lucide-react';
+import { Video, Type, Clock, Users, BookOpen, Wand2, MonitorPlay , ChevronDown} from "lucide-react";
 
 interface VideoFormProps {
   onGenerateManim: (config: VideoConfig) => void;
@@ -35,9 +35,9 @@ const VideoForm: React.FC<VideoFormProps> = ({ onGenerateManim, onGenerateScript
   };
 
   const inputClass = "w-full pl-10 pr-4 py-2.5 bg-[#ffffff] border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-sm font-semibold text-slate-700 placeholder:text-slate-600 shadow-sm";
-  const selectClass = "w-full pl-10 pr-8 py-2.5 bg-[#ffffff] border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-sm font-semibold text-slate-700 shadow-sm appearance-none cursor-pointer";
+  const selectClass = "w-full pl-10 pr-8 py-2.5 bg-[#ffffff] border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-sm font-semibold text-slate-700 shadow-sm  cursor-pointer appearance-none";
   const labelClass = "block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider";
-  const iconClass = "absolute left-3.5 top-[11px] w-4 h-4 text-slate-600";
+  const iconClass = "pointer-events-none absolute left-3.5 top-[11px] w-4 h-4 text-slate-600";
 
   return (
     <div className="bg-[#ffffff] rounded-none shadow-[8px_8px_0_0_rgba(0,0,0,1)] border-4 border-black p-6 lg:p-8 animate-in slide-in-from-left-4 duration-500 w-full">
@@ -132,6 +132,7 @@ const VideoForm: React.FC<VideoFormProps> = ({ onGenerateManim, onGenerateScript
                   <option value="creative">Sáng tạo / Hấp dẫn</option>
                   <option value="simple">Đơn giản / Dễ hiểu</option>
                 </select>
+<ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
               </div>
             </div>
 
@@ -147,7 +148,20 @@ const VideoForm: React.FC<VideoFormProps> = ({ onGenerateManim, onGenerateScript
                   <option value="horizontal">Ngang (16:9 - YouTube)</option>
                   <option value="vertical">Dọc (9:16 - TikTok/Shorts)</option>
                 </select>
+<ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
               </div>
+            </div>
+          </div>
+          
+          <div className="group relative mt-4">
+            <label className={labelClass}>Nội dung chi tiết / Yêu cầu thêm (Tùy chọn)</label>
+            <div className="relative">
+              <textarea
+                placeholder="VD: Tập trung vào 3 dạng bài tập cơ bản, hoặc đưa ra các ví dụ thực tế về đời sống..."
+                className="w-full p-4 bg-[#ffffff] border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-sm font-semibold text-slate-700 placeholder:text-slate-600 shadow-sm min-h-[100px]"
+                value={config.details || ''}
+                onChange={e => handleChange('details', e.target.value)}
+              />
             </div>
           </div>
         </div>

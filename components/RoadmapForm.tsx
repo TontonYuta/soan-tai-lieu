@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Target, Zap, Clock, BookOpen, GraduationCap, Wand2, Map, FileText, ClipboardList } from 'lucide-react';
+import { Target, Zap, Clock, BookOpen, GraduationCap, Wand2, Map, FileText, ClipboardList , Sparkles, ChevronDown} from "lucide-react";
 import { RoadmapConfig, GenerationStatus } from '../types';
 
 interface RoadmapFormProps {
@@ -31,7 +31,7 @@ const RoadmapForm: React.FC<RoadmapFormProps> = ({ onSubmit, status }) => {
 
   const inputClass = "w-full pl-10 pr-4 py-2.5 bg-[#ffffff] border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all text-sm font-semibold text-slate-700 placeholder:text-slate-600 shadow-sm";
   const labelClass = "block text-[11px] font-bold text-slate-700 mb-1.5 uppercase tracking-wider";
-  const iconClass = "absolute left-3.5 top-3 w-4 h-4 text-slate-600 group-hover:text-amber-500 transition-colors";
+  const iconClass = "pointer-events-none absolute left-3.5 top-3 w-4 h-4 text-slate-600 group-hover:text-amber-500 transition-colors";
 
   return (
     <div className="bg-[#ffffff]/80 backdrop-blur-xl rounded-[2rem] shadow-xl border border-white/60 p-6 lg:p-8 animate-in slide-in-from-left-4 duration-500 scrollbar-hide">
@@ -136,6 +136,37 @@ const RoadmapForm: React.FC<RoadmapFormProps> = ({ onSubmit, status }) => {
                     />
                 </div>
             </div>
+
+            
+            <div className="group relative">
+                <label className={labelClass}>Ngôn ngữ</label>
+                <div className="relative">
+                    <Sparkles className={iconClass} />
+                    <select 
+                        className={inputClass + " appearance-none cursor-pointer pl-10 pr-8"}
+                        value={config.language || "bilingual"}
+                        onChange={e => handleChange("language", e.target.value)}
+                    >
+                        <option value="bilingual">Song ngữ Anh - Việt</option>
+                        <option value="vietnamese">Thuần Việt</option>
+                        <option value="english">Thuần Anh</option>
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                </div>
+            </div>
+
+            <div className="group relative mt-4">
+                <label className={labelClass}>Yêu cầu cá nhân hóa thêm (Tùy chọn)</label>
+                <div className="relative">
+                    <textarea
+                        className={inputClass + " min-h-[80px] pt-3"}
+                        placeholder="Vd: Muốn ưu tiên tự học qua Youtube, kết hợp flashcard..."
+                        value={config.details || ''}
+                        onChange={e => handleChange('details', e.target.value)}
+                    />
+                </div>
+            </div>
+
         </div>
 
         <button

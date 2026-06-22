@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { BookOpen, GraduationCap, Sparkles, Target, Users, Wand2, School, Calendar, Layout, Info } from 'lucide-react';
+import { BookOpen, GraduationCap, Sparkles, Target, Users, Wand2, School, Calendar, Layout, Info , ChevronDown} from "lucide-react";
 import { LearningConfig, GenerationStatus } from '../types';
 
 interface LearningFormProps {
@@ -46,8 +46,8 @@ const LearningForm: React.FC<LearningFormProps> = ({ onSubmit, status }) => {
 
   const inputClass = "w-full pl-10 pr-4 py-2.5 bg-[#ffffff] border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all text-sm font-semibold text-slate-700 placeholder:text-slate-600 shadow-sm group-hover:border-teal-300";
   const labelClass = "block text-[11px] font-bold text-slate-700 mb-1.5 uppercase tracking-wider";
-  const iconClass = "absolute left-3.5 top-3 w-4 h-4 text-slate-600 group-hover:text-teal-500 transition-colors duration-300";
-  const selectClass = "w-full pl-10 pr-8 py-2.5 bg-[#ffffff] border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all text-sm font-semibold text-slate-700 shadow-sm appearance-none group-hover:border-teal-300 cursor-pointer";
+  const iconClass = "pointer-events-none absolute left-3.5 top-3 w-4 h-4 text-slate-600 group-hover:text-teal-500 transition-colors duration-300";
+  const selectClass = "w-full pl-10 pr-8 py-2.5 bg-[#ffffff] border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all text-sm font-semibold text-slate-700 shadow-sm  group-hover:border-teal-300 cursor-pointer appearance-none";
 
   return (
     <div className="bg-[#ffffff]/80 backdrop-blur-xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/60 p-6 lg:p-8 h-fit sticky top-28 overflow-y-auto max-h-[calc(100vh-9rem)] scrollbar-hide">
@@ -178,6 +178,7 @@ const LearningForm: React.FC<LearningFormProps> = ({ onSubmit, status }) => {
                             <option value="detailed">Bài giảng chi tiết (Lý thuyết + Ví dụ)</option>
                             <option value="exercises">Phiếu bài tập (Có đáp án)</option>
                         </select>
+<ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
                     </div>
                 </div>
 
@@ -194,6 +195,7 @@ const LearningForm: React.FC<LearningFormProps> = ({ onSubmit, status }) => {
                             <option value="creative">Sáng tạo / Sinh động</option>
                             <option value="simple">Đơn giản / Cơ bản</option>
                         </select>
+<ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
                     </div>
                 </div>
 
@@ -208,7 +210,9 @@ const LearningForm: React.FC<LearningFormProps> = ({ onSubmit, status }) => {
                         >
                             <option value="bilingual">Song ngữ Anh - Việt</option>
                             <option value="vietnamese">Thuần Việt</option>
+                            <option value="english">Thuần Anh</option>
                         </select>
+<ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
                     </div>
                 </div>
 
@@ -225,6 +229,19 @@ const LearningForm: React.FC<LearningFormProps> = ({ onSubmit, status }) => {
                         />
                     </div>
                 </div>
+
+                <div className="group relative mt-4">
+                    <label className={labelClass}>Yêu cầu cập nhật thêm (Tùy chọn)</label>
+                    <div className="relative">
+                        <textarea
+                            className={inputClass + " min-h-[80px]"}
+                            placeholder="Vd: Cập nhật format mới của Bộ, mẹo học nhanh..."
+                            value={config.details || ''}
+                            onChange={e => handleChange('details', e.target.value)}
+                        />
+                    </div>
+                </div>
+
             </div>
         </div>
 

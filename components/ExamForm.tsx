@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Settings2, Clock, Calculator, School, Wand2, BookOpen, GraduationCap, LayoutDashboard, FileSpreadsheet, Link as LinkIcon, CheckCircle2, Circle, AlertCircle } from 'lucide-react';
+import { Settings2, Clock, Calculator, School, Wand2, BookOpen, GraduationCap, LayoutDashboard, FileSpreadsheet, Link as LinkIcon, CheckCircle2, Circle, AlertCircle , Sparkles, ChevronDown} from "lucide-react";
 import { ExamConfig, GenerationStatus } from '../types';
 
 interface ExamFormProps {
@@ -45,6 +45,7 @@ const ExamForm: React.FC<ExamFormProps> = ({ onSubmit, status, initialContext, c
     subject: contextSubject || '',
     topic: contextTopic || '',
     grade: contextGrade || '12',
+    language: 'bilingual',
     time: 60,
     counts: { mc: 25, essay: 3 },
     matrix: { lv1: 12, lv2: 8, lv3: 5, lv4: 3 },
@@ -91,7 +92,7 @@ const ExamForm: React.FC<ExamFormProps> = ({ onSubmit, status, initialContext, c
 
   const inputClass = "w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-[#ffffff] transition-all text-sm font-bold text-slate-700 placeholder:text-slate-300 shadow-sm";
   const labelClass = "block text-[10px] font-black text-slate-600 mb-1.5 uppercase tracking-[0.15em]";
-  const iconClass = "absolute left-4 top-3.5 w-4.5 h-4.5 text-slate-300 group-focus-within:text-indigo-500 transition-colors";
+  const iconClass = "pointer-events-none absolute left-4 top-3.5 w-4.5 h-4.5 text-slate-300 group-focus-within:text-indigo-500 transition-colors";
 
   return (
     <div className="glass-card rounded-[2.5rem] shadow-2xl shadow-indigo-100 border-white p-6 lg:p-10 space-y-10 animate-in slide-in-from-left-4 duration-500">
@@ -201,6 +202,37 @@ const ExamForm: React.FC<ExamFormProps> = ({ onSubmit, status, initialContext, c
                     <input type="text" className={inputClass} placeholder="Vd: Ứng dụng đạo hàm" value={config.topic} onChange={e => setConfig({...config, topic: e.target.value})} required />
                 </div>
             </div>
+
+            
+            <div className="group relative">
+                <label className={labelClass}>Ngôn ngữ</label>
+                <div className="relative">
+                    <Sparkles className={iconClass} />
+                    <select 
+                        className={inputClass + " appearance-none cursor-pointer pl-11"}
+                        value={config.language || "bilingual"}
+                        onChange={e => setConfig({...config, language: e.target.value as any})}
+                    >
+                        <option value="bilingual">Song ngữ Anh - Việt</option>
+                        <option value="vietnamese">Thuần Việt</option>
+                        <option value="english">Thuần Anh</option>
+                    </select>
+                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                </div>
+            </div>
+
+            <div className="group relative mt-4">
+                <label className={labelClass}>Yêu cầu thêm (Tùy chọn)</label>
+                <div className="relative">
+                    <textarea 
+                        className={inputClass + " min-h-[80px]"} 
+                        placeholder="Vd: Bám sát đề minh họa 2025, cho ví dụ thực tế..." 
+                        value={config.details || ''} 
+                        onChange={e => setConfig({...config, details: e.target.value})} 
+                    />
+                </div>
+            </div>
+
         </div>
 
         <div className="p-6 bg-white/50 rounded-[2rem] border border-slate-100 space-y-6">

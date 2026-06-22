@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Book, User, Layout, Wand2, Info, GraduationCap, School } from 'lucide-react';
+import { Book, User, Layout, Wand2, Info, GraduationCap, School , ChevronDown} from "lucide-react";
 import { WorksheetConfig, GenerationStatus } from '../types';
 
 interface WorksheetFormProps {
@@ -28,9 +28,9 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({ onSubmit, status }) => {
   };
 
   const inputClass = "w-full pl-10 pr-4 py-2.5 bg-[#ffffff] rounded-none border-[3px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] focus:ring-0 focus:translate-y-1 focus:translate-x-1 focus:shadow-none transition-all text-sm font-bold text-black placeholder:text-gray-700 uppercase";
-  const selectClass = "w-full pl-10 pr-8 py-2.5 bg-[#ffffff] rounded-none border-[3px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] focus:ring-0 focus:translate-y-1 focus:translate-x-1 focus:shadow-none transition-all text-sm font-bold text-black uppercase appearance-none cursor-pointer";
+  const selectClass = "w-full pl-10 pr-8 py-2.5 bg-[#ffffff] rounded-none border-[3px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] focus:ring-0 focus:translate-y-1 focus:translate-x-1 focus:shadow-none transition-all text-sm font-bold text-black uppercase  cursor-pointer appearance-none";
   const labelClass = "block text-xs font-black text-black mb-1.5 uppercase tracking-widest";
-  const iconClass = "absolute left-3.5 top-[13px] w-4 h-4 text-black font-black";
+  const iconClass = "pointer-events-none absolute left-3.5 top-[13px] w-4 h-4 text-black font-black";
 
   return (
     <div className="bg-[#ffffff] rounded-none shadow-[8px_8px_0_0_rgba(0,0,0,1)] border-4 border-black p-6 lg:p-8 h-fit sticky top-28 overflow-y-auto max-h-[calc(100vh-9rem)] scrollbar-hide">
@@ -113,7 +113,9 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({ onSubmit, status }) => {
                         >
                              <option value="bilingual">Song ngữ Anh - Việt</option>
                              <option value="vietnamese">Thuần Việt</option>
+                             <option value="english">Thuần Anh</option>
                         </select>
+<ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
                     </div>
                 </div>
 
@@ -131,6 +133,19 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({ onSubmit, status }) => {
                         />
                     </div>
                 </div>
+
+                <div className="group relative mt-4">
+                    <label className={labelClass}>Yêu cầu nâng cao (Tùy chọn)</label>
+                    <div className="relative">
+                        <textarea
+                            className={inputClass + " min-h-[80px] pt-3 pl-4"}
+                            placeholder="Vd: Chỉ ra 5 bài toán thực tế kết hợp vận động..."
+                            value={config.details || ''}
+                            onChange={e => handleChange('details', e.target.value)}
+                        />
+                    </div>
+                </div>
+
             </div>
         </div>
 

@@ -18,6 +18,8 @@ export interface ExamConfig {
     lv4: number; 
   };
   referenceContent?: string;
+  language?: 'bilingual' | 'vietnamese' | 'english';
+  details?: string;
 }
 
 export interface LearningConfig {
@@ -29,7 +31,8 @@ export interface LearningConfig {
   goal: 'summary' | 'detailed' | 'exercises'; 
   tone: 'academic' | 'creative' | 'simple'; 
   audience: string;
-  language?: 'bilingual' | 'vietnamese';
+  language?: 'bilingual' | 'vietnamese' | 'english';
+  details?: string;
 }
 
 export interface RoadmapConfig {
@@ -39,6 +42,8 @@ export interface RoadmapConfig {
   currentLevel: string; // Vd: Mất gốc, Đã có căn bản
   target: string; // Vd: Thi HSG, Đạt điểm 8+
   syllabus?: string; // Đề cương có sẵn (Tùy chọn)
+  language?: 'bilingual' | 'vietnamese' | 'english';
+  details?: string;
 }
 
 export interface WorksheetConfig {
@@ -46,7 +51,8 @@ export interface WorksheetConfig {
   topic: string;
   grade: string;
   teacherName: string;
-  language?: 'bilingual' | 'vietnamese';
+  language?: 'bilingual' | 'vietnamese' | 'english';
+  details?: string;
 }
 
 export interface VideoConfig {
@@ -56,6 +62,7 @@ export interface VideoConfig {
   tone: 'academic' | 'creative' | 'simple';
   audience: string;
   format: 'horizontal' | 'vertical';
+  details?: string;
 }
 
 export enum GenerationStatus {
