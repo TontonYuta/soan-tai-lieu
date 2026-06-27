@@ -2,7 +2,7 @@ import { ExamConfig } from "../../types";
 import { LATEX_TECHNICAL_RULES, EXAM_TEMPLATE } from "./latex-rules";
 
 export const generateExamPrompt = (config: ExamConfig): string => {
-  const totalQuestions = config.counts.mc + config.counts.essay;
+  const totalQuestions = Number(config.counts.mc) + Number(config.counts.essay);
   const matrixInfo = `NB: ${config.matrix.lv1}, TH: ${config.matrix.lv2}, VD: ${config.matrix.lv3}, VDC: ${config.matrix.lv4}`;
 
   let languageInstruction = "";
@@ -20,7 +20,7 @@ I. THÔNG TIN BÀI THI:
 - Kì thi: ${config.examName} (${config.year})
 - Môn học: ${config.subject}
 - Lớp: ${config.grade} - Nội dung trọng tâm: ${config.topic}
-- Khối lượng: ${totalQuestions} câu (${config.counts.mc} trắc nghiệm, ${config.counts.essay} tự luận)
+- Khối lượng: ${String(totalQuestions)} câu (${String(config.counts.mc)} trắc nghiệm, ${String(config.counts.essay)} tự luận)
 - Ma trận phân bổ: ${matrixInfo} (TĂNG DẦN THEO ĐỘ KHÓ)
 - Thời gian làm bài: ${config.time} phút
 - Ngôn ngữ: ${languageInstruction}
@@ -35,19 +35,19 @@ III. YÊU CẦU KỸ THUẬT VÀ TRÌNH BÀY (BẮT BUỘC TUÂN THEO CÁC RULE 
 ${LATEX_TECHNICAL_RULES}
 
 IV. BỘ KHUNG CODE MẪU ĐỀ THI:
-HÃY sử dụng nguyên bản cấu trúc sau và tự động sinh ra nội dung số lượng câu hỏi đúng barem, thay thế các `%` bằng nội dung câu hỏi thực tế:
-\`\`\`latex
+HÃY sử dụng nguyên bản cấu trúc sau và tự động sinh ra nội dung số lượng câu hỏi đúng barem, thay thế các \`%\` bằng nội dung câu hỏi thực tế:
 ${EXAM_TEMPLATE}
-\`\`\`
 
 LƯU Ý QUAN TRỌNG:
 - BẮT BUỘC dùng macro \\cauhoi và \\dapan để định dạng câu hỏi trắc nghiệm (dàn 4 cột rõ ràng).
 - Nếu tự luận, phải để dòng kẻ theo ước lượng để hs làm bài trực tiếp.
 
+
+
 [BƯỚC CHUYÊN SÂU: KIỂM TRA LẠI CHÉO (SELF-CHECK)]
-Trước khi xuất ra kết quả cuối cùng, bạn PHẢI tự rà soát và kiểm tra chất lượng bằng cách viết ra một khối <self_check> ... </self_check>:
+Trước khi xuất ra kết quả cuối cùng, bạn PHẢI tự rà soát và kiểm tra chất lượng bằng cách viết ra một khối \`<self_check> ... </self_check>\`:
 - Logic đã chuẩn chưa? Cấu trúc có phân chia nhỏ hợp lý từ dễ đến khó không?
-- Lỗi hiển thị: Định dạng (mã LaTeX hoặc Markdown) có dính lỗi cú pháp không (thiếu ngoặc, quên macro, sai tên biến)? Khắc phục ngay.
-Sau khi tự review xong, mới được phép xuất ra đoạn mã/nội dung kết quả chuẩn nhất.
-`;
+- Lỗi hiển thị: Định dạng (mã LaTeX hoặc Markdown) có dính lỗi cú pháp không (thiếu ngoặc, quên macro, thiếu end, sai tên biến, không escape ký tự đặc biệt như %, &, _, $)? Khắc phục ngay.
+- Kiểm tra tính hoàn thiện: Đã bọc mã bằng markdown codeblock chưa? Bắt buộc phải đặt toàn bộ code trong block \`\`\` (vd: \`\`\`latex ... \`\`\`).
+Sau khi tự review xong, mới được phép xuất ra đoạn mã/nội dung kết quả chuẩn nhất.`;
 };

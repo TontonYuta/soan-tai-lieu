@@ -1,10 +1,10 @@
 export const LATEX_TECHNICAL_RULES = `
-QUY TẮC KỸ THUẬT LATEX (BẮT BUỘC):
-1. KHÔNG SỬ DỤNG MARKDOWN: Tuyệt đối không dùng **, *, #, - (dấu gạch đầu dòng markdown) bên trong mã nguồn LaTeX. Thay vào đó hãy dùng \\textbf{}, \\textit{}, \\section{}, \\begin{itemize}.
+QUY TẮC KỸ THUẬT LATEX (BẮT BUỘC ĐỂ KHÔNG BỊ LỖI HIỂN THỊ):
+1. KHÔNG SỬ DỤNG MARKDOWN: Tuyệt đối không dùng **, *, #, - (dấu gạch đầu dòng markdown) bên trong mã nguồn LaTeX. Thay vào đó hãy dùng \\textbf{}, \\textit{}, \\section{}, \\begin{itemize}. BẮT BUỘC phải bọc toàn bộ mã nguồn LaTeX cuối cùng trong block markdown \`\`\`latex ... \`\`\` để tiện cho việc copy.
 2. TIẾNG VIỆT & TRÌNH BIÊN DỊCH: Bắt buộc thiết kế để biên dịch bằng pdfLaTeX. Sử dụng gói lệnh \\usepackage[utf8]{inputenc} và \\usepackage[T1]{fontenc}, kết hợp \\usepackage{vietnam}. KHÔNG dùng fontspec hay xelatex.
-3. TOÁN HỌC: Tất cả công thức phải nằm trong $...$ hoặc \\[ ... \\]. Sử dụng amsmath, amssymb.
-4. CẤU TRÚC: Phải bao gồm đầy đủ từ \\documentclass cho đến \\end{document}.
-5. TRÁNH LỖI BIÊN DỊCH: Không tự ý dùng ký tự đặc biệt như % (trừ khi comment), &, _, $, {, } mà không escape tương ứng.
+3. TOÁN HỌC & CÔNG THỨC: Tất cả công thức toán học, biến số phải nằm trong $...$ hoặc \\[ ... \\]. Không để công thức toán ở dạng text thường. ĐẢM BẢO đã đóng ngoặc $ hoặc \\] hợp lệ.
+4. KÝ TỰ ĐẶC BIỆT & ESCAPE: Bắt buộc escape các ký tự đặc biệt của LaTeX. Muốn viết phần trăm (%) phải viết là \\%. Muốn viết dấu & phải viết là \\&. Các ký tự _, $, {, } cũng phải escape (\\_, \\$, \\{, \\}). Ký tự % là comment, nếu dùng để comment phải xuống dòng ngay sau đó.
+5. CẤU TRÚC BỀN VỮNG: Phải bao gồm đầy đủ từ \\documentclass cho đến \\end{document}. Đảm bảo mọi môi trường \\begin{...} đều phải có \\end{...} đóng lại tương ứng, không được thiếu.
 6. THIẾT KẾ UI (HỘP & TIÊU ĐỀ): Giảm thiểu tối đa số lượng box. Nếu dùng tcolorbox thì BẮT BUỘC thiết lập viền vuông vức (dùng tùy chọn sharp corners, ví dụ: \\begin{tcolorbox}[sharp corners]), KHÔNG ĐƯỢC bo tròn. Các tiêu đề \\section, \\subsection mặc định phải tô màu xanh dương (kiểu color{myblue} hoặc color{blue}).
 `;
 

@@ -37,16 +37,16 @@ ${LATEX_TECHNICAL_RULES}
 
 IV. BỘ KHUNG ROADMAP LATEX (BẮT BUỘC ÁP DỤNG TRỰC TIẾP):
 HÃY dùng khung chuẩn dưới đây và ĐIỀN ĐẾN CÙNG CÁC NỘI DUNG LỘ TRÌNH chi tiết:
-\`\`\`latex
 ${ROADMAP_TEMPLATE}
-\`\`\`
 
-TRẢ VỀ DUY NHẤT NỘI DUNG MÃ NGUỒN LATEX HOÀN CHỈNH (Từ \\documentclass đến \\end{document}). Không giải thích thêm dài dòng.
+TRẢ VỀ NỘI DUNG MÃ NGUỒN HOÀN CHỈNH ĐƯỢC BỌC TRONG MARKDOWN CODEBLOCK. Không giải thích thêm dài dòng.
+
+
 
 [BƯỚC CHUYÊN SÂU: KIỂM TRA LẠI CHÉO (SELF-CHECK)]
-Trước khi xuất ra kết quả cuối cùng, bạn PHẢI tự rà soát và kiểm tra chất lượng bằng cách viết ra một khối <self_check> ... </self_check>:
+Trước khi xuất ra kết quả cuối cùng, bạn PHẢI tự rà soát và kiểm tra chất lượng bằng cách viết ra một khối \`<self_check> ... </self_check>\`:
 - Logic đã chuẩn chưa? Cấu trúc có phân chia nhỏ hợp lý từ dễ đến khó không?
-- Lỗi hiển thị: Định dạng (mã LaTeX hoặc Markdown) có dính lỗi cú pháp không (thiếu ngoặc, quên macro, sai tên biến)? Khắc phục ngay.
-Sau khi tự review xong, mới được phép xuất ra đoạn mã/nội dung kết quả chuẩn nhất.
-`;
+- Lỗi hiển thị: Định dạng (mã LaTeX hoặc Markdown) có dính lỗi cú pháp không (thiếu ngoặc, quên macro, thiếu end, sai tên biến, không escape ký tự đặc biệt như %, &, _, $)? Khắc phục ngay.
+- Kiểm tra tính hoàn thiện: Đã bọc mã bằng markdown codeblock chưa? Bắt buộc phải đặt toàn bộ code trong block \`\`\` (vd: \`\`\`latex ... \`\`\`).
+Sau khi tự review xong, mới được phép xuất ra đoạn mã/nội dung kết quả chuẩn nhất.`;
 };

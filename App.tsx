@@ -6,13 +6,14 @@ import LearningForm from './components/LearningForm';
 import RoadmapForm from './components/RoadmapForm';
 import WorksheetForm from './components/WorksheetForm';
 import VideoForm from './components/VideoForm';
+import BatForm from './components/BatForm';
 import OutputDisplay from './components/OutputDisplay';
-import { generateExamPrompt, generateLearningPrompt, generateRoadmapPrompt, generateWorksheetPrompt, generateVideoManimPrompt, generateVideoScriptPrompt } from './services/gemini';
-import { ExamConfig, LearningConfig, RoadmapConfig, WorksheetConfig, VideoConfig, GenerationStatus } from './types';
-import { Sparkles, GraduationCap, BookOpen, Link as LinkIcon, Trash2, ArrowRight, Map, Zap, Lightbulb, ClipboardCheck, MessageSquareText, Info, ExternalLink, Save, Book, Video as VideoIcon } from 'lucide-react';
+import { generateExamPrompt, generateLearningPrompt, generateRoadmapPrompt, generateWorksheetPrompt, generateVideoManimPrompt, generateVideoScriptPrompt, generateBatPrompt } from './services/gemini';
+import { ExamConfig, LearningConfig, RoadmapConfig, WorksheetConfig, VideoConfig, BatConfig, GenerationStatus } from './types';
+import { Sparkles, GraduationCap, BookOpen, Link as LinkIcon, Trash2, ArrowRight, Map, Zap, Lightbulb, ClipboardCheck, MessageSquareText, Info, ExternalLink, Save, Book, Video as VideoIcon, Terminal } from 'lucide-react';
 
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'exam' | 'learning' | 'roadmap' | 'worksheet' | 'video'>('worksheet');
+  const [activeTab, setActiveTab] = useState<'exam' | 'learning' | 'roadmap' | 'worksheet' | 'video' | 'bat'>('worksheet');
   const [status, setStatus] = useState<GenerationStatus>(GenerationStatus.IDLE);
   const [promptContent, setPromptContent] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
@@ -118,6 +119,20 @@ const App: React.FC = () => {
     }, 400);
   };
 
+  const handleBatGenerate = (config: BatConfig) => {
+    setStatus(GenerationStatus.LOADING);
+    setError(null);
+    setTimeout(() => {
+        try {
+            setPromptContent(generateBatPrompt(config));
+            setStatus(GenerationStatus.SUCCESS);
+        } catch (err) {
+            setStatus(GenerationStatus.ERROR);
+            setError('Lỗi khi thiết kế script .bat.');
+        }
+    }, 400);
+  };
+
   const clearContext = () => {
     setLearningContext(null);
     setContextMetadata(null);
@@ -195,6 +210,10 @@ const App: React.FC = () => {
                 <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${activeTab === 'video' ? 'text-[#9333EA]' : 'text-black opacity-50'}`}>
                     5. Video
                 </div>
+                <ArrowRight className="w-3 h-3 text-black" />
+                <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${activeTab === 'bat' ? 'text-[#FFED66]' : 'text-black opacity-50'}`}>
+                    6. Script
+                </div>
             </div>
 
             <div className="brutal-card p-2 border-4 border-black shadow-[8px_8px_0_0_rgba(0,0,0,1)] flex items-center gap-2 flex-wrap justify-center bg-[#ffffff]">
@@ -213,6 +232,14 @@ const App: React.FC = () => {
                 >
                     <VideoIcon className="w-4 h-4 stroke-[3]" />
                     Video
+                </button>
+                <button
+                    onClick={() => setActiveTab('bat')}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-none text-sm font-black uppercase tracking-widest transition-all
+                    ${activeTab === 'bat' ? 'bg-[#FFED66] text-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-4 border-black' : 'text-black hover:bg-[#ffffff] hover:border-4 hover:border-black'}`}
+                >
+                    <Terminal className="w-4 h-4 stroke-[3]" />
+                    Script
                 </button>
   
                 <button
@@ -269,6 +296,8 @@ const App: React.FC = () => {
                 <RoadmapForm onSubmit={handleRoadmapGenerate} status={status} />
             ) : activeTab === 'learning' ? (
                 <LearningForm onSubmit={handleLearningGenerate} status={status} />
+            ) : activeTab === 'bat' ? (
+                <BatForm onSubmit={handleBatGenerate} status={status} />
             ) : (
                 <ExamForm 
                     onSubmit={handleExamGenerate} 
@@ -290,7 +319,7 @@ const App: React.FC = () => {
           </div>
 
           <div className="lg:col-span-8 space-y-6">
-            <OutputDisplay content={promptContent} status={status} error={error} isLatex={activeTab !== 'video'} />
+            <OutputDisplay content={promptContent} status={status} error={error} isLatex={activeTab !== 'video' && activeTab !== 'bat'} />
             
             <div className="p-8 bg-[#ffffff] border-4 border-black text-black shadow-[8px_8px_0_0_rgba(0,0,0,1)] relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF90E8]/10 blur-[80px] rounded-none -mr-20 -mt-20 group-hover:bg-[#FF90E8]/20 transition-all"></div>

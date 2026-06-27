@@ -65,6 +65,11 @@ export interface VideoConfig {
   details?: string;
 }
 
+export interface BatConfig {
+  task: string;
+  details?: string;
+}
+
 export enum GenerationStatus {
   IDLE = 'IDLE',
   LOADING = 'LOADING',

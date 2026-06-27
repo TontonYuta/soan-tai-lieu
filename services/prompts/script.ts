@@ -7,7 +7,7 @@ Bạn đang viết kịch bản dạng bảng phân cảnh (Storyboard Script) m
 
 [THÔNG TIN VIDEO]
 - Môn học / Chủ đề: ${config.subject} - ${config.topic}
-- Khối lớp: ${config.grade}
+- Khối lớp: ${(config as any).grade}
 - Định dạng Khung hình & Cấu trúc: ${config.format} (Nếu vertical/Tiktok thì phải dồn dập, giật gân ở 3 giây đầu).
 - Thời lượng: ${config.duration} phút.
 - Ngôn ngữ: ${(config as any).language === 'vietnamese' ? '100% TIẾNG VIỆT' : (config as any).language === 'english' ? '100% TIẾNG ANH' : 'SONG NGỮ (Chèn từ khóa quan trọng bằng tiếng Anh kế bên tiếng Việt)'}
@@ -42,10 +42,12 @@ Bắt buộc in đậm các đoạn này theo Markdown:
 
 Trả về nguyên văn đoạn text áp dụng triệt để những kiểu mộc mạc trên!
 
+
+
 [BƯỚC CHUYÊN SÂU: KIỂM TRA LẠI CHÉO (SELF-CHECK)]
-Trước khi xuất ra kết quả cuối cùng, bạn PHẢI tự rà soát và kiểm tra chất lượng bằng cách viết ra một khối <self_check> ... </self_check>:
+Trước khi xuất ra kết quả cuối cùng, bạn PHẢI tự rà soát và kiểm tra chất lượng bằng cách viết ra một khối \`<self_check> ... </self_check>\`:
 - Logic đã chuẩn chưa? Cấu trúc có phân chia nhỏ hợp lý từ dễ đến khó không?
-- Lỗi hiển thị: Định dạng (mã LaTeX hoặc Markdown) có dính lỗi cú pháp không (thiếu ngoặc, quên macro, sai tên biến)? Khắc phục ngay.
-Sau khi tự review xong, mới được phép xuất ra đoạn mã/nội dung kết quả chuẩn nhất.
-`;
+- Lỗi hiển thị: Định dạng (mã LaTeX hoặc Markdown) có dính lỗi cú pháp không (thiếu ngoặc, quên macro, thiếu end, sai tên biến, không escape ký tự đặc biệt như %, &, _, $)? Khắc phục ngay.
+- Kiểm tra tính hoàn thiện: Đã bọc mã bằng markdown codeblock chưa? Bắt buộc phải đặt toàn bộ code trong block \`\`\` (vd: \`\`\`latex ... \`\`\`).
+Sau khi tự review xong, mới được phép xuất ra đoạn mã/nội dung kết quả chuẩn nhất.`;
 };
