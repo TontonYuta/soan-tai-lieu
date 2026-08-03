@@ -1,17 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Terminal, Settings, Wand2, Info, Layout } from "lucide-react";
 import { BatConfig, GenerationStatus } from '../types';
 
 interface BatFormProps {
   onSubmit: (data: BatConfig) => void;
   status: GenerationStatus;
+  contextTopic?: string;
+  contextSubject?: string;
 }
 
-const BatForm: React.FC<BatFormProps> = ({ onSubmit, status }) => {
+const BatForm: React.FC<BatFormProps> = ({ onSubmit, status, contextTopic, contextSubject }) => {
   const [config, setConfig] = useState<BatConfig>({
-    task: '',
+    task: contextTopic ? `Script dọn dẹp file rác LaTeX và tổ chức thư mục cho ${contextSubject || ''} - ${contextTopic}` : 'Tự động dọn dẹp file rác .aux, .log sau khi biên dịch LaTeX',
     details: ''
   });
+
+  useEffect(() => {
+    if (contextTopic || contextSubject) {
+      setConfig(prev => ({
+        ...prev,
+        task: `Script dọn dẹp file rác LaTeX và tổ chức thư mục cho ${contextSubject || ''} - ${contextTopic}`
+      }));
+    }
+  }, [contextTopic, contextSubject]);
 
   const isLoading = status === GenerationStatus.LOADING;
 

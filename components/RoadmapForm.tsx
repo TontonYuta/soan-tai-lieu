@@ -1,22 +1,35 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Target, Zap, Clock, BookOpen, GraduationCap, Wand2, Map, FileText, ClipboardList , Sparkles, ChevronDown} from "lucide-react";
 import { RoadmapConfig, GenerationStatus } from '../types';
 
 interface RoadmapFormProps {
   onSubmit: (data: RoadmapConfig) => void;
   status: GenerationStatus;
+  contextTopic?: string;
+  contextSubject?: string;
+  contextGrade?: string;
 }
 
-const RoadmapForm: React.FC<RoadmapFormProps> = ({ onSubmit, status }) => {
+const RoadmapForm: React.FC<RoadmapFormProps> = ({ onSubmit, status, contextTopic, contextSubject, contextGrade }) => {
   const [config, setConfig] = useState<RoadmapConfig>({
-    subject: '',
-    topic: '',
+    subject: contextSubject || '',
+    topic: contextTopic || '',
     duration: '14 ngày',
     currentLevel: 'Mới bắt đầu / Mất gốc',
     target: 'Nắm vững kiến thức cơ bản và giải được các bài tập mức độ thông hiểu',
     syllabus: ''
   });
+
+  useEffect(() => {
+    if (contextTopic || contextSubject) {
+      setConfig(prev => ({
+        ...prev,
+        topic: contextTopic || prev.topic,
+        subject: contextSubject || prev.subject
+      }));
+    }
+  }, [contextTopic, contextSubject]);
 
   const isLoading = status === GenerationStatus.LOADING;
 

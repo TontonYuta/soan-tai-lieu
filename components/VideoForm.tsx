@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { VideoConfig, GenerationStatus } from '../types';
 import { Video, Type, Clock, Users, BookOpen, Wand2, MonitorPlay , ChevronDown} from "lucide-react";
 
@@ -6,17 +6,38 @@ interface VideoFormProps {
   onGenerateManim: (config: VideoConfig) => void;
   onGenerateScript: (config: VideoConfig) => void;
   status: GenerationStatus;
+  contextTopic?: string;
+  contextSubject?: string;
+  contextGrade?: string;
 }
 
-const VideoForm: React.FC<VideoFormProps> = ({ onGenerateManim, onGenerateScript, status }) => {
+const VideoForm: React.FC<VideoFormProps> = ({ 
+  onGenerateManim, 
+  onGenerateScript, 
+  status, 
+  contextTopic, 
+  contextSubject, 
+  contextGrade 
+}) => {
   const [config, setConfig] = useState<VideoConfig>({
-    subject: '',
-    topic: '',
+    subject: contextSubject || '',
+    topic: contextTopic || '',
     duration: '3-5 phút',
     tone: 'academic',
-    audience: 'Học sinh trung học',
+    audience: contextGrade ? `Học sinh lớp ${contextGrade}` : 'Học sinh trung học',
     format: 'horizontal'
   });
+
+  useEffect(() => {
+    if (contextTopic || contextSubject) {
+      setConfig(prev => ({
+        ...prev,
+        topic: contextTopic || prev.topic,
+        subject: contextSubject || prev.subject,
+        audience: contextGrade ? `Học sinh lớp ${contextGrade}` : prev.audience
+      }));
+    }
+  }, [contextTopic, contextSubject, contextGrade]);
 
   const isLoading = status === GenerationStatus.LOADING;
 

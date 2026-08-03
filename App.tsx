@@ -8,15 +8,17 @@ import WorksheetForm from './components/WorksheetForm';
 import VideoForm from './components/VideoForm';
 import BatForm from './components/BatForm';
 import OutputDisplay from './components/OutputDisplay';
+import ReadmeModal from './components/ReadmeModal';
 import { generateExamPrompt, generateLearningPrompt, generateRoadmapPrompt, generateWorksheetPrompt, generateVideoManimPrompt, generateVideoScriptPrompt, generateBatPrompt } from './services/gemini';
 import { ExamConfig, LearningConfig, RoadmapConfig, WorksheetConfig, VideoConfig, BatConfig, GenerationStatus } from './types';
-import { Sparkles, GraduationCap, BookOpen, Link as LinkIcon, Trash2, ArrowRight, Map, Zap, Lightbulb, ClipboardCheck, MessageSquareText, Info, ExternalLink, Save, Book, Video as VideoIcon, Terminal } from 'lucide-react';
+import { Sparkles, GraduationCap, BookOpen, Link as LinkIcon, Trash2, ArrowRight, Map, Zap, Lightbulb, ClipboardCheck, MessageSquareText, Info, ExternalLink, Save, Book, Video as VideoIcon, Terminal, HelpCircle } from 'lucide-react';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'exam' | 'learning' | 'roadmap' | 'worksheet' | 'video' | 'bat'>('worksheet');
   const [status, setStatus] = useState<GenerationStatus>(GenerationStatus.IDLE);
   const [promptContent, setPromptContent] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+  const [isReadmeOpen, setIsReadmeOpen] = useState(false);
   
   // Link Gemini cố định
   const [geminiLink, setGeminiLink] = useState<string>(localStorage.getItem('gemini_fixed_link') || '');
@@ -36,6 +38,8 @@ const App: React.FC = () => {
     setTimeout(() => {
         try {
             setPromptContent(generateExamPrompt(config));
+            setContextMetadata({ topic: config.topic, subject: config.subject, grade: config.grade });
+            setLearningContext(`Đề thi: ${config.topic}`);
             setStatus(GenerationStatus.SUCCESS);
         } catch (err) {
             setStatus(GenerationStatus.ERROR);
@@ -51,7 +55,7 @@ const App: React.FC = () => {
         try {
             setPromptContent(generateLearningPrompt(config));
             setContextMetadata({ topic: config.topic, subject: config.subject, grade: config.grade });
-            setLearningContext(`Lộ trình/Bài học: ${config.topic}`);
+            setLearningContext(`Bài học: ${config.topic}`);
             setStatus(GenerationStatus.SUCCESS);
         } catch (err) {
             setStatus(GenerationStatus.ERROR);
@@ -67,7 +71,7 @@ const App: React.FC = () => {
         try {
             setPromptContent(generateRoadmapPrompt(config));
             setContextMetadata({ topic: config.topic, subject: config.subject, grade: 'Hệ thống' });
-            setLearningContext(`Lộ trình tổng thể: ${config.topic}`);
+            setLearningContext(`Lộ trình: ${config.topic}`);
             setStatus(GenerationStatus.SUCCESS);
         } catch (err) {
             setStatus(GenerationStatus.ERROR);
@@ -76,13 +80,14 @@ const App: React.FC = () => {
     }, 400);
   };
 
-  
   const handleVideoScriptGenerate = (config: VideoConfig) => {
     setStatus(GenerationStatus.LOADING);
     setError(null);
     setTimeout(() => {
         try {
             setPromptContent(generateVideoScriptPrompt(config));
+            setContextMetadata({ topic: config.topic, subject: config.subject, grade: config.audience });
+            setLearningContext(`Video Script: ${config.topic}`);
             setStatus(GenerationStatus.SUCCESS);
         } catch (err) {
             setStatus(GenerationStatus.ERROR);
@@ -97,6 +102,8 @@ const App: React.FC = () => {
     setTimeout(() => {
         try {
             setPromptContent(generateVideoManimPrompt(config));
+            setContextMetadata({ topic: config.topic, subject: config.subject, grade: config.audience });
+            setLearningContext(`Video Manim: ${config.topic}`);
             setStatus(GenerationStatus.SUCCESS);
         } catch (err) {
             setStatus(GenerationStatus.ERROR);
@@ -111,6 +118,8 @@ const App: React.FC = () => {
     setTimeout(() => {
         try {
             setPromptContent(generateWorksheetPrompt(config));
+            setContextMetadata({ topic: config.topic, subject: config.subject, grade: config.grade });
+            setLearningContext(`Bài tập: ${config.topic}`);
             setStatus(GenerationStatus.SUCCESS);
         } catch (err) {
             setStatus(GenerationStatus.ERROR);
@@ -133,6 +142,11 @@ const App: React.FC = () => {
     }, 400);
   };
 
+  const handleForwardContext = (targetTab: 'roadmap' | 'learning' | 'worksheet' | 'exam' | 'video' | 'bat') => {
+    setActiveTab(targetTab);
+    window.scrollTo({ top: 300, behavior: 'smooth' });
+  };
+
   const clearContext = () => {
     setLearningContext(null);
     setContextMetadata(null);
@@ -140,8 +154,10 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
+      <Header onOpenReadme={() => setIsReadmeOpen(true)} />
       
+      <ReadmeModal isOpen={isReadmeOpen} onClose={() => setIsReadmeOpen(false)} />
+
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         {/* Fixed Chat Link Manager */}
@@ -190,7 +206,7 @@ const App: React.FC = () => {
         </div>
 
         <div className="flex flex-col items-center mb-12">
-            <div className="flex items-center gap-3 mb-6 bg-[#ffffff] px-4 py-2 border-4 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
+            <div className="flex items-center gap-3 mb-6 bg-[#ffffff] px-4 py-2 border-4 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] flex-wrap justify-center">
                 <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${activeTab === 'roadmap' ? 'text-[#FF5E5B]' : 'text-black opacity-50'}`}>
                     1. Lộ trình
                 </div>
@@ -226,23 +242,6 @@ const App: React.FC = () => {
                     Lộ trình
                 </button>
                 <button
-                    onClick={() => setActiveTab('video')}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-none text-sm font-black uppercase tracking-widest transition-all
-                    ${activeTab === 'video' ? 'bg-[#9333EA] text-white shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-4 border-black' : 'text-black hover:bg-[#ffffff] hover:border-4 hover:border-black'}`}
-                >
-                    <VideoIcon className="w-4 h-4 stroke-[3]" />
-                    Video
-                </button>
-                <button
-                    onClick={() => setActiveTab('bat')}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-none text-sm font-black uppercase tracking-widest transition-all
-                    ${activeTab === 'bat' ? 'bg-[#FFED66] text-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-4 border-black' : 'text-black hover:bg-[#ffffff] hover:border-4 hover:border-black'}`}
-                >
-                    <Terminal className="w-4 h-4 stroke-[3]" />
-                    Script
-                </button>
-  
-                <button
                     onClick={() => setActiveTab('learning')}
                     className={`flex items-center gap-2 px-6 py-3 rounded-none text-sm font-black uppercase tracking-widest transition-all
                     ${activeTab === 'learning' ? 'bg-[#00CECB] text-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-4 border-black' : 'text-black hover:bg-[#ffffff] hover:border-4 hover:border-black'}`}
@@ -266,6 +265,22 @@ const App: React.FC = () => {
                     <GraduationCap className="w-4 h-4 stroke-[3]" />
                     Đề thi
                 </button>
+                <button
+                    onClick={() => setActiveTab('video')}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-none text-sm font-black uppercase tracking-widest transition-all
+                    ${activeTab === 'video' ? 'bg-[#9333EA] text-white shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-4 border-black' : 'text-black hover:bg-[#ffffff] hover:border-4 hover:border-black'}`}
+                >
+                    <VideoIcon className="w-4 h-4 stroke-[3]" />
+                    Video
+                </button>
+                <button
+                    onClick={() => setActiveTab('bat')}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-none text-sm font-black uppercase tracking-widest transition-all
+                    ${activeTab === 'bat' ? 'bg-[#FFED66] text-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-4 border-black' : 'text-black hover:bg-[#ffffff] hover:border-4 hover:border-black'}`}
+                >
+                    <Terminal className="w-4 h-4 stroke-[3]" />
+                    Script
+                </button>
             </div>
 
             {learningContext && (
@@ -277,7 +292,9 @@ const App: React.FC = () => {
                             </div>
                             <div>
                                 <h4 className="text-[10px] font-black text-black uppercase tracking-widest border-b-2 border-black inline-block mb-1">Đang giữ ngữ cảnh đồng bộ</h4>
-                                <p className="text-sm text-black font-bold uppercase">{contextMetadata?.topic}</p>
+                                <p className="text-sm text-black font-bold uppercase">
+                                  {contextMetadata?.subject ? `${contextMetadata.subject}: ` : ''}{contextMetadata?.topic} {contextMetadata?.grade ? `(Lớp ${contextMetadata.grade})` : ''}
+                                </p>
                             </div>
                         </div>
                         <button onClick={clearContext} className="p-2 text-black hover:text-[#FF5E5B] transition-colors"><Trash2 className="w-5 h-5 stroke-[3]" /></button>
@@ -289,15 +306,46 @@ const App: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-4">
             {activeTab === 'worksheet' ? (
-                <WorksheetForm onSubmit={handleWorksheetGenerate} status={status} />
+                <WorksheetForm 
+                  onSubmit={handleWorksheetGenerate} 
+                  status={status} 
+                  initialContext={learningContext || undefined}
+                  contextTopic={contextMetadata?.topic}
+                  contextSubject={contextMetadata?.subject}
+                  contextGrade={contextMetadata?.grade}
+                />
             ) : activeTab === 'video' ? (
-                <VideoForm onGenerateScript={handleVideoScriptGenerate} onGenerateManim={handleVideoManimGenerate} status={status} />
+                <VideoForm 
+                  onGenerateScript={handleVideoScriptGenerate} 
+                  onGenerateManim={handleVideoManimGenerate} 
+                  status={status} 
+                  contextTopic={contextMetadata?.topic}
+                  contextSubject={contextMetadata?.subject}
+                  contextGrade={contextMetadata?.grade}
+                />
             ) : activeTab === 'roadmap' ? (
-                <RoadmapForm onSubmit={handleRoadmapGenerate} status={status} />
+                <RoadmapForm 
+                  onSubmit={handleRoadmapGenerate} 
+                  status={status} 
+                  contextTopic={contextMetadata?.topic}
+                  contextSubject={contextMetadata?.subject}
+                  contextGrade={contextMetadata?.grade}
+                />
             ) : activeTab === 'learning' ? (
-                <LearningForm onSubmit={handleLearningGenerate} status={status} />
+                <LearningForm 
+                  onSubmit={handleLearningGenerate} 
+                  status={status} 
+                  contextTopic={contextMetadata?.topic}
+                  contextSubject={contextMetadata?.subject}
+                  contextGrade={contextMetadata?.grade}
+                />
             ) : activeTab === 'bat' ? (
-                <BatForm onSubmit={handleBatGenerate} status={status} />
+                <BatForm 
+                  onSubmit={handleBatGenerate} 
+                  status={status} 
+                  contextTopic={contextMetadata?.topic}
+                  contextSubject={contextMetadata?.subject}
+                />
             ) : (
                 <ExamForm 
                     onSubmit={handleExamGenerate} 
@@ -319,7 +367,13 @@ const App: React.FC = () => {
           </div>
 
           <div className="lg:col-span-8 space-y-6">
-            <OutputDisplay content={promptContent} status={status} error={error} isLatex={activeTab !== 'video' && activeTab !== 'bat'} />
+            <OutputDisplay 
+              content={promptContent} 
+              status={status} 
+              error={error} 
+              isLatex={activeTab !== 'video' && activeTab !== 'bat'} 
+              onForwardContext={handleForwardContext}
+            />
             
             <div className="p-8 bg-[#ffffff] border-4 border-black text-black shadow-[8px_8px_0_0_rgba(0,0,0,1)] relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF90E8]/10 blur-[80px] rounded-none -mr-20 -mt-20 group-hover:bg-[#FF90E8]/20 transition-all"></div>
@@ -342,9 +396,19 @@ const App: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="mt-8 flex items-center gap-3 text-xs font-black text-black uppercase tracking-widest bg-[#FFED66] border-4 border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] w-fit px-5 py-2.5">
-                        <Sparkles className="w-4 h-4" />
-                        Đảm bảo hệ thống kiến thức Logic & Khoa học
+                    <div className="mt-8 flex items-center justify-between flex-wrap gap-4">
+                      <div className="flex items-center gap-3 text-xs font-black text-black uppercase tracking-widest bg-[#FFED66] border-4 border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] px-5 py-2.5">
+                          <Sparkles className="w-4 h-4" />
+                          Đảm bảo hệ thống kiến thức Logic & Khoa học
+                      </div>
+                      
+                      <button 
+                        onClick={() => setIsReadmeOpen(true)}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-[#00CECB] text-black border-4 border-black text-xs font-black uppercase tracking-widest shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all cursor-pointer"
+                      >
+                        <HelpCircle className="w-4 h-4 stroke-[3]" />
+                        Xem Readme Chi Tiết
+                      </button>
                     </div>
                 </div>
             </div>

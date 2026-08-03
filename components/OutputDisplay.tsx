@@ -8,9 +8,10 @@ interface OutputDisplayProps {
   status: GenerationStatus;
   error?: string | null;
   isLatex?: boolean;
+  onForwardContext?: (targetTab: 'roadmap' | 'learning' | 'worksheet' | 'exam' | 'video' | 'bat') => void;
 }
 
-const OutputDisplay: React.FC<OutputDisplayProps> = ({ content, status, error, isLatex = true }) => {
+const OutputDisplay: React.FC<OutputDisplayProps> = ({ content, status, error, isLatex = true, onForwardContext }) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -113,7 +114,7 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({ content, status, error, i
       </div>
       
       {/* Editor Content */}
-      <div className="relative flex-1 bg-[#ffffff] group">
+      <div className="relative flex-1 bg-[#ffffff] group min-h-[350px]">
         <textarea 
             readOnly
             className={`w-full h-full p-8 font-mono text-sm leading-relaxed ${isLatex ? 'text-[#1e88e5]' : 'text-[#000000]'} bg-transparent resize-none focus:outline-none selection:bg-[#FF90E8]/50 border-none !shadow-none`}
@@ -128,6 +129,50 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({ content, status, error, i
             )}
         </div>
       </div>
+
+      {/* Forward Context Bar */}
+      {onForwardContext && (
+        <div className="border-t-4 border-black bg-[#FFED66]/40 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Zap className="w-4 h-4 text-black stroke-[3]" />
+            <span className="text-xs font-black text-black uppercase tracking-widest">
+              Đồng bộ ngữ cảnh sang tính năng tiếp theo:
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => onForwardContext('learning')}
+              className="px-3 py-1.5 bg-[#00CECB] text-black border-2 border-black text-[11px] font-black uppercase tracking-wider hover:translate-x-[2px] hover:translate-y-[2px] shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:shadow-none transition-all"
+            >
+              📖 Sang Bài Học
+            </button>
+            <button
+              onClick={() => onForwardContext('worksheet')}
+              className="px-3 py-1.5 bg-[#A3E635] text-black border-2 border-black text-[11px] font-black uppercase tracking-wider hover:translate-x-[2px] hover:translate-y-[2px] shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:shadow-none transition-all"
+            >
+              📝 Sang Bài Tập
+            </button>
+            <button
+              onClick={() => onForwardContext('exam')}
+              className="px-3 py-1.5 bg-[#FF90E8] text-black border-2 border-black text-[11px] font-black uppercase tracking-wider hover:translate-x-[2px] hover:translate-y-[2px] shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:shadow-none transition-all"
+            >
+              🎓 Sang Đề Thi
+            </button>
+            <button
+              onClick={() => onForwardContext('video')}
+              className="px-3 py-1.5 bg-[#9333EA] text-white border-2 border-black text-[11px] font-black uppercase tracking-wider hover:translate-x-[2px] hover:translate-y-[2px] shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:shadow-none transition-all"
+            >
+              🎬 Sang Video
+            </button>
+            <button
+              onClick={() => onForwardContext('bat')}
+              className="px-3 py-1.5 bg-[#FFED66] text-black border-2 border-black text-[11px] font-black uppercase tracking-wider hover:translate-x-[2px] hover:translate-y-[2px] shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:shadow-none transition-all"
+            >
+              💻 Sang Script .BAT
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

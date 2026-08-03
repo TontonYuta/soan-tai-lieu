@@ -1,20 +1,41 @@
-import React, { useState } from 'react';
-import { Book, User, Layout, Wand2, Info, GraduationCap, School , ChevronDown} from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { Book, User, Layout, Wand2, Info, GraduationCap, School , ChevronDown, Link as LinkIcon} from "lucide-react";
 import { WorksheetConfig, GenerationStatus } from '../types';
 
 interface WorksheetFormProps {
   onSubmit: (data: WorksheetConfig) => void;
   status: GenerationStatus;
+  initialContext?: string;
+  contextTopic?: string;
+  contextSubject?: string;
+  contextGrade?: string;
 }
 
-const WorksheetForm: React.FC<WorksheetFormProps> = ({ onSubmit, status }) => {
+const WorksheetForm: React.FC<WorksheetFormProps> = ({ 
+  onSubmit, 
+  status, 
+  contextTopic, 
+  contextSubject, 
+  contextGrade 
+}) => {
   const [config, setConfig] = useState<WorksheetConfig>({
-    subject: '',
-    topic: '',
-    grade: '',
-    teacherName: '',
+    subject: contextSubject || '',
+    topic: contextTopic || '',
+    grade: contextGrade || '',
+    teacherName: 'Giáo viên',
     language: 'bilingual'
   });
+
+  useEffect(() => {
+    if (contextTopic || contextSubject || contextGrade) {
+      setConfig(prev => ({
+        ...prev,
+        topic: contextTopic || prev.topic,
+        subject: contextSubject || prev.subject,
+        grade: contextGrade || prev.grade
+      }));
+    }
+  }, [contextTopic, contextSubject, contextGrade]);
 
   const isLoading = status === GenerationStatus.LOADING;
 

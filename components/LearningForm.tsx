@@ -1,11 +1,14 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BookOpen, GraduationCap, Sparkles, Target, Users, Wand2, School, Calendar, Layout, Info , ChevronDown} from "lucide-react";
 import { LearningConfig, GenerationStatus } from '../types';
 
 interface LearningFormProps {
   onSubmit: (data: LearningConfig) => void;
   status: GenerationStatus;
+  contextTopic?: string;
+  contextSubject?: string;
+  contextGrade?: string;
 }
 
 const COMMON_SCHOOLS = [
@@ -19,19 +22,30 @@ const COMMON_SCHOOLS = [
   "Trường Đại học Sư phạm Hà Nội"
 ];
 
-const LearningForm: React.FC<LearningFormProps> = ({ onSubmit, status }) => {
+const LearningForm: React.FC<LearningFormProps> = ({ onSubmit, status, contextTopic, contextSubject, contextGrade }) => {
   const currentYear = new Date().getFullYear();
   const [config, setConfig] = useState<LearningConfig>({
-    school: '',
+    school: COMMON_SCHOOLS[0],
     year: `${currentYear} - ${currentYear + 1}`,
-    subject: '',
-    grade: '',
-    topic: '',
+    subject: contextSubject || '',
+    grade: contextGrade || '',
+    topic: contextTopic || '',
     goal: 'summary',
     tone: 'academic',
     audience: 'Học sinh trung bình - khá',
     language: 'bilingual'
   });
+
+  useEffect(() => {
+    if (contextTopic || contextSubject || contextGrade) {
+      setConfig(prev => ({
+        ...prev,
+        topic: contextTopic || prev.topic,
+        subject: contextSubject || prev.subject,
+        grade: contextGrade || prev.grade
+      }));
+    }
+  }, [contextTopic, contextSubject, contextGrade]);
 
   const isLoading = status === GenerationStatus.LOADING;
 
