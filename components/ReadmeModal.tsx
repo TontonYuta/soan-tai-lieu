@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { 
   BookOpen, FileCode, Terminal, Video, Map, GraduationCap, 
   Sparkles, ExternalLink, Copy, Check, X, ShieldCheck, Zap, 
@@ -37,387 +37,153 @@ const ReadmeModal: React.FC<ReadmeModalProps> = ({ isOpen, onClose }) => {
                 Yuta!LaTeX Studio — Hướng Dẫn Chi Tiết
               </h2>
               <p className="text-xs font-bold text-black uppercase tracking-wider">
-                README & Cẩm nang vận hành toàn diện
+                Cẩm nang vận hành soạn thảo Toán học & Diễn hoạt Manim
               </p>
             </div>
           </div>
-          <button 
+          <button
             onClick={onClose}
-            className="w-10 h-10 bg-[#ffffff] hover:bg-[#FFED66] border-3 border-black flex items-center justify-center text-black font-black shadow-[3px_3px_0_0_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all"
+            className="w-10 h-10 bg-[#ffffff] hover:bg-[#FFECA1] border-3 border-black flex items-center justify-center text-black font-black shadow-[3px_3px_0_0_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all cursor-pointer"
           >
             <X className="w-6 h-6 stroke-[3]" />
           </button>
         </div>
 
-        {/* Modal Navigation Tabs */}
-        <div className="bg-[#FFED66] border-b-4 border-black p-3 flex flex-wrap gap-2">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`px-4 py-2 border-3 border-black text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 ${
-              activeTab === 'overview' 
-                ? 'bg-[#ffffff] text-black shadow-[3px_3px_0_0_rgba(0,0,0,1)]' 
-                : 'bg-transparent text-black hover:bg-[#ffffff]/60'
-            }`}
-          >
-            <Zap className="w-4 h-4 stroke-[3]" />
-            1. Triết Lý & Tổng Quan
-          </button>
-          
-          <button
-            onClick={() => setActiveTab('tools')}
-            className={`px-4 py-2 border-3 border-black text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 ${
-              activeTab === 'tools' 
-                ? 'bg-[#ffffff] text-black shadow-[3px_3px_0_0_rgba(0,0,0,1)]' 
-                : 'bg-transparent text-black hover:bg-[#ffffff]/60'
-            }`}
-          >
-            <FileCode className="w-4 h-4 stroke-[3]" />
-            2. Các Bộ Tool Prompting
-          </button>
-
-          <button
-            onClick={() => setActiveTab('execution')}
-            className={`px-4 py-2 border-3 border-black text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 ${
-              activeTab === 'execution' 
-                ? 'bg-[#ffffff] text-black shadow-[3px_3px_0_0_rgba(0,0,0,1)]' 
-                : 'bg-transparent text-black hover:bg-[#ffffff]/60'
-            }`}
-          >
-            <Terminal className="w-4 h-4 stroke-[3]" />
-            3. Biên Dịch & Chạy Code
-          </button>
-
-          <button
-            onClick={() => setActiveTab('sync')}
-            className={`px-4 py-2 border-3 border-black text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 ${
-              activeTab === 'sync' 
-                ? 'bg-[#ffffff] text-black shadow-[3px_3px_0_0_rgba(0,0,0,1)]' 
-                : 'bg-transparent text-black hover:bg-[#ffffff]/60'
-            }`}
-          >
-            <Sparkles className="w-4 h-4 stroke-[3]" />
-            4. Kênh Cố Định & Context
-          </button>
+        {/* Tab Selector */}
+        <div className="flex border-b-4 border-black bg-[#FFED66] overflow-x-auto">
+          {[
+            { id: 'overview', label: '1. Tổng Quan & Triết Lý', icon: BookOpen },
+            { id: 'tools', label: '2. Bộ Công Cụ (7 Tab)', icon: Sparkles },
+            { id: 'execution', label: '3. Cách Biên Dịch & Chạy', icon: Terminal },
+            { id: 'sync', label: '4. Chuỗi Ngữ Cảnh Tự Động', icon: Zap }
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex items-center gap-2 px-5 py-3.5 border-r-3 border-black text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer
+                  ${isActive 
+                    ? 'bg-[#ffffff] text-black shadow-inner border-b-0 -mb-1' 
+                    : 'bg-transparent text-black hover:bg-[#FFECA1]'}`}
+              >
+                <Icon className="w-4 h-4 stroke-[3]" />
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
 
-        {/* Modal Content Area */}
-        <div className="p-6 sm:p-8 overflow-y-auto flex-1 space-y-8 bg-[#FAFAFA]">
-          
-          {/* TAB 1: OVERVIEW & RED THREAD */}
+        {/* Modal Body */}
+        <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6 text-black bg-[#ffffff]">
           {activeTab === 'overview' && (
-            <div className="space-y-6">
-              <div className="bg-[#A3E635] border-4 border-black p-6 shadow-[6px_6px_0_0_rgba(0,0,0,1)]">
-                <h3 className="text-xl font-black text-black uppercase tracking-widest mb-2 flex items-center gap-3">
-                  <Zap className="w-6 h-6 stroke-[3]" />
-                  Chiến Thuật "Sợi Chỉ Đỏ" (Red Thread Strategy)
+            <div className="space-y-6 animate-in fade-in duration-300">
+              <div className="border-4 border-black p-5 bg-[#00CECB]/20 shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
+                <h3 className="text-lg font-black uppercase tracking-wider mb-2 flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 stroke-[3]" /> Mục Tiêu Dự Án
                 </h3>
-                <p className="text-sm font-bold text-black leading-relaxed">
-                  Yuta!LaTeX Studio không đơn thuần là công cụ sinh code ngẫu nhiên. Hệ thống được xây dựng để kết nối liên tục từ việc lập kế hoạch giảng dạy tới việc tạo công cụ tự động hóa hệ thống.
+                <p className="text-sm font-medium leading-relaxed">
+                  <strong>Yuta!LaTeX Studio</strong> là hệ thống tạo Prompt chuyên nghiệp cho Gemini AI, được tối ưu hóa 100% để sinh ra mã nguồn <strong>LaTeX Toán học sạch</strong> (biên dịch pdfLaTeX không lỗi), <strong>mã nguồn Python Manim</strong> (làm video diễn hoạt toán học trực quan) và <strong>file tự động hóa Windows Batch (.bat)</strong>.
                 </p>
               </div>
 
-              {/* Workflow Pipeline visual */}
-              <div className="bg-[#ffffff] border-4 border-black p-6 shadow-[6px_6px_0_0_rgba(0,0,0,1)] space-y-4">
-                <h4 className="text-base font-black text-black uppercase tracking-wider border-b-3 border-black pb-2">
-                  Luồng Làm Việc 6 Bước Đồng Bộ Khép Kín:
-                </h4>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className="p-4 bg-[#FF5E5B]/20 border-3 border-black shadow-[3px_3px_0_0_rgba(0,0,0,1)]">
-                    <span className="text-xs font-black bg-[#FF5E5B] text-black px-2 py-0.5 border border-black uppercase">Bước 1</span>
-                    <h5 className="font-black text-black text-sm mt-2 uppercase">🗺️ Lộ Trình (Roadmap)</h5>
-                    <p className="text-xs font-bold text-gray-800 mt-1">Phân chia chương trình thành các Micro-steps dễ hấp thụ.</p>
-                  </div>
-
-                  <div className="p-4 bg-[#00CECB]/20 border-3 border-black shadow-[3px_3px_0_0_rgba(0,0,0,1)]">
-                    <span className="text-xs font-black bg-[#00CECB] text-black px-2 py-0.5 border border-black uppercase">Bước 2</span>
-                    <h5 className="font-black text-black text-sm mt-2 uppercase">📖 Bài Học (Learning)</h5>
-                    <p className="text-xs font-bold text-gray-800 mt-1">Soạn lý thuyết, ví dụ minh họa chuẩn mực LaTeX.</p>
-                  </div>
-
-                  <div className="p-4 bg-[#A3E635]/20 border-3 border-black shadow-[3px_3px_0_0_rgba(0,0,0,1)]">
-                    <span className="text-xs font-black bg-[#A3E635] text-black px-2 py-0.5 border border-black uppercase">Bước 3</span>
-                    <h5 className="font-black text-black text-sm mt-2 uppercase">📝 Bài Tập (Worksheet)</h5>
-                    <p className="text-xs font-bold text-gray-800 mt-1">Biên soạn phiếu bài tập rèn luyện có đáp án chi tiết.</p>
-                  </div>
-
-                  <div className="p-4 bg-[#FF90E8]/20 border-3 border-black shadow-[3px_3px_0_0_rgba(0,0,0,1)]">
-                    <span className="text-xs font-black bg-[#FF90E8] text-black px-2 py-0.5 border border-black uppercase">Bước 4</span>
-                    <h5 className="font-black text-black text-sm mt-2 uppercase">🎓 Đề Thi (Exam)</h5>
-                    <p className="text-xs font-bold text-gray-800 mt-1">Thiết lập ma trận 4 cấp độ (Nhận biết - Vận dụng cao).</p>
-                  </div>
-
-                  <div className="p-4 bg-[#9333EA]/20 border-3 border-black shadow-[3px_3px_0_0_rgba(0,0,0,1)]">
-                    <span className="text-xs font-black bg-[#9333EA] text-white px-2 py-0.5 border border-black uppercase">Bước 5</span>
-                    <h5 className="font-black text-black text-sm mt-2 uppercase">🎬 Video & Manim</h5>
-                    <p className="text-xs font-bold text-gray-800 mt-1">Tạo kịch bản giảng dạy & code hoạt hình Python Manim.</p>
-                  </div>
-
-                  <div className="p-4 bg-[#FFED66]/40 border-3 border-black shadow-[3px_3px_0_0_rgba(0,0,0,1)]">
-                    <span className="text-xs font-black bg-[#FFED66] text-black px-2 py-0.5 border border-black uppercase">Bước 6</span>
-                    <h5 className="font-black text-black text-sm mt-2 uppercase">💻 Windows Script (.bat)</h5>
-                    <p className="text-xs font-bold text-gray-800 mt-1">Tự động dọn dẹp file tạm .aux, .log, tự động biên dịch.</p>
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="border-3 border-black p-4 bg-[#FFED66]/30 shadow-[3px_3px_0_0_rgba(0,0,0,1)]">
+                  <h4 className="font-black text-xs uppercase mb-1">Chuẩn pdfLaTeX</h4>
+                  <p className="text-xs text-gray-700 font-medium">Bảo đảm biên dịch 1 phát ăn ngay trên Overleaf hoặc máy tính cá nhân.</p>
                 </div>
-              </div>
-
-              {/* Highlights */}
-              <div className="bg-[#00CECB] border-4 border-black p-6 shadow-[6px_6px_0_0_rgba(0,0,0,1)]">
-                <h4 className="text-base font-black text-black uppercase tracking-wider mb-3">
-                  Vì sao Yuta!LaTeX tạo ra mã nguồn sạch hơn?
-                </h4>
-                <ul className="space-y-2 text-xs font-bold text-black">
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 shrink-0 stroke-[3] mt-0.5" />
-                    <span><b>Loại bỏ lỗi hiển thị Markdown:</b> Prompt ép AI không bọc sai cú pháp làm hỏng trình biên dịch pdfLaTeX hay XeLaTeX.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 shrink-0 stroke-[3] mt-0.5" />
-                    <span><b>Escape ký tự đặc biệt:</b> Tự động nhắc nhở AI escape các ký tự nguy hiểm trong LaTeX như %, _, &, $, &#123;, &#125;.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 shrink-0 stroke-[3] mt-0.5" />
-                    <span><b>Khối Self-Check độc quyền:</b> AI sẽ tự rà soát lại ma trận câu hỏi và tính hợp lệ trước khi trả kết quả cuối cùng.</span>
-                  </li>
-                </ul>
+                <div className="border-3 border-black p-4 bg-[#A3E635]/30 shadow-[3px_3px_0_0_rgba(0,0,0,1)]">
+                  <h4 className="font-black text-xs uppercase mb-1">Toán Học & Diễn Hoạt</h4>
+                  <p className="text-xs text-gray-700 font-medium">Hỗ trợ đầy đủ từ Ma trận Đề thi, Phiếu bài tập, Đổi số bài toán đến Script Manim Shorts/YouTube.</p>
+                </div>
+                <div className="border-3 border-black p-4 bg-[#FF90E8]/30 shadow-[3px_3px_0_0_rgba(0,0,0,1)]">
+                  <h4 className="font-black text-xs uppercase mb-1">Kênh Nhớ Ngữ Cảnh</h4>
+                  <p className="text-xs text-gray-700 font-medium">Lưu link chat Gemini cố định để AI nhớ lịch sử bài học, tránh trùng lặp chuyên đề.</p>
+                </div>
               </div>
             </div>
           )}
 
-          {/* TAB 2: TOOLS GUIDE */}
           {activeTab === 'tools' && (
-            <div className="space-y-6">
-              <h3 className="text-xl font-black text-black uppercase tracking-widest mb-4">
-                Chi Tiết 6 Bộ Công Cụ Chuyên Sâu
-              </h3>
-
-              <div className="space-y-4">
-                {/* 1. Roadmap */}
-                <div className="bg-[#ffffff] border-3 border-black p-5 shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 bg-[#FF5E5B] border-2 border-black flex items-center justify-center font-black">
-                      <Map className="w-4 h-4" />
-                    </div>
-                    <h4 className="font-black text-black uppercase text-base">1. Lộ Trình Học Tập (Roadmap)</h4>
-                  </div>
-                  <p className="text-xs font-bold text-gray-800 leading-relaxed">
-                    Giúp thiết kế lộ trình cá nhân hóa cho học sinh từ mức Mất gốc đến Thi HSG/Thi ĐH. AI tự động chia nhỏ thành các giai đoạn (Phases) và các bài học nối tiếp nhau sinh động.
-                  </p>
+            <div className="space-y-4 animate-in fade-in duration-300">
+              <h3 className="text-base font-black uppercase border-b-3 border-black pb-2">Danh Sách 7 Công Cụ Chính:</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="border-3 border-black p-4 bg-[#ffffff] shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
+                  <span className="px-2 py-0.5 bg-[#FF5E5B] text-black font-black text-[10px] uppercase border border-black">1. Lộ trình học (Roadmap)</span>
+                  <p className="text-xs font-medium mt-2">Vẽ kế hoạch bài bản từ mất gốc lên điểm 8+, 9+ với thời gian và các chặng rõ ràng.</p>
                 </div>
-
-                {/* 2. Learning */}
-                <div className="bg-[#ffffff] border-3 border-black p-5 shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 bg-[#00CECB] border-2 border-black flex items-center justify-center font-black">
-                      <BookOpen className="w-4 h-4" />
-                    </div>
-                    <h4 className="font-black text-black uppercase text-base">2. Bài Học & Lý Thuyết (Learning)</h4>
-                  </div>
-                  <p className="text-xs font-bold text-gray-800 leading-relaxed">
-                    Tạo tài liệu học tập đầy đủ cấu trúc: Tóm tắt Cheat Sheet, Bài giảng chi tiết (có ví dụ minh họa và chú thích câu lệnh), chọn được văn phong (Hàn lâm, Sáng tạo, Đơn giản) và Ngôn ngữ (Song ngữ, Thuần Việt, Thuần Anh).
-                  </p>
+                <div className="border-3 border-black p-4 bg-[#ffffff] shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
+                  <span className="px-2 py-0.5 bg-[#00CECB] text-black font-black text-[10px] uppercase border border-black">2. Bài học lý thuyết (Learning)</span>
+                  <p className="text-xs font-medium mt-2">Bài giảng sư phạm chuyên sâu, định nghĩa, chứng minh và ví dụ mẫu.</p>
                 </div>
-
-                {/* 3. Worksheet */}
-                <div className="bg-[#ffffff] border-3 border-black p-5 shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 bg-[#A3E635] border-2 border-black flex items-center justify-center font-black">
-                      <FileText className="w-4 h-4" />
-                    </div>
-                    <h4 className="font-black text-black uppercase text-base">3. Phiếu Bài Tập (Worksheet)</h4>
-                  </div>
-                  <p className="text-xs font-bold text-gray-800 leading-relaxed">
-                    Tạo phiếu bài tập phân dạng có khung tóm tắt lý thuyết, ví dụ mẫu, phần bài tập tự luyện và đáp án chi tiết. Bố cục được tối ưu hóa chuẩn XeLaTeX/pdfLaTeX để in ấn trực tiếp.
-                  </p>
+                <div className="border-3 border-black p-4 bg-[#ffffff] shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
+                  <span className="px-2 py-0.5 bg-[#A3E635] text-black font-black text-[10px] uppercase border border-black">3. Phiếu bài tập (Worksheet)</span>
+                  <p className="text-xs font-medium mt-2">Tạo tài liệu học tập in ấn có dòng kẻ chấm (\dongke) cho học sinh làm trực tiếp.</p>
                 </div>
-
-                {/* 4. Exam */}
-                <div className="bg-[#ffffff] border-3 border-black p-5 shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 bg-[#FF90E8] border-2 border-black flex items-center justify-center font-black">
-                      <GraduationCap className="w-4 h-4" />
-                    </div>
-                    <h4 className="font-black text-black uppercase text-base">4. Đề Thi & Ma Trận (Exam)</h4>
-                  </div>
-                  <p className="text-xs font-bold text-gray-800 leading-relaxed">
-                    Cấu hình số câu Trắc nghiệm & Tự luận. Tùy chỉnh chính xác ma trận 4 mức độ: Nhận biết (NB), Thông hiểu (TH), Vận dụng (VD), Vận dụng cao (VDC). Kiểm tra chéo tổng số câu tự động trước khi bấm tạo!
-                  </p>
+                <div className="border-3 border-black p-4 bg-[#ffffff] shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
+                  <span className="px-2 py-0.5 bg-[#FB7185] text-black font-black text-[10px] uppercase border border-black">4. Bài tập tương tự (Similar)</span>
+                  <p className="text-xs font-medium mt-2">Dán 1 bài toán gốc → AI tự sinh 3-5 bài cùng dạng hoặc đổi số, kèm lời giải chi tiết.</p>
                 </div>
-
-                {/* 5. Video */}
-                <div className="bg-[#ffffff] border-3 border-black p-5 shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 bg-[#9333EA] text-white border-2 border-black flex items-center justify-center font-black">
-                      <Video className="w-4 h-4" />
-                    </div>
-                    <h4 className="font-black text-black uppercase text-base">5. Kịch Bản Video & Code Manim</h4>
-                  </div>
-                  <p className="text-xs font-bold text-gray-800 leading-relaxed">
-                    Cho phép chọn 2 chế độ:
-                    <br />• <b>Kịch bản Video:</b> Tạo lời thoại + gợi ý hình ảnh chi tiết theo dòng thời gian (Khung ngang/dọc).
-                    <br />• <b>Code Python Manim:</b> Sinh mã Python thư viện Manim hoạt hình toán học/vật lý hoàn chỉnh.
-                  </p>
+                <div className="border-3 border-black p-4 bg-[#ffffff] shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
+                  <span className="px-2 py-0.5 bg-[#FF90E8] text-black font-black text-[10px] uppercase border border-black">5. Đề thi chuẩn hóa (Exam)</span>
+                  <p className="text-xs font-medium mt-2">Ma trận 4 mức độ: Nhận biết, Thông hiểu, Vận dụng, VDC với trắc nghiệm và tự luận.</p>
                 </div>
-
-                {/* 6. Bat */}
-                <div className="bg-[#ffffff] border-3 border-black p-5 shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 bg-[#FFED66] border-2 border-black flex items-center justify-center font-black">
-                      <Terminal className="w-4 h-4" />
-                    </div>
-                    <h4 className="font-black text-black uppercase text-base">6. Automation Script Windows (.bat)</h4>
-                  </div>
-                  <p className="text-xs font-bold text-gray-800 leading-relaxed">
-                    Tạo script tự động hóa công việc quản lý tài liệu trên Windows (CMD): Dọn dẹp file rác .aux/.log sau khi biên dịch LaTeX, sao lưu tự động bài giảng, hoặc tạo hàng loạt thư mục môn học.
-                  </p>
+                <div className="border-3 border-black p-4 bg-[#ffffff] shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
+                  <span className="px-2 py-0.5 bg-[#9333EA] text-white font-black text-[10px] uppercase border border-black">6. Video & Manim (Animation)</span>
+                  <p className="text-xs font-medium mt-2">Kịch bản lời thoại và code Python Manim chuẩn cho Shorts (9:16) & YouTube (16:9).</p>
+                </div>
+                <div className="border-3 border-black p-4 bg-[#ffffff] shadow-[4px_4px_0_0_rgba(0,0,0,1)] col-span-1 md:col-span-2">
+                  <span className="px-2 py-0.5 bg-[#FFED66] text-black font-black text-[10px] uppercase border border-black">7. Automation Script (.BAT)</span>
+                  <p className="text-xs font-medium mt-2">Tự động dọn dẹp file rác LaTeX (.aux, .log), render video Manim tự động chỉ với 1 click.</p>
                 </div>
               </div>
             </div>
           )}
 
-          {/* TAB 3: EXECUTION & COMPILATION */}
           {activeTab === 'execution' && (
-            <div className="space-y-6">
-              <h3 className="text-xl font-black text-black uppercase tracking-widest mb-4">
-                Hướng Dẫn Biên Dịch & Chạy Code Đầu Ra
-              </h3>
-
-              {/* 1. LaTeX Overleaf */}
-              <div className="bg-[#ffffff] border-4 border-black p-6 shadow-[6px_6px_0_0_rgba(0,0,0,1)] space-y-3">
-                <div className="flex items-center justify-between border-b-3 border-black pb-2">
-                  <h4 className="font-black text-black uppercase text-base flex items-center gap-2">
-                    <FileCode className="w-5 h-5 text-[#00CECB]" />
-                    1. Cách Biên Dịch LaTeX (Overleaf / TeXStudio)
-                  </h4>
-                  <span className="text-[10px] font-black bg-[#00CECB] text-black px-2 py-0.5 border border-black uppercase">
-                    pdfLaTeX / XeLaTeX
-                  </span>
-                </div>
-                <ol className="list-decimal list-inside space-y-2 text-xs font-bold text-gray-800 leading-relaxed">
-                  <li>Bấm nút <b>Sao chép mã</b> trên giao diện kết quả của Yuta!LaTeX.</li>
-                  <li>Mở <b>Overleaf.com</b> ➔ Tạo dự án mới <b>Blank Project</b>.</li>
-                  <li>Dán toàn bộ mã vào file <code>main.tex</code>.</li>
-                  <li>Chọn Compiler trong Menu Overleaf: <b>pdfLaTeX</b> (mặc định) hoặc <b>XeLaTeX</b> (nếu dùng font hệ thống).</li>
-                  <li>Bấm <b>Recompile</b> (Ctrl + S) để xuất ra PDF chuẩn định dạng.</li>
-                </ol>
-              </div>
-
-              {/* 2. Python Manim */}
-              <div className="bg-[#ffffff] border-4 border-black p-6 shadow-[6px_6px_0_0_rgba(0,0,0,1)] space-y-3">
-                <div className="flex items-center justify-between border-b-3 border-black pb-2">
-                  <h4 className="font-black text-black uppercase text-base flex items-center gap-2">
-                    <Video className="w-5 h-5 text-[#9333EA]" />
-                    2. Cách Chạy Code Hoạt Hình Python Manim
-                  </h4>
-                  <span className="text-[10px] font-black bg-[#9333EA] text-white px-2 py-0.5 border border-black uppercase">
-                    Python 3.8+
-                  </span>
-                </div>
-                <p className="text-xs font-bold text-gray-800">
-                  Cài đặt thư viện Manim qua Terminal/Command Prompt:
-                </p>
-                <div className="bg-[#1E1E1E] text-green-400 p-3 font-mono text-xs border-2 border-black flex items-center justify-between">
-                  <code>pip install manim</code>
-                  <button 
-                    onClick={() => handleCopySnippet('pip install manim', 'manim-install')}
-                    className="text-white hover:text-[#FFED66] p-1"
-                  >
-                    {copiedCode === 'manim-install' ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
-                  </button>
-                </div>
-                <p className="text-xs font-bold text-gray-800">
-                  Lưu đoạn code thành <code>scene.py</code> và chạy lệnh render video chất lượng thường (pql) hoặc 4K (pqh):
-                </p>
-                <div className="bg-[#1E1E1E] text-green-400 p-3 font-mono text-xs border-2 border-black flex items-center justify-between">
-                  <code>manim -pql scene.py MySceneName</code>
-                  <button 
-                    onClick={() => handleCopySnippet('manim -pql scene.py MySceneName', 'manim-run')}
-                    className="text-white hover:text-[#FFED66] p-1"
-                  >
-                    {copiedCode === 'manim-run' ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              {/* 3. Windows Batch Script */}
-              <div className="bg-[#ffffff] border-4 border-black p-6 shadow-[6px_6px_0_0_rgba(0,0,0,1)] space-y-3">
-                <div className="flex items-center justify-between border-b-3 border-black pb-2">
-                  <h4 className="font-black text-black uppercase text-base flex items-center gap-2">
-                    <Terminal className="w-5 h-5 text-[#FFED66]" />
-                    3. Cách Chạy Script Tự Động Windows (.bat)
-                  </h4>
-                  <span className="text-[10px] font-black bg-[#FFED66] text-black px-2 py-0.5 border border-black uppercase">
-                    CMD / PowerShell
-                  </span>
-                </div>
-                <ol className="list-decimal list-inside space-y-2 text-xs font-bold text-gray-800 leading-relaxed">
-                  <li>Sao chép mã script <code>.bat</code> đã sinh ra.</li>
-                  <li>Mở <b>Notepad</b> ➔ Dán mã vào ➔ Chọn <b>Save As</b>.</li>
-                  <li>Đổi kiểu file thành <b>All Files (*.*)</b> và lưu với đuôi <code>.bat</code> (Ví dụ: <code>cleanup_tex.bat</code>).</li>
-                  <li>Nếu script yêu cầu quyền hệ thống: Nhấp chuột phải vào file <code>.bat</code> ➔ Chọn <b>Run as Administrator</b>.</li>
-                </ol>
-              </div>
+            <div className="space-y-4 animate-in fade-in duration-300">
+              <h3 className="text-base font-black uppercase border-b-3 border-black pb-2">Hướng Dẫn Sử Dụng & Biên Dịch:</h3>
+              <ol className="space-y-3 text-xs font-medium list-decimal pl-5">
+                <li><strong>Bước 1:</strong> Chọn công cụ muốn tạo (ví dụ: Đề thi, Worksheet hoặc Bài tập tương tự) và bấm nút tạo prompt.</li>
+                <li><strong>Bước 2:</strong> Bấm <strong>"Sao Chép Mã"</strong> hoặc <strong>"Vào Đoạn Chat"</strong> để mở Gemini. Dán prompt vào và gửi.</li>
+                <li><strong>Bước 3:</strong> Sao chép đoạn code \`\`\`latex\`\`\` mà Gemini trả về:
+                  <ul className="list-disc pl-5 mt-1 text-gray-700">
+                    <li>Dán vào <strong>Overleaf</strong> (trình biên dịch mặc định là pdfLaTeX) để xuất file PDF ngay.</li>
+                    <li>Hoặc lưu thành file \`tailieu.tex\` trên máy tính rồi biên dịch bằng TeXLive / MikTeX.</li>
+                  </ul>
+                </li>
+                <li><strong>Bước 4 đối với Manim Video:</strong> Lưu code vào file \`scene.py\` và chạy lệnh: <code className="bg-gray-100 px-1 py-0.5 border border-black font-mono">manim -pql scene.py MainScene</code>.</li>
+              </ol>
             </div>
           )}
 
-          {/* TAB 4: SYNC & FIXED LINK */}
           {activeTab === 'sync' && (
-            <div className="space-y-6">
-              <div className="bg-[#FFED66] border-4 border-black p-6 shadow-[6px_6px_0_0_rgba(0,0,0,1)]">
-                <h3 className="text-xl font-black text-black uppercase tracking-widest mb-2 flex items-center gap-3">
-                  <Sparkles className="w-6 h-6 stroke-[3]" />
-                  Quản Lý Kênh Gemini Cố Định & Đồng Bộ Ngữ Cảnh
+            <div className="space-y-4 animate-in fade-in duration-300">
+              <div className="border-3 border-black p-4 bg-[#FFED66]/40 shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
+                <h3 className="text-sm font-black uppercase mb-2 flex items-center gap-2">
+                  <Zap className="w-4 h-4 stroke-[3]" /> Thanh Đồng Bộ Ngữ Cảnh (Forward Context)
                 </h3>
-                <p className="text-sm font-bold text-black leading-relaxed">
-                  Tránh tình trạng AI quên bài học cũ hoặc sinh lại nội dung trùng lặp bằng cách duy trì 1 cuộc hội thoại duy nhất!
+                <p className="text-xs font-medium leading-relaxed">
+                  Khi bạn tạo xong một chuyên đề (ví dụ: Lộ trình hàm số), phía dưới khung kết quả sẽ có thanh <strong>"Đồng bộ ngữ cảnh"</strong>. Bạn chỉ cần bấm <em>"Sang Bài Học"</em>, <em>"Sang Bài Tập"</em>, <em>"Sang Bài Tương Tự"</em> hoặc <em>"Sang Đề Thi"</em>, toàn bộ tên chủ đề, khối lớp, môn học sẽ tự động được điền sang form tiếp theo mà bạn không cần gõ lại!
                 </p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-[#ffffff] border-3 border-black p-5 shadow-[4px_4px_0_0_rgba(0,0,0,1)] space-y-3">
-                  <h4 className="font-black text-black uppercase text-base border-b-2 border-black pb-2">
-                    📌 1. Ô Kênh Gemini Cố Định
-                  </h4>
-                  <p className="text-xs font-bold text-gray-800 leading-relaxed">
-                    Sau khi copy Prompt đầu tiên dán vào Gemini, hãy sao chép đường dẫn (URL) của đoạn chat đó dán vào khung <b>"Kênh Gemini Cố định"</b> ở đầu trang.
-                  </p>
-                  <p className="text-xs font-bold text-indigo-900 bg-indigo-50 p-2 border border-indigo-200">
-                    💡 Mọi lần sau bạn chỉ cần bấm nút <b>"KÊNH CỐ ĐỊNH"</b> để quay lại ngay cuộc hội thoại cũ!
-                  </p>
-                </div>
-
-                <div className="bg-[#ffffff] border-3 border-black p-5 shadow-[4px_4px_0_0_rgba(0,0,0,1)] space-y-3">
-                  <h4 className="font-black text-black uppercase text-base border-b-2 border-black pb-2">
-                    ⚡ 2. Chuyển Tiếp Ngữ Cảnh Tự Động
-                  </h4>
-                  <p className="text-xs font-bold text-gray-800 leading-relaxed">
-                    Khi bạn tạo Lộ trình hay Bài học thành công, trên thanh kết quả sẽ có các nút <b>"👉 Chuyển sang Bài tập / Đề thi / Video / Script"</b>.
-                  </p>
-                  <p className="text-xs font-bold text-emerald-900 bg-emerald-50 p-2 border border-emerald-200">
-                    💡 Bấm vào đó, môn học, lớp và chủ đề sẽ tự động điền sang biểu mẫu tiếp theo mà không cần nhập lại!
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-[#ffffff] border-4 border-black p-6 shadow-[6px_6px_0_0_rgba(0,0,0,1)] text-center">
-                <h4 className="font-black text-black uppercase text-base mb-2">
-                  🚀 Bạn Đã Sẵn Sàng Sáng Tạo Giáo Án Chuẩn Quốc Tế!
-                </h4>
-                <p className="text-xs font-bold text-gray-700 mb-4">
-                  Bắt đầu ngay bằng cách chọn một công cụ trên thanh menu chính.
-                </p>
-                <button
-                  onClick={onClose}
-                  className="px-8 py-3 bg-[#A3E635] text-black font-black uppercase tracking-widest border-3 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
-                >
-                  ĐÓNG HƯỚNG DẪN & BẮT ĐẦU
-                </button>
               </div>
             </div>
           )}
-
         </div>
 
+        {/* Modal Footer */}
+        <div className="bg-[#ffffff] border-t-4 border-black p-4 flex justify-between items-center">
+          <span className="text-xs font-black uppercase tracking-wider text-black">
+            Yuta Education System
+          </span>
+          <button
+            onClick={onClose}
+            className="px-6 py-2 bg-[#FFED66] hover:bg-[#FFECA1] border-3 border-black text-xs font-black uppercase tracking-widest shadow-[3px_3px_0_0_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all cursor-pointer"
+          >
+            Đóng Hướng Dẫn
+          </button>
+        </div>
       </div>
     </div>
   );

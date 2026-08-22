@@ -1,11 +1,11 @@
-
-import React, { useState, useEffect } from 'react';
-import { BookOpen, GraduationCap, Sparkles, Target, Users, Wand2, School, Calendar, Layout, Info , ChevronDown} from "lucide-react";
+﻿import React, { useState, useEffect } from 'react';
+import { BookOpen, GraduationCap, Wand2, School, Calendar, Layout, Info, ChevronDown, Target, Users } from "lucide-react";
 import { LearningConfig, GenerationStatus } from '../types';
 
 interface LearningFormProps {
   onSubmit: (data: LearningConfig) => void;
   status: GenerationStatus;
+  initialContext?: string;
   contextTopic?: string;
   contextSubject?: string;
   contextGrade?: string;
@@ -27,13 +27,14 @@ const LearningForm: React.FC<LearningFormProps> = ({ onSubmit, status, contextTo
   const [config, setConfig] = useState<LearningConfig>({
     school: COMMON_SCHOOLS[0],
     year: `${currentYear} - ${currentYear + 1}`,
-    subject: contextSubject || '',
-    grade: contextGrade || '',
+    subject: contextSubject || 'Toán học',
+    grade: contextGrade || '12',
     topic: contextTopic || '',
     goal: 'summary',
     tone: 'academic',
     audience: 'Học sinh trung bình - khá',
-    language: 'bilingual'
+    language: 'vietnamese',
+    details: ''
   });
 
   useEffect(() => {
@@ -51,231 +52,192 @@ const LearningForm: React.FC<LearningFormProps> = ({ onSubmit, status, contextTo
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(config);
+    if (config.subject && config.topic) {
+      onSubmit(config);
+    }
   };
 
   const handleChange = (field: keyof LearningConfig, value: any) => {
     setConfig(prev => ({ ...prev, [field]: value }));
   };
 
-  const inputClass = "w-full pl-10 pr-4 py-2.5 bg-[#ffffff] border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all text-sm font-semibold text-slate-700 placeholder:text-slate-600 shadow-sm group-hover:border-teal-300";
-  const labelClass = "block text-[11px] font-bold text-slate-700 mb-1.5 uppercase tracking-wider";
-  const iconClass = "pointer-events-none absolute left-3.5 top-3 w-4 h-4 text-slate-600 group-hover:text-teal-500 transition-colors duration-300";
-  const selectClass = "w-full pl-10 pr-8 py-2.5 bg-[#ffffff] border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all text-sm font-semibold text-slate-700 shadow-sm  group-hover:border-teal-300 cursor-pointer appearance-none";
+  const inputClass = "w-full pl-10 pr-4 py-2.5 bg-[#ffffff] rounded-none border-[3px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] focus:ring-0 focus:translate-y-1 focus:translate-x-1 focus:shadow-none transition-all text-sm font-bold text-black placeholder:text-gray-500 uppercase";
+  const selectClass = "w-full pl-10 pr-8 py-2.5 bg-[#ffffff] rounded-none border-[3px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] focus:ring-0 focus:translate-y-1 focus:translate-x-1 focus:shadow-none transition-all text-sm font-bold text-black uppercase cursor-pointer appearance-none";
+  const labelClass = "block text-xs font-black text-black mb-1.5 uppercase tracking-widest";
+  const iconClass = "pointer-events-none absolute left-3.5 top-[13px] w-4 h-4 text-black font-black";
 
   return (
-    <div className="bg-[#ffffff]/80 backdrop-blur-xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/60 p-6 lg:p-8 h-fit sticky top-28 overflow-y-auto max-h-[calc(100vh-9rem)] scrollbar-hide">
+    <div className="bg-[#ffffff] rounded-none shadow-[8px_8px_0_0_rgba(0,0,0,1)] border-4 border-black p-6 lg:p-8 h-fit sticky top-28 overflow-y-auto max-h-[calc(100vh-9rem)] scrollbar-hide">
       
-      <div className="flex items-center gap-4 mb-8">
-        <div className="w-12 h-12 rounded-2xl bg-teal-50 flex items-center justify-center text-teal-600 shadow-sm ring-4 ring-teal-50/50">
-            <BookOpen className="w-6 h-6" />
+      <div className="flex items-center gap-4 mb-8 border-b-4 border-black pb-4">
+        <div className="w-12 h-12 bg-[#00CECB] flex items-center justify-center text-black border-4 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] rounded-none">
+            <BookOpen className="w-6 h-6 stroke-[3]" />
         </div>
         <div>
-            <h2 className="text-xl font-bold text-slate-800">Tài liệu Học tập</h2>
-            <p className="text-xs text-slate-700 font-medium">Soạn bài giảng, phiếu bài tập LaTeX</p>
+            <h2 className="text-2xl font-black text-black uppercase tracking-widest">Thiết Kế Bài Học</h2>
+            <p className="text-xs text-black font-bold uppercase tracking-wider">Bài Giảng Lý Thuyết & Ví Dụ</p>
         </div>
       </div>
       
       <form onSubmit={handleSubmit} className="space-y-6">
         
-        {/* SECTION 1: INFO */}
-        <div className="p-5 rounded-2xl bg-white border border-slate-100 space-y-4 hover:border-teal-100 transition-colors duration-300">
-             <div className="flex items-center gap-2 mb-2 pb-3 border-b border-slate-200/60">
-                <div className="w-6 h-6 rounded-lg bg-[#ffffff] shadow-sm flex items-center justify-center text-teal-600">
-                    <Info className="w-3.5 h-3.5" />
+        {/* SECTION 1: METADATA */}
+        <div className="p-5 bg-[#ffffff] border-[3px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] space-y-4">
+             <div className="flex items-center gap-2 mb-2 pb-3 border-b-4 border-black">
+                <div className="w-6 h-6 bg-[#A3E635] border-2 border-black flex items-center justify-center text-black">
+                    <Info className="w-3.5 h-3.5 stroke-[3]" />
                 </div>
-                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wide">Thông tin chung</h3>
+                <h3 className="text-sm font-black text-black uppercase tracking-wider">Thông tin bài học</h3>
             </div>
 
             <div className="space-y-4">
-                <div className="group relative">
-                    <label className={labelClass}>Tên Trường / Sở GD&ĐT</label>
-                    <div className="relative">
-                        <School className={iconClass} />
-                        <input
-                            type="text"
-                            list="learning-schools-list"
-                            className={inputClass}
-                            placeholder="Chọn hoặc nhập tên trường"
-                            value={config.school}
-                            onChange={e => handleChange('school', e.target.value)}
-                            required
-                        />
-                        <datalist id="learning-schools-list">
-                          {COMMON_SCHOOLS.map(s => <option key={s} value={s} />)}
-                        </datalist>
-                    </div>
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="group relative">
+                      <label className={labelClass}>Môn học</label>
+                      <div className="relative">
+                          <BookOpen className={iconClass} />
+                          <input
+                              type="text"
+                              className={inputClass}
+                              placeholder="Toán học"
+                              value={config.subject}
+                              onChange={e => handleChange('subject', e.target.value)}
+                              required
+                          />
+                      </div>
+                  </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="group relative">
-                        <label className={labelClass}>Năm học</label>
-                        <div className="relative">
-                            <Calendar className={iconClass} />
-                            <input
-                                type="text"
-                                className={inputClass}
-                                placeholder="Vd: 2024 - 2025"
-                                value={config.year}
-                                onChange={e => handleChange('year', e.target.value)}
-                            />
-                        </div>
-                    </div>
-                    <div className="group relative">
-                        <label className={labelClass}>Lớp</label>
-                        <div className="relative">
-                            <GraduationCap className={iconClass} />
-                            <input
-                                type="text"
-                                className={inputClass}
-                                placeholder="Vd: 12"
-                                value={config.grade}
-                                onChange={e => handleChange('grade', e.target.value)}
-                                required
-                            />
-                        </div>
-                    </div>
+                  <div className="group relative">
+                      <label className={labelClass}>Khối lớp</label>
+                      <div className="relative">
+                          <GraduationCap className={iconClass} />
+                          <input
+                              type="text"
+                              className={inputClass}
+                              placeholder="12"
+                              value={config.grade}
+                              onChange={e => handleChange('grade', e.target.value)}
+                              required
+                          />
+                      </div>
+                  </div>
                 </div>
 
                 <div className="group relative">
-                    <label className={labelClass}>Môn học</label>
-                    <div className="relative">
-                        <BookOpen className={iconClass} />
-                        <input
-                            type="text"
-                            className={inputClass}
-                            placeholder="Vd: Vật lý"
-                            value={config.subject}
-                            onChange={e => handleChange('subject', e.target.value)}
-                            required
-                        />
-                    </div>
-                </div>
-                
-                <div className="group relative">
-                    <label className={labelClass}>Chủ đề / Tên bài</label>
+                    <label className={labelClass}>Chủ đề bài học</label>
                     <div className="relative">
                         <Layout className={iconClass} />
                         <input
                             type="text"
                             className={inputClass}
-                            placeholder="Vd: Dòng điện xoay chiều"
+                            placeholder="Vd: Phương pháp tọa độ hóa hình không gian"
                             value={config.topic}
                             onChange={e => handleChange('topic', e.target.value)}
                             required
                         />
                     </div>
                 </div>
-            </div>
-        </div>
 
-        {/* SECTION 2: CONTENT CONFIG */}
-        <div className="p-5 rounded-2xl bg-white border border-slate-100 space-y-4 hover:border-teal-100 transition-colors duration-300">
-            <div className="flex items-center gap-2 mb-2 pb-3 border-b border-slate-200/60">
-                <div className="w-6 h-6 rounded-lg bg-[#ffffff] shadow-sm flex items-center justify-center text-teal-600">
-                    <Target className="w-3.5 h-3.5" />
-                </div>
-                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wide">Yêu cầu nội dung</h3>
-            </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="group relative">
+                      <label className={labelClass}>Mục tiêu bài học</label>
+                      <div className="relative">
+                          <Target className={iconClass} />
+                          <select
+                              className={selectClass}
+                              value={config.goal}
+                              onChange={e => handleChange('goal', e.target.value)}
+                          >
+                              <option value="summary">Tóm tắt trọng tâm lý thuyết</option>
+                              <option value="detailed">Chi tiết toàn bộ kiến thức</option>
+                              <option value="exercises">Lý thuyết kèm ví dụ minh họa</option>
+                          </select>
+                          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black pointer-events-none stroke-[3]" />
+                      </div>
+                  </div>
 
-            <div className="space-y-4">
-                <div className="group relative">
-                    <label className={labelClass}>Mục tiêu tài liệu</label>
-                    <div className="relative">
-                        <Target className={iconClass} />
-                        <select 
-                            className={selectClass}
-                            value={config.goal}
-                            onChange={e => handleChange('goal', e.target.value)}
-                        >
-                            <option value="summary">Tóm tắt / Cheat Sheet</option>
-                            <option value="detailed">Bài giảng chi tiết (Lý thuyết + Ví dụ)</option>
-                            <option value="exercises">Phiếu bài tập (Có đáp án)</option>
-                        </select>
-<ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-                    </div>
-                </div>
-
-                <div className="group relative">
-                    <label className={labelClass}>Phong cách viết</label>
-                    <div className="relative">
-                        <Sparkles className={iconClass} />
-                        <select 
-                            className={selectClass}
-                            value={config.tone}
-                            onChange={e => handleChange('tone', e.target.value)}
-                        >
-                            <option value="academic">Hàn lâm / Chuẩn mực</option>
-                            <option value="creative">Sáng tạo / Sinh động</option>
-                            <option value="simple">Đơn giản / Cơ bản</option>
-                        </select>
-<ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-                    </div>
+                  <div className="group relative">
+                      <label className={labelClass}>Đối tượng người học</label>
+                      <div className="relative">
+                          <Users className={iconClass} />
+                          <input
+                              type="text"
+                              className={inputClass}
+                              placeholder="Học sinh trung bình - khá"
+                              value={config.audience}
+                              onChange={e => handleChange('audience', e.target.value)}
+                              required
+                          />
+                      </div>
+                  </div>
                 </div>
 
-                <div className="group relative">
-                    <label className={labelClass}>Ngôn ngữ</label>
-                    <div className="relative">
-                        <Sparkles className={iconClass} />
-                        <select 
-                            className={selectClass}
-                            value={config.language || 'bilingual'}
-                            onChange={e => handleChange('language', e.target.value)}
-                        >
-                            <option value="bilingual">Song ngữ Anh - Việt</option>
-                            <option value="vietnamese">Thuần Việt</option>
-                            <option value="english">Thuần Anh</option>
-                        </select>
-<ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="group relative">
+                      <label className={labelClass}>Ngôn ngữ</label>
+                      <div className="relative">
+                          <Wand2 className={iconClass} />
+                          <select
+                              className={selectClass}
+                              value={config.language || 'vietnamese'}
+                              onChange={e => handleChange('language', e.target.value)}
+                          >
+                              <option value="vietnamese">Tiếng Việt</option>
+                              <option value="bilingual">Song ngữ Anh - Việt</option>
+                              <option value="english">Tiếng Anh</option>
+                          </select>
+                          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black pointer-events-none stroke-[3]" />
+                      </div>
+                  </div>
+
+                  <div className="group relative">
+                      <label className={labelClass}>Đơn vị / Trường</label>
+                      <div className="relative">
+                          <School className={iconClass} />
+                          <input
+                              type="text"
+                              list="common-schools"
+                              className={inputClass}
+                              value={config.school}
+                              onChange={e => handleChange('school', e.target.value)}
+                              required
+                          />
+                          <datalist id="common-schools">
+                              {COMMON_SCHOOLS.map(s => <option key={s} value={s} />)}
+                          </datalist>
+                      </div>
+                  </div>
                 </div>
 
-                <div className="group relative">
-                     <label className={labelClass}>Đối tượng học sinh</label>
-                     <div className="relative">
-                        <Users className={iconClass} />
-                        <input
-                            type="text"
-                            className={inputClass}
-                            placeholder="Vd: Mất gốc, Đội tuyển..."
-                            value={config.audience}
-                            onChange={e => handleChange('audience', e.target.value)}
-                        />
-                    </div>
+                <div className="group relative mt-2">
+                    <label className={labelClass}>Yêu cầu thêm (Tùy chọn)</label>
+                    <textarea
+                        className="w-full p-3 bg-[#ffffff] rounded-none border-[3px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] text-sm font-medium text-black placeholder:text-gray-500 min-h-[70px]"
+                        placeholder="Vd: Thêm mẹo tính nhanh Casio, phân biệt các dạng toán thường gặp..."
+                        value={config.details || ''}
+                        onChange={e => handleChange('details', e.target.value)}
+                    />
                 </div>
-
-                <div className="group relative mt-4">
-                    <label className={labelClass}>Yêu cầu cập nhật thêm (Tùy chọn)</label>
-                    <div className="relative">
-                        <textarea
-                            className={inputClass + " min-h-[80px]"}
-                            placeholder="Vd: Cập nhật format mới của Bộ, mẹo học nhanh..."
-                            value={config.details || ''}
-                            onChange={e => handleChange('details', e.target.value)}
-                        />
-                    </div>
-                </div>
-
             </div>
         </div>
 
         <button
           type="submit"
-          disabled={isLoading || !config.subject || !config.topic || !config.school}
-          className={`w-full group relative flex items-center justify-center gap-3 py-4 px-6 rounded-2xl text-white font-bold shadow-lg shadow-teal-200 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0
-            ${(isLoading || !config.subject || !config.school)
-              ? 'bg-slate-300 cursor-not-allowed shadow-none' 
-              : 'bg-gradient-to-r from-teal-500 to-emerald-500 hover:shadow-teal-500/30'}`}
+          disabled={isLoading || !config.subject || !config.topic}
+          className={`w-full relative flex items-center justify-center gap-3 py-4 px-6 rounded-none text-black font-black uppercase tracking-widest text-lg border-4 border-black shadow-[6px_6px_0_0_rgba(0,0,0,1)] transition-all duration-75 active:translate-y-[6px] active:translate-x-[6px] active:shadow-none
+            ${(isLoading || !config.subject || !config.topic)
+              ? 'bg-[#E2E8F0] cursor-not-allowed text-gray-500 shadow-none border-gray-400' 
+              : 'bg-[#00CECB] hover:bg-[#00B4B1]'}`}
         >
           {isLoading ? (
              <>
-               <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"/>
-               <span className="text-sm">Đang khởi tạo...</span>
+               <span className="w-5 h-5 border-4 border-black border-t-transparent rounded-full animate-spin"/>
+               <span>Đang tạo bài học...</span>
              </>
           ) : (
             <>
-              <Wand2 className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-              <span className="text-sm">Tạo Prompt Bài Học</span>
+              <Wand2 className="w-6 h-6 stroke-[3]" />
+              <span>Tạo Prompt Bài Học</span>
             </>
           )}
         </button>

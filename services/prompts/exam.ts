@@ -1,53 +1,81 @@
-import { ExamConfig } from "../../types";
-import { LATEX_TECHNICAL_RULES, EXAM_TEMPLATE } from "./latex-rules";
+﻿import { ExamConfig } from "../../types";
+import { LATEX_TECHNICAL_RULES, EXAM_TEMPLATE_2025, EXAM_TEMPLATE_CLASSIC } from "./latex-rules";
 
 export const generateExamPrompt = (config: ExamConfig): string => {
-  const totalQuestions = Number(config.counts.mc) + Number(config.counts.essay);
-  const matrixInfo = `NB: ${config.matrix.lv1}, TH: ${config.matrix.lv2}, VD: ${config.matrix.lv3}, VDC: ${config.matrix.lv4}`;
+  const is2025Format = config.examFormat === 'standard2025' || !config.examFormat;
 
-  let languageInstruction = "";
-  if (config.language === "vietnamese") {
-    languageInstruction = "Sử dụng 100% TIẾNG VIỆT.";
-  } else if (config.language === "english") {
-    languageInstruction = "Sử dụng 100% TIẾNG ANH (toàn bộ đề bài, chuyên đề, câu hỏi trắc nghiệm, đáp án).";
+  let totalQuestions = 0;
+  let structureDescription = "";
+
+  if (is2025Format) {
+    const p1 = Number(config.counts.part1_mc || 12);
+    const p2 = Number(config.counts.part2_tf || 4);
+    const p3 = Number(config.counts.part3_sa || 6);
+    totalQuestions = p1 + p2 + p3;
+    structureDescription = `
+- CẤU TRÚC ĐỀ THI 3 PHẦN CHUẨN BỘ GD&ĐT 2025--2026:
+  * PHẦN I: ${p1} câu trắc nghiệm nhiều phương án lựa chọn (A, B, C, D) - Dùng macro \\cauhoi{n} và \\dapan{A}{B}{C}{D}.
+  * PHẦN II: ${p2} câu trắc nghiệm Đúng / Sai (mỗi câu gồm 4 mệnh đề a, b, c, d) - Dùng macro \\cauhoi{n} và \\yDungSai{...}{...}{...}{...}.
+  * PHẦN III: ${p3} câu trắc nghiệm Trả lời ngắn (điền kết quả/đáp số) - Dùng macro \\cauhoi{n} và \\traLoiNgan.
+  * TỔNG CỘNG: ${totalQuestions} câu hỏi.`;
   } else {
-    languageInstruction = "Sử dụng SONG NGỮ (Anh - Việt). Tiếng Anh làm ngôn ngữ chính, kèm trong ngoặc hoặc bên dưới là bản dịch tiếng Việt cho đề bài.";
+    const mc = Number(config.counts.mc || config.counts.part1_mc || 25);
+    const essay = Number(config.counts.essay || 3);
+    totalQuestions = mc + essay;
+    structureDescription = `
+- CẤU TRÚC ĐỀ THI TRUYỀN THỐNG:
+  * PHẦN I (Trắc nghiệm): ${mc} câu (A, B, C, D).
+  * PHẦN II (Tự luận): ${essay} câu tính toán nâng cao kèm dòng chấm.
+  * TỔNG CỘNG: ${totalQuestions} câu hỏi.`;
   }
 
-  return `Đóng vai Chuyên gia Đánh giá khảo thí. Soạn mã LaTeX cho đề thi chính thức.
+  const matrixInfo = `Nhận biết: ${config.matrix.lv1}, Thông hiểu: ${config.matrix.lv2}, Vận dụng: ${config.matrix.lv3}, Vận dụng cao: ${config.matrix.lv4}`;
 
-I. THÔNG TIN BÀI THI:
-- Kì thi: ${config.examName} (${config.year})
-- Môn học: ${config.subject}
-- Lớp: ${config.grade} - Nội dung trọng tâm: ${config.topic}
-- Khối lượng: ${String(totalQuestions)} câu (${String(config.counts.mc)} trắc nghiệm, ${String(config.counts.essay)} tự luận)
-- Ma trận phân bổ: ${matrixInfo} (TĂNG DẦN THEO ĐỘ KHÓ)
+  let languageInstruction = "";
+  if (config.language === "vietnamese" || !config.language) {
+    languageInstruction = "Sử dụng 100% TIẾNG VIỆT.";
+  } else if (config.language === "english") {
+    languageInstruction = "Sử dụng 100% TIẾNG ANH.";
+  } else {
+    languageInstruction = "Sử dụng SONG NGỮ (Anh - Việt).";
+  }
+
+  const tikzInstruction = config.includeTikZ ? `
+- **YÊU CẦU ĐỒ THỊ & HÌNH HỌC TIKZ (BẮT BUỘC):**
+  * Đối với các câu hỏi về Hình học không gian (khối chóp, lăng trụ, nón, trụ, cầu, tọa độ Oxyz): BẮT BUỘC vẽ hình trực quan bằng TikZ (nét đứt [dashed] cho cạnh khuất, nét liền [thick] cho cạnh nhìn thấy, ký hiệu góc vuông).
+  * Đối với các câu hỏi Khảo sát hàm số: BẮT BUỘC vẽ Bảng biến thiên hoặc Đồ thị hàm số bằng TikZ/pgfplots sạch đẹp.` : '';
+
+  return `Đóng vai Chuyên gia Khảo thí và Biên soạn đề thi Toán học LaTeX chuyên nghiệp (chuẩn format Bộ GD&ĐT 2025--2026).
+
+I. THÔNG TIN KỲ THI:
+- Đơn vị / Trường: ${config.school}
+- Kỳ thi: ${config.examName} (${config.year})
+- Môn học: ${config.subject} - Khối: ${config.grade}
+- Chủ đề trọng tâm: ${config.topic}
 - Thời gian làm bài: ${config.time} phút
 - Ngôn ngữ: ${languageInstruction}
-- Yêu cầu cấu trúc bổ sung: ${config.details || "Không"}
+- Ma trận phân bổ độ khó: ${matrixInfo} (Tăng dần theo logic tư duy)
+${structureDescription}
+${config.referenceContent ? `- Ngữ cảnh đề cương/tài liệu tham khảo: ${config.referenceContent}` : ''}
+- Yêu cầu bổ sung: ${config.details || "Bám sát định dạng đề thi mới"}
 
-II. LUẬT NỘI DUNG VÀ VĂN PHONG (BẮT BUỘC):
-- **Bám sát thực tế:** Các câu hỏi sinh ra phải ĐÚNG nội dung yêu cầu logic phân hóa học lực, từ Nhận Biết đến Vận Dụng Cao một cách chặt chẽ.
-- **KHÔNG NGÔN TỪ HOA MỸ:** Đề bài là nơi đo lường năng lực, tuyệt đối dùng ngôn từ khách quan, chuẩn xác, phổ thông, đời thường, đi vào trọng tâm, không dư thừa, tránh phong cách viết văn sáo rỗng của chatbot/AI.
-- **Đáp án chi tiết:** Phần đáp án cuối đề thi phải súc tích, cung cấp lời giải đúng trọng tâm cho câu tự luận.
+II. LUẬT NỘI DUNG VÀ VĂN PHONG SƯ PHẠM (BẮT BUỘC):
+- **Bám sát thực tế & Chuẩn mực:** Mọi câu hỏi đều phải chuẩn logic toán học, có số liệu đẹp, không vô lý, nghiệm thực tế.
+- **Phân hóa rõ ràng:** Phần I kiểm tra kiến thức nền tảng và thông hiểu; Phần II kiểm tra tư duy biện luận logic qua 4 mệnh đề đúng/sai; Phần III kiểm tra năng lực giải quyết vấn đề và tính toán chính xác.
+- **KHÔNG NGÔN TỪ HOA MỸ:** Ngôn từ trong sáng, khách quan, chuẩn mực sư phạm.
+${tikzInstruction}
 
-III. YÊU CẦU KỸ THUẬT VÀ TRÌNH BÀY (BẮT BUỘC TUÂN THEO CÁC RULE SAU):
+III. YÊU CẦU KỸ THUẬT VÀ QUY TẮC LATEX:
 ${LATEX_TECHNICAL_RULES}
 
-IV. BỘ KHUNG CODE MẪU ĐỀ THI:
-HÃY sử dụng nguyên bản cấu trúc sau và tự động sinh ra nội dung số lượng câu hỏi đúng barem, thay thế các \`%\` bằng nội dung câu hỏi thực tế:
-${EXAM_TEMPLATE}
-
-LƯU Ý QUAN TRỌNG:
-- BẮT BUỘC dùng macro \\cauhoi và \\dapan để định dạng câu hỏi trắc nghiệm (dàn 4 cột rõ ràng).
-- Nếu tự luận, phải để dòng kẻ theo ước lượng để hs làm bài trực tiếp.
-
-
+IV. KHUNG CODE MẪU ĐỀ THI ĐƯỢC ÁP DỤNG:
+Hãy sử dụng bộ khung sau, thay thế các phần comment \`%\` bằng nội dung câu hỏi thực tế và bảng đáp án + lời giải chi tiết:
+${is2025Format ? EXAM_TEMPLATE_2025 : EXAM_TEMPLATE_CLASSIC}
 
 [BƯỚC CHUYÊN SÂU: KIỂM TRA LẠI CHÉO (SELF-CHECK)]
-Trước khi xuất ra kết quả cuối cùng, bạn PHẢI tự rà soát và kiểm tra chất lượng bằng cách viết ra một khối \`<self_check> ... </self_check>\`:
-- Logic đã chuẩn chưa? Cấu trúc có phân chia nhỏ hợp lý từ dễ đến khó không?
-- Lỗi hiển thị: Định dạng (mã LaTeX hoặc Markdown) có dính lỗi cú pháp không (thiếu ngoặc, quên macro, thiếu end, sai tên biến, không escape ký tự đặc biệt như %, &, _, $)? Khắc phục ngay.
-- Kiểm tra tính hoàn thiện: Đã bọc mã bằng markdown codeblock chưa? Bắt buộc phải đặt toàn bộ code trong block \`\`\` (vd: \`\`\`latex ... \`\`\`).
-Sau khi tự review xong, mới được phép xuất ra đoạn mã/nội dung kết quả chuẩn nhất.`;
+Trước khi xuất ra kết quả cuối cùng, bạn PHẢI tự rà soát và kiểm tra chất lượng bằng khối \`<self_check> ... </self_check>\`:
+- Cấu trúc đề: Đã đủ số câu cho từng Phần chưa?
+- Lỗi hiển thị: Mã LaTeX có thiếu ngoặc, quên macro, thiếu end, sai tên biến, không escape %, &, _, $ không?
+- Hoàn thiện: Bắt buộc bọc toàn bộ code trong block \`\`\`latex ... \`\`\`.
+Sau khi tự review xong, mới được phép xuất ra đoạn mã LaTeX hoàn chỉnh.`;
 };

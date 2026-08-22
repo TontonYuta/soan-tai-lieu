@@ -1,45 +1,46 @@
-import { LearningConfig } from "../../types";
-import { PRE_ALGEBRA_TEMPLATE } from "./latex-rules";
+﻿import { LearningConfig } from "../../types";
+import { LATEX_TECHNICAL_RULES, ROADMAP_TEMPLATE } from "./latex-rules";
 
 export const generateLearningPrompt = (config: LearningConfig): string => {
   let languageInstruction = "";
-  if (config.language === "vietnamese") {
-    languageInstruction = "Sử dụng 100% TIẾNG VIỆT, BỎ hoàn toàn tiếng Anh/Vocabulary Box.";
+  if (config.language === "vietnamese" || !config.language) {
+    languageInstruction = "Sử dụng 100% TIẾNG VIỆT.";
   } else if (config.language === "english") {
-    languageInstruction = "Sử dụng 100% TIẾNG ANH (từ tiêu đề, giải thích lý thuyết, cho đến đề bài, ví dụ, bài tập). Tuyệt đối không dùng tiếng Việt.";
+    languageInstruction = "Sử dụng 100% TIẾNG ANH.";
   } else {
-    languageInstruction = "Sử dụng TAY TRONG TAY SONG NGỮ (Anh - Việt). Các định nghĩa quan trọng, đề bài tập, ví dụ cũng cần có phần dịch song ngữ hoặc sử dụng xen kẽ tự nhiên để người học quen thuộc.";
+    languageInstruction = "Sử dụng SONG NGỮ (Anh - Việt).";
   }
 
-  return `Đóng vai một gia sư cực kỳ có kinh nghiệm và thân thiện. Nhiệm vụ: biên soạn BÀI HỌC (Learning Module) môn "${config.subject}" cho ${config.audience} / Lớp ${config.grade}.
+  const goalText = 
+    config.goal === 'summary' ? 'Tóm tắt lý thuyết trọng tâm và các công thức cần nhớ' :
+    config.goal === 'detailed' ? 'Biên soạn bài giảng chi tiết toàn diện từ định nghĩa đến chứng minh' :
+    'Lý thuyết kết hợp nhiều ví dụ mẫu và phương pháp giải từng dạng toán';
 
-### I. YÊU CẦU CHUYÊN MÔN
-1. Mục tiêu tài liệu: ${config.goal}. Phong cách: ${config.tone}.
-2. Ngôn ngữ: ${languageInstruction}
-3. Cụ thể hóa nội dung chủ đề: "${config.topic}". 
+  return `Đóng vai Giáo viên Toán học chuyên nghiệp và Master LaTeX.
+Nhiệm vụ: Biên soạn một tài liệu bài giảng/bài học chuẩn mực cho chủ đề được yêu cầu.
 
-**TUYỆT ĐỐI TUÂN THỦ CÁC NGUYÊN TẮC SAU:**
-- **THỰC HÀNH LÀ CHÍNH:** Giảm thiểu tối đa lý thuyết suông. Lý thuyết phải RẤT NGẮN GỌN (chỉ 1-2 câu). Dành phần lớn không gian cho các VÍ DỤ và BÀI TẬP THỰC HÀNH.
-- **BÀI TẬP PHẢI ĐỒNG BỘ VỚI LÝ THUYẾT:** Ngay sau khi nói về một định lý/quy tắc nào, PHẢI có ngay bài mẫu và bài tập về đúng quy tắc đó. Không cho bài tập ngoài lề.
-- **ĐỘ KHÓ TĂNG DẦN THEO LOGIC:** Phân rã bài tập theo các Level: Level 1 (Nhận biết/Làm quen ngay) -> Level 2 (Áp dụng/Thông hiểu) -> Level 3 (Ứng dụng thực tế hoặc tư duy sâu hơn).
-- **VĂN PHONG MỘC MẠC, CHO NEWBIE:** Phải sử dụng từ ngữ đời thường, cực kì dễ hiểu, như một người anh/người chị chỉ bài cho đứa em mất gốc. **CẤM** dùng các từ ngữ sáo rỗng, hoa mỹ, sặc mùi AI như "khám phá vẻ đẹp", "hành trình tri thức", "hãy cùng nhau bước vào", "đi sâu vào", v.v... Cứ đi thẳng vào vấn đề thật tự nhiên.
-- Yêu cầu thêm từ người dùng: ${config.details || "Không có"}
+I. THÔNG TIN BÀI HỌC:
+- Môn học: ${config.subject} (Lớp ${config.grade})
+- Chủ đề: ${config.topic}
+- Đơn vị / Trường: ${config.school} (${config.year})
+- Mục tiêu bài giảng: ${goalText}
+- Đối tượng người học: ${config.audience}
+- Ngôn ngữ: ${languageInstruction}
+- Yêu cầu bổ sung: ${config.details || "Không"}
 
-### II. CẤU TRÚC MÃ LATEX BẮT BUỘC
-Tuyệt đối KHÔNG tự ý chèn \\clearpage bừa bãi.
-- Bắt buộc dùng macro: \\dangbai{Tên mục}, \\ghinho, \\vidu{1}, \\loigiai.
+II. NGUYÊN TẮC SƯ PHẠM:
+- Đi từ trực quan đến trừu tượng, có ví dụ minh họa và đồ thị/hình vẽ TikZ nếu cần thiết.
+- Trình bày công thức toán học rõ ràng, có đóng khung công thức quan trọng bằng tcolorbox sharp corners.
 
-### III. KHUNG MÃ LATEX MẪU (BẮT BUỘC TÁI SỬ DỤNG HOÀN TOÀN CẤU TRÚC NÀY, THAY COMMENT BẰNG NỘI DUNG CỦA BẠN):
-${PRE_ALGEBRA_TEMPLATE}
+III. QUY TẮC LATEX:
+${LATEX_TECHNICAL_RULES}
 
-Bắt buộc trả về duy nhất một markdown codeblock (\`\`\`latex) chứa toàn bộ nội dung mã LaTeX. Hãy nhớ: Mộc mạc, dễ hiểu, ưu tiên thực hành, độ khó tăng dần!
-
-
+Trả về toàn bộ mã LaTeX hoàn chỉnh được bọc trong markdown codeblock (\`\`\`latex ... \`\`\`).
 
 [BƯỚC CHUYÊN SÂU: KIỂM TRA LẠI CHÉO (SELF-CHECK)]
 Trước khi xuất ra kết quả cuối cùng, bạn PHẢI tự rà soát và kiểm tra chất lượng bằng cách viết ra một khối \`<self_check> ... </self_check>\`:
-- Logic đã chuẩn chưa? Cấu trúc có phân chia nhỏ hợp lý từ dễ đến khó không?
-- Lỗi hiển thị: Định dạng (mã LaTeX hoặc Markdown) có dính lỗi cú pháp không (thiếu ngoặc, quên macro, thiếu end, sai tên biến, không escape ký tự đặc biệt như %, &, _, $)? Khắc phục ngay.
-- Kiểm tra tính hoàn thiện: Đã bọc mã bằng markdown codeblock chưa? Bắt buộc phải đặt toàn bộ code trong block \`\`\` (vd: \`\`\`latex ... \`\`\`).
-Sau khi tự review xong, mới được phép xuất ra đoạn mã/nội dung kết quả chuẩn nhất.`;
+- Logic toán học: Đã chuẩn xác chưa?
+- Lỗi hiển thị: Mã LaTeX có thiếu ngoặc, quên macro, thiếu $ công thức, không escape % hay _ không?
+- Hoàn thiện: Đã bọc mã bằng \`\`\`latex ... \`\`\` chưa?
+Sau khi tự review xong, mới được phép xuất ra đoạn mã LaTeX chuẩn nhất.`;
 };

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Terminal, Settings, Wand2, Info, Layout } from "lucide-react";
+﻿import React, { useState, useEffect } from 'react';
+import { Terminal, Wand2, Info } from "lucide-react";
 import { BatConfig, GenerationStatus } from '../types';
 
 interface BatFormProps {
@@ -11,7 +11,7 @@ interface BatFormProps {
 
 const BatForm: React.FC<BatFormProps> = ({ onSubmit, status, contextTopic, contextSubject }) => {
   const [config, setConfig] = useState<BatConfig>({
-    task: contextTopic ? `Script dọn dẹp file rác LaTeX và tổ chức thư mục cho ${contextSubject || ''} - ${contextTopic}` : 'Tự động dọn dẹp file rác .aux, .log sau khi biên dịch LaTeX',
+    task: contextTopic ? `Script dọn dẹp file rác LaTeX (.aux, .log) và tổ chức thư mục cho ${contextSubject || ''} - ${contextTopic}` : 'Tự động dọn dẹp file rác .aux, .log sau khi biên dịch LaTeX và render Manim video',
     details: ''
   });
 
@@ -19,7 +19,7 @@ const BatForm: React.FC<BatFormProps> = ({ onSubmit, status, contextTopic, conte
     if (contextTopic || contextSubject) {
       setConfig(prev => ({
         ...prev,
-        task: `Script dọn dẹp file rác LaTeX và tổ chức thư mục cho ${contextSubject || ''} - ${contextTopic}`
+        task: `Script dọn dẹp file rác LaTeX (.aux, .log) và tổ chức thư mục cho ${contextSubject || ''} - ${contextTopic}`
       }));
     }
   }, [contextTopic, contextSubject]);
@@ -28,14 +28,16 @@ const BatForm: React.FC<BatFormProps> = ({ onSubmit, status, contextTopic, conte
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(config);
+    if (config.task) {
+      onSubmit(config);
+    }
   };
 
   const handleChange = (field: keyof BatConfig, value: any) => {
     setConfig(prev => ({ ...prev, [field]: value }));
   };
 
-  const inputClass = "w-full pl-10 pr-4 py-2.5 bg-[#ffffff] rounded-none border-[3px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] focus:ring-0 focus:translate-y-1 focus:translate-x-1 focus:shadow-none transition-all text-sm font-bold text-black placeholder:text-gray-700 uppercase";
+  const inputClass = "w-full pl-10 pr-4 py-2.5 bg-[#ffffff] rounded-none border-[3px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] focus:ring-0 focus:translate-y-1 focus:translate-x-1 focus:shadow-none transition-all text-sm font-bold text-black placeholder:text-gray-500 uppercase";
   const labelClass = "block text-xs font-black text-black mb-1.5 uppercase tracking-widest";
   const iconClass = "pointer-events-none absolute left-3.5 top-[13px] w-4 h-4 text-black font-black";
 
@@ -48,7 +50,7 @@ const BatForm: React.FC<BatFormProps> = ({ onSubmit, status, contextTopic, conte
         </div>
         <div>
             <h2 className="text-2xl font-black text-black uppercase tracking-widest">Automation Script</h2>
-            <p className="text-xs text-black font-bold uppercase tracking-wider">Windows Batch (.bat)</p>
+            <p className="text-xs text-black font-bold uppercase tracking-wider">Windows Batch (.bat) & Lệnh Biên Dịch</p>
         </div>
       </div>
       
@@ -65,13 +67,13 @@ const BatForm: React.FC<BatFormProps> = ({ onSubmit, status, contextTopic, conte
 
             <div className="space-y-4">
                 <div className="group relative">
-                    <label className={labelClass}>Mục tiêu / Tác vụ</label>
+                    <label className={labelClass}>Mục tiêu / Tác vụ tự động</label>
                     <div className="relative">
                         <Terminal className={iconClass} />
                         <input
                             type="text"
                             className={inputClass}
-                            placeholder="Vd: Tự động xóa file .log, .aux..."
+                            placeholder="Vd: Tự động xóa file .log, .aux và chạy pdflatex..."
                             value={config.task}
                             onChange={e => handleChange('task', e.target.value)}
                             required
@@ -81,14 +83,12 @@ const BatForm: React.FC<BatFormProps> = ({ onSubmit, status, contextTopic, conte
 
                 <div className="group relative mt-4">
                     <label className={labelClass}>Yêu cầu nâng cao (Tùy chọn)</label>
-                    <div className="relative">
-                        <textarea
-                            className={inputClass + " min-h-[100px] pt-3 pl-4"}
-                            placeholder="Vd: Thêm màu sắc hiển thị, kiểm tra thư mục tồn tại..."
-                            value={config.details || ''}
-                            onChange={e => handleChange('details', e.target.value)}
-                        />
-                    </div>
+                    <textarea
+                        className="w-full p-3 bg-[#ffffff] rounded-none border-[3px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] text-sm font-medium text-black placeholder:text-gray-500 min-h-[100px]"
+                        placeholder="Vd: Thêm màu sắc hiển thị (color 0A), kiểm tra thư mục tồn tại, tự động mở PDF sau khi render..."
+                        value={config.details || ''}
+                        onChange={e => handleChange('details', e.target.value)}
+                    />
                 </div>
 
             </div>
@@ -97,15 +97,15 @@ const BatForm: React.FC<BatFormProps> = ({ onSubmit, status, contextTopic, conte
         <button
           type="submit"
           disabled={isLoading || !config.task}
-          className={`w-full relative flex items-center justify-center gap-3 py-4 px-6 rounded-none text-black font-black uppercase tracking-widest text-lg border-4 border-black shadow-[6px_6px_0_0_rgba(0,0,0,1)] transition-all duration-75 active:translate-y-[6px] active:translate-x-[6px] active:shadow-none
+          className={`w-full relative flex items-center justify-center gap-3 py-4 px-6 rounded-none text-black font-black uppercase tracking-widest text-lg border-4 border-black shadow-[6px_6px_0_0_rgba(0,0,0,1)] transition-all duration-75 active:translate-y-[6px] active:translate-x-[6px] active:shadow-none cursor-pointer
             ${(isLoading || !config.task)
-              ? 'bg-[#E2E8F0] cursor-not-allowed text-gray-700 shadow-none border-gray-400' 
+              ? 'bg-[#E2E8F0] cursor-not-allowed text-gray-500 shadow-none border-gray-400' 
               : 'bg-[#FFED66] hover:bg-[#FFD700]'}`}
         >
           {isLoading ? (
              <>
                <span className="w-5 h-5 border-4 border-black border-t-transparent rounded-full animate-spin"/>
-               <span>Đang tạo...</span>
+               <span>Đang tạo script...</span>
              </>
           ) : (
             <>

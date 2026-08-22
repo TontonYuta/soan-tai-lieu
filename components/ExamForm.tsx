@@ -1,6 +1,9 @@
-
-import React, { useState, useEffect } from 'react';
-import { Settings2, Clock, Calculator, School, Wand2, BookOpen, GraduationCap, LayoutDashboard, FileSpreadsheet, Link as LinkIcon, CheckCircle2, Circle, AlertCircle , Sparkles, ChevronDown} from "lucide-react";
+﻿import React, { useState, useEffect } from 'react';
+import { 
+  Clock, School, Wand2, BookOpen, GraduationCap, LayoutDashboard, 
+  CheckCircle2, AlertCircle, Sparkles, Info, CheckSquare, Square, 
+  Sliders, Layers, Zap
+} from "lucide-react";
 import { ExamConfig, GenerationStatus } from '../types';
 
 interface ExamFormProps {
@@ -24,58 +27,116 @@ const COMMON_SCHOOLS = [
 ];
 
 const COMMON_EXAMS = [
+  "Thi thử Tốt nghiệp THPT Quốc gia",
+  "Đánh giá Năng lực (HSA / V-SAT)",
   "Kiểm tra Giữa kỳ I",
   "Kiểm tra Cuối kỳ I",
   "Kiểm tra Giữa kỳ II",
   "Kiểm tra Cuối kỳ II",
-  "Thi thử THPT Quốc gia",
-  "Kiểm tra 15 phút",
-  "Kiểm tra định kỳ",
-  "Khảo sát chất lượng"
+  "Kiểm tra 1 Tiết (45 phút)",
+  "Khảo sát chất lượng Toán học"
 ];
 
-const ExamForm: React.FC<ExamFormProps> = ({ onSubmit, status, initialContext, contextTopic, contextSubject, contextGrade }) => {
+const ExamForm: React.FC<ExamFormProps> = ({ 
+  onSubmit, 
+  status, 
+  initialContext, 
+  contextTopic, 
+  contextSubject, 
+  contextGrade 
+}) => {
   const currentYear = new Date().getFullYear();
   const [useContext, setUseContext] = useState(!!initialContext);
   
   const [config, setConfig] = useState<ExamConfig>({
-    school: '',
-    examName: 'Kiểm tra Giữa kỳ I',
+    school: 'Sở GD&ĐT',
+    examName: 'Thi thử Tốt nghiệp THPT Quốc gia',
     year: `${currentYear} - ${currentYear + 1}`,
-    subject: contextSubject || '',
+    subject: contextSubject || 'Toán học',
     topic: contextTopic || '',
     grade: contextGrade || '12',
-    language: 'bilingual',
-    time: 60,
-    counts: { mc: 25, essay: 3 },
-    matrix: { lv1: 12, lv2: 8, lv3: 5, lv4: 3 },
-    referenceContent: initialContext || ''
+    examFormat: 'standard2025',
+    language: 'vietnamese',
+    time: 90,
+    counts: {
+      part1_mc: 12,
+      part2_tf: 4,
+      part3_sa: 6,
+      mc: 12,
+      essay: 0
+    },
+    matrix: { lv1: 6, lv2: 8, lv3: 6, lv4: 2 },
+    includeTikZ: true,
+    referenceContent: initialContext || '',
+    details: ''
   });
 
   useEffect(() => {
     if (initialContext) {
-        setUseContext(true);
-        setConfig(prev => ({ 
-            ...prev, 
-            referenceContent: initialContext,
-            topic: contextTopic || prev.topic,
-            subject: contextSubject || prev.subject,
-            grade: contextGrade || prev.grade
-        }));
+      setUseContext(true);
+      setConfig(prev => ({ 
+        ...prev, 
+        referenceContent: initialContext,
+        topic: contextTopic || prev.topic,
+        subject: contextSubject || prev.subject,
+        grade: contextGrade || prev.grade
+      }));
     }
   }, [initialContext, contextTopic, contextSubject, contextGrade]);
 
-  const questionsTotal = config.counts.mc + config.counts.essay;
-  const matrixTotal = config.matrix.lv1 + config.matrix.lv2 + config.matrix.lv3 + config.matrix.lv4;
+  const is2025 = config.examFormat === 'standard2025';
+  
+  const questionsTotal = is2025 
+    ? (Number(config.counts.part1_mc || 0) + Number(config.counts.part2_tf || 0) + Number(config.counts.part3_sa || 0))
+    : (Number(config.counts.mc || 0) + Number(config.counts.essay || 0));
+
+  const matrixTotal = Number(config.matrix.lv1) + Number(config.matrix.lv2) + Number(config.matrix.lv3) + Number(config.matrix.lv4);
   const isMatrixValid = matrixTotal === questionsTotal;
   const isLoading = status === GenerationStatus.LOADING;
 
+  // Preset switchers
+  const applyPreset = (preset: 'thpt90' | 'test45' | 'test15' | 'classic') => {
+    if (preset === 'thpt90') {
+      setConfig(prev => ({
+        ...prev,
+        examFormat: 'standard2025',
+        time: 90,
+        counts: { ...prev.counts, part1_mc: 12, part2_tf: 4, part3_sa: 6 },
+        matrix: { lv1: 6, lv2: 8, lv3: 6, lv4: 2 }
+      }));
+    } else if (preset === 'test45') {
+      setConfig(prev => ({
+        ...prev,
+        examFormat: 'standard2025',
+        time: 45,
+        counts: { ...prev.counts, part1_mc: 6, part2_tf: 2, part3_sa: 3 },
+        matrix: { lv1: 3, lv2: 4, lv3: 3, lv4: 1 }
+      }));
+    } else if (preset === 'test15') {
+      setConfig(prev => ({
+        ...prev,
+        examFormat: 'standard2025',
+        time: 15,
+        counts: { ...prev.counts, part1_mc: 4, part2_tf: 1, part3_sa: 1 },
+        matrix: { lv1: 2, lv2: 2, lv3: 1, lv4: 1 }
+      }));
+    } else if (preset === 'classic') {
+      setConfig(prev => ({
+        ...prev,
+        examFormat: 'classic',
+        time: 90,
+        counts: { ...prev.counts, mc: 25, essay: 3 },
+        matrix: { lv1: 10, lv2: 10, lv3: 5, lv4: 3 }
+      }));
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isMatrixValid) {
+    if (isMatrixValid && config.subject && config.topic) {
       onSubmit({
-          ...config,
-          referenceContent: useContext ? config.referenceContent : undefined
+        ...config,
+        referenceContent: useContext ? config.referenceContent : undefined
       });
     }
   };
@@ -90,197 +151,339 @@ const ExamForm: React.FC<ExamFormProps> = ({ onSubmit, status, initialContext, c
     setConfig(prev => ({ ...prev, matrix: { ...prev.matrix, [key]: num } }));
   };
 
-  const inputClass = "w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-[#ffffff] transition-all text-sm font-bold text-slate-700 placeholder:text-slate-300 shadow-sm";
-  const labelClass = "block text-[10px] font-black text-slate-600 mb-1.5 uppercase tracking-[0.15em]";
-  const iconClass = "pointer-events-none absolute left-4 top-3.5 w-4.5 h-4.5 text-slate-300 group-focus-within:text-indigo-500 transition-colors";
+  const inputClass = "w-full pl-10 pr-4 py-2.5 bg-[#ffffff] rounded-none border-[3px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] focus:ring-0 focus:translate-y-1 focus:translate-x-1 focus:shadow-none transition-all text-sm font-bold text-black placeholder:text-gray-500 uppercase";
+  const selectClass = "w-full pl-10 pr-4 py-2.5 bg-[#ffffff] rounded-none border-[3px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] focus:ring-0 focus:translate-y-1 focus:translate-x-1 focus:shadow-none transition-all text-sm font-bold text-black uppercase cursor-pointer appearance-none";
+  const labelClass = "block text-xs font-black text-black mb-1.5 uppercase tracking-widest";
+  const iconClass = "pointer-events-none absolute left-3.5 top-[13px] w-4 h-4 text-black font-black";
 
   return (
-    <div className="glass-card rounded-[2.5rem] shadow-2xl shadow-indigo-100 border-white p-6 lg:p-10 space-y-10 animate-in slide-in-from-left-4 duration-500">
+    <div className="bg-[#ffffff] rounded-none shadow-[8px_8px_0_0_rgba(0,0,0,1)] border-4 border-black p-6 lg:p-8 h-fit sticky top-28 overflow-y-auto max-h-[calc(100vh-9rem)] scrollbar-hide">
       
-      <div className="flex items-center gap-5">
-        <div className="w-14 h-14 rounded-3xl bg-indigo-600 flex items-center justify-center text-white shadow-xl shadow-indigo-200 transform -rotate-2">
-            <Settings2 className="w-7 h-7" />
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-6 border-b-4 border-black pb-4">
+        <div className="w-12 h-12 bg-[#FF90E8] flex items-center justify-center text-black border-4 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] rounded-none">
+          <GraduationCap className="w-6 h-6 stroke-[3]" />
         </div>
         <div>
-            <h2 className="text-2xl font-black text-indigo-950 tracking-tight">Cấu hình Đề thi</h2>
-            <p className="text-xs text-slate-600 font-bold uppercase tracking-widest">Ma trận chuẩn LaTeX</p>
+          <h2 className="text-2xl font-black text-black uppercase tracking-widest">Đề Thi Chuẩn Hóa</h2>
+          <p className="text-xs text-black font-bold uppercase tracking-wider">Format 2025--2026 & Vẽ Hình TikZ</p>
         </div>
       </div>
 
-      {initialContext && (
-          <div 
-            onClick={() => setUseContext(!useContext)}
-            className={`cursor-pointer p-5 rounded-3xl border-2 transition-all duration-300 flex items-center justify-between group
-            ${useContext 
-                ? 'bg-indigo-50 border-indigo-200 shadow-inner translate-x-1' 
-                : 'bg-white border-slate-100 hover:border-indigo-100 hover:bg-[#ffffff]'}`}
-          >
-            <div className="flex items-center gap-4">
-                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${useContext ? 'bg-indigo-600 text-white scale-110 rotate-12' : 'bg-slate-200 text-slate-600 group-hover:bg-indigo-100'}`}>
-                    <LinkIcon className="w-5 h-5" />
-                </div>
-                <div>
-                    <h5 className={`text-xs font-black uppercase tracking-wider ${useContext ? 'text-indigo-800' : 'text-slate-700'}`}>Đồng bộ hóa kiến thức</h5>
-                    <p className="text-[10px] font-bold text-slate-600 truncate max-w-[140px]">Dựa trên bài học đã soạn</p>
-                </div>
-            </div>
-            {useContext ? <CheckCircle2 className="w-6 h-6 text-indigo-600 fill-indigo-50" /> : <Circle className="w-6 h-6 text-slate-300" />}
-          </div>
-      )}
-      
-      <form onSubmit={handleSubmit} className="space-y-8">
-        
-        <div className="space-y-5">
-            <div className="group relative">
-                <label className={labelClass}>Trường / Sở Giáo Dục</label>
-                <div className="relative">
-                    <School className={iconClass} />
-                    <input 
-                      type="text" 
-                      list="schools-list"
-                      className={inputClass} 
-                      placeholder="Chọn hoặc nhập tên trường" 
-                      value={config.school} 
-                      onChange={e => setConfig({...config, school: e.target.value})} 
-                      required 
-                    />
-                    <datalist id="schools-list">
-                      {COMMON_SCHOOLS.map(s => <option key={s} value={s} />)}
-                    </datalist>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-5">
-                 <div className="group relative">
-                    <label className={labelClass}>Tên kỳ thi</label>
-                    <div className="relative">
-                        <FileSpreadsheet className={iconClass} />
-                        <input 
-                          type="text" 
-                          list="exams-list"
-                          className={inputClass} 
-                          value={config.examName} 
-                          onChange={e => setConfig({...config, examName: e.target.value})} 
-                          required 
-                        />
-                        <datalist id="exams-list">
-                          {COMMON_EXAMS.map(e => <option key={e} value={e} />)}
-                        </datalist>
-                    </div>
-                </div>
-                <div className="group relative">
-                    <label className={labelClass}>Thời gian</label>
-                    <div className="relative">
-                        <Clock className={iconClass} />
-                        <input type="number" className={inputClass} value={config.time} onChange={e => setConfig({...config, time: parseInt(e.target.value)||0})} />
-                        <span className="absolute right-4 top-3.5 text-[10px] font-black text-slate-300">PHÚT</span>
-                    </div>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-5">
-                <div className="group relative">
-                    <label className={labelClass}>Môn học</label>
-                    <div className="relative">
-                        <BookOpen className={iconClass} />
-                        <input type="text" className={inputClass} placeholder="Toán học" value={config.subject} onChange={e => setConfig({...config, subject: e.target.value})} required />
-                    </div>
-                </div>
-                <div className="group relative">
-                    <label className={labelClass}>Khối lớp</label>
-                    <div className="relative">
-                        <GraduationCap className={iconClass} />
-                        <input type="text" className={inputClass} placeholder="12" value={config.grade} onChange={e => setConfig({...config, grade: e.target.value})} required />
-                    </div>
-                </div>
-            </div>
-
-            <div className="group relative">
-                <label className={labelClass}>Chủ đề bài thi</label>
-                <div className="relative">
-                    <LayoutDashboard className={iconClass} />
-                    <input type="text" className={inputClass} placeholder="Vd: Ứng dụng đạo hàm" value={config.topic} onChange={e => setConfig({...config, topic: e.target.value})} required />
-                </div>
-            </div>
-
-            
-            <div className="group relative">
-                <label className={labelClass}>Ngôn ngữ</label>
-                <div className="relative">
-                    <Sparkles className={iconClass} />
-                    <select 
-                        className={inputClass + " appearance-none cursor-pointer pl-11"}
-                        value={config.language || "bilingual"}
-                        onChange={e => setConfig({...config, language: e.target.value as any})}
-                    >
-                        <option value="bilingual">Song ngữ Anh - Việt</option>
-                        <option value="vietnamese">Thuần Việt</option>
-                        <option value="english">Thuần Anh</option>
-                    </select>
-                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                </div>
-            </div>
-
-            <div className="group relative mt-4">
-                <label className={labelClass}>Yêu cầu thêm (Tùy chọn)</label>
-                <div className="relative">
-                    <textarea 
-                        className={inputClass + " min-h-[80px]"} 
-                        placeholder="Vd: Bám sát đề minh họa 2025, cho ví dụ thực tế..." 
-                        value={config.details || ''} 
-                        onChange={e => setConfig({...config, details: e.target.value})} 
-                    />
-                </div>
-            </div>
-
+      {/* Format Switcher */}
+      <div className="mb-6 p-3 bg-[#FFED66] border-[3px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
+            <Layers className="w-4 h-4 stroke-[3]" /> Định dạng đề thi:
+          </span>
+          <span className="text-[10px] font-black bg-black text-white px-2 py-0.5 uppercase">
+            {is2025 ? 'Quy chế mới 2025' : 'Truyền thống'}
+          </span>
         </div>
 
-        <div className="p-6 bg-white/50 rounded-[2rem] border border-slate-100 space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-                <div className="bg-[#ffffff] p-4 rounded-2xl shadow-sm border border-slate-100 group transition-all hover:ring-2 hover:ring-indigo-500/20">
-                    <span className={labelClass}>Trắc nghiệm</span>
-                    <input type="number" className="w-full text-2xl font-black bg-transparent border-none p-0 focus:ring-0 text-indigo-900" value={config.counts.mc} onChange={e => handleCountChange('mc', e.target.value)} />
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => applyPreset('thpt90')}
+            className={`p-2 border-2 border-black text-xs font-black uppercase transition-all cursor-pointer text-center
+              ${is2025 
+                ? 'bg-[#ffffff] text-black shadow-[3px_3px_0_0_rgba(0,0,0,1)] translate-x-[1px] translate-y-[1px]' 
+                : 'bg-transparent text-black hover:bg-[#FFECA1]'}`}
+          >
+            ⭐ Chuẩn Bộ GD&ĐT (3 Phần)
+          </button>
+          
+          <button
+            type="button"
+            onClick={() => applyPreset('classic')}
+            className={`p-2 border-2 border-black text-xs font-black uppercase transition-all cursor-pointer text-center
+              ${!is2025 
+                ? 'bg-[#ffffff] text-black shadow-[3px_3px_0_0_rgba(0,0,0,1)] translate-x-[1px] translate-y-[1px]' 
+                : 'bg-transparent text-black hover:bg-[#FFECA1]'}`}
+          >
+            Đề TN + Tự Luận (Cổ điển)
+          </button>
+        </div>
+
+        {/* Quick Presets */}
+        {is2025 && (
+          <div className="flex items-center gap-2 pt-1">
+            <span className="text-[10px] font-black uppercase text-black">Mẫu nhanh:</span>
+            <button
+              type="button"
+              onClick={() => applyPreset('thpt90')}
+              className="px-2 py-1 bg-white border border-black text-[10px] font-black uppercase hover:bg-[#A3E635] cursor-pointer"
+            >
+              90p (12+4+6)
+            </button>
+            <button
+              type="button"
+              onClick={() => applyPreset('test45')}
+              className="px-2 py-1 bg-white border border-black text-[10px] font-black uppercase hover:bg-[#A3E635] cursor-pointer"
+            >
+              45p (6+2+3)
+            </button>
+            <button
+              type="button"
+              onClick={() => applyPreset('test15')}
+              className="px-2 py-1 bg-white border border-black text-[10px] font-black uppercase hover:bg-[#A3E635] cursor-pointer"
+            >
+              15p (4+1+1)
+            </button>
+          </div>
+        )}
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        
+        {/* SECTION 1: METADATA */}
+        <div className="p-5 bg-[#ffffff] border-[3px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] space-y-4">
+          <div className="flex items-center gap-2 mb-2 pb-3 border-b-4 border-black">
+            <div className="w-6 h-6 bg-[#A3E635] border-2 border-black flex items-center justify-center text-black">
+              <Info className="w-3.5 h-3.5 stroke-[3]" />
+            </div>
+            <h3 className="text-sm font-black text-black uppercase tracking-wider">Thông tin kỳ thi</h3>
+          </div>
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="group relative">
+                <label className={labelClass}>Đơn vị / Trường</label>
+                <div className="relative">
+                  <School className={iconClass} />
+                  <input 
+                    type="text" 
+                    list="schools-list"
+                    className={inputClass} 
+                    value={config.school} 
+                    onChange={e => setConfig({...config, school: e.target.value})} 
+                    placeholder="Sở GD&ĐT..."
+                    required 
+                  />
+                  <datalist id="schools-list">
+                    {COMMON_SCHOOLS.map(s => <option key={s} value={s} />)}
+                  </datalist>
                 </div>
-                <div className="bg-[#ffffff] p-4 rounded-2xl shadow-sm border border-slate-100 group transition-all hover:ring-2 hover:ring-indigo-500/20">
-                    <span className={labelClass}>Tự luận</span>
-                    <input type="number" className="w-full text-2xl font-black bg-transparent border-none p-0 focus:ring-0 text-indigo-900" value={config.counts.essay} onChange={e => handleCountChange('essay', e.target.value)} />
+              </div>
+
+              <div className="group relative">
+                <label className={labelClass}>Tên kỳ thi</label>
+                <div className="relative">
+                  <BookOpen className={iconClass} />
+                  <input 
+                    type="text" 
+                    list="exams-list"
+                    className={inputClass} 
+                    value={config.examName} 
+                    onChange={e => setConfig({...config, examName: e.target.value})} 
+                    required 
+                  />
+                  <datalist id="exams-list">
+                    {COMMON_EXAMS.map(e => <option key={e} value={e} />)}
+                  </datalist>
                 </div>
+              </div>
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="group relative">
+                <label className={labelClass}>Môn học</label>
+                <div className="relative">
+                  <BookOpen className={iconClass} />
+                  <input type="text" className={inputClass} placeholder="Toán học" value={config.subject} onChange={e => setConfig({...config, subject: e.target.value})} required />
+                </div>
+              </div>
+
+              <div className="group relative">
+                <label className={labelClass}>Khối lớp</label>
+                <div className="relative">
+                  <GraduationCap className={iconClass} />
+                  <input type="text" className={inputClass} placeholder="12" value={config.grade} onChange={e => setConfig({...config, grade: e.target.value})} required />
+                </div>
+              </div>
+
+              <div className="group relative">
+                <label className={labelClass}>Thời gian (phút)</label>
+                <div className="relative">
+                  <Clock className={iconClass} />
+                  <input type="number" className={inputClass} value={config.time} onChange={e => setConfig({...config, time: parseInt(e.target.value)||0})} />
+                </div>
+              </div>
+            </div>
+
+            <div className="group relative">
+              <label className={labelClass}>Chủ đề trọng tâm</label>
+              <div className="relative">
+                <LayoutDashboard className={iconClass} />
+                <input type="text" className={inputClass} placeholder="Vd: Khảo sát hàm số, Hình không gian Oxyz, Tích phân..." value={config.topic} onChange={e => setConfig({...config, topic: e.target.value})} required />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="group relative">
+                <label className={labelClass}>Ngôn ngữ</label>
+                <div className="relative">
+                  <Sparkles className={iconClass} />
+                  <select 
+                    className={selectClass}
+                    value={config.language || "vietnamese"}
+                    onChange={e => setConfig({...config, language: e.target.value as any})}
+                  >
+                    <option value="vietnamese">Tiếng Việt (Chuẩn)</option>
+                    <option value="bilingual">Song ngữ Anh - Việt</option>
+                    <option value="english">Tiếng Anh (Toán Quốc tế)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="group relative">
+                <label className={labelClass}>Năm học</label>
+                <input 
+                  type="text" 
+                  className={inputClass + " pl-4"}
+                  value={config.year} 
+                  onChange={e => setConfig({...config, year: e.target.value})} 
+                />
+              </div>
+            </div>
+
+            {/* TikZ Graphic Option */}
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setConfig(prev => ({ ...prev, includeTikZ: !prev.includeTikZ }))}
+                className="flex items-center gap-3 p-2.5 bg-[#ffffff] border-2 border-black w-full shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:bg-[#FFECA1] transition-all cursor-pointer text-left"
+              >
+                {config.includeTikZ ? (
+                  <CheckSquare className="w-5 h-5 text-black stroke-[3] shrink-0" />
+                ) : (
+                  <Square className="w-5 h-5 text-black stroke-[2] shrink-0" />
+                )}
+                <div>
+                  <span className="text-xs font-black text-black uppercase block">
+                    Bắt buộc AI vẽ Đồ thị & Hình học TikZ
+                  </span>
+                  <span className="text-[10px] text-gray-700 font-medium">
+                    Tự động tạo hình không gian, bảng biến thiên chuẩn xác cho câu hình học & giải tích
+                  </span>
+                </div>
+              </button>
+            </div>
+
+            <div className="group relative mt-2">
+              <label className={labelClass}>Yêu cầu nâng cao (Tùy chọn)</label>
+              <textarea 
+                className="w-full p-3 bg-[#ffffff] rounded-none border-[3px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] text-sm font-medium text-black placeholder:text-gray-500 min-h-[60px]" 
+                placeholder="Vd: 3 câu toán thực tế, bám sát đề minh họa HSA / V-SAT..." 
+                value={config.details || ''} 
+                onChange={e => setConfig({...config, details: e.target.value})} 
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 2: QUESTION COUNTS & MATRIX */}
+        <div className="p-5 bg-[#ffffff] border-[3px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] space-y-4">
+          <div className="flex items-center gap-2 mb-2 pb-3 border-b-4 border-black">
+            <div className="w-6 h-6 bg-[#00CECB] border-2 border-black flex items-center justify-center text-black">
+              <Sliders className="w-3.5 h-3.5 stroke-[3]" />
+            </div>
+            <h3 className="text-sm font-black text-black uppercase tracking-wider">
+              {is2025 ? 'Số câu hỏi theo 3 Phần (Chuẩn 2025)' : 'Số câu Trắc nghiệm & Tự luận'}
+            </h3>
+          </div>
+
+          {is2025 ? (
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-[#ffffff] p-3 border-2 border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] text-center">
+                <span className="text-[10px] font-black uppercase block text-black">Phần I: 4 Lựa chọn</span>
+                <input 
+                  type="number" 
+                  min="0"
+                  className="w-full text-center text-xl font-black bg-transparent border-none p-0 focus:ring-0 text-black mt-1" 
+                  value={config.counts.part1_mc || 12} 
+                  onChange={e => handleCountChange('part1_mc', e.target.value)} 
+                />
+              </div>
+
+              <div className="bg-[#ffffff] p-3 border-2 border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] text-center">
+                <span className="text-[10px] font-black uppercase block text-black">Phần II: Đúng / Sai</span>
+                <input 
+                  type="number" 
+                  min="0"
+                  className="w-full text-center text-xl font-black bg-transparent border-none p-0 focus:ring-0 text-black mt-1" 
+                  value={config.counts.part2_tf || 4} 
+                  onChange={e => handleCountChange('part2_tf', e.target.value)} 
+                />
+              </div>
+
+              <div className="bg-[#ffffff] p-3 border-2 border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] text-center">
+                <span className="text-[10px] font-black uppercase block text-black">Phần III: Điền đáp số</span>
+                <input 
+                  type="number" 
+                  min="0"
+                  className="w-full text-center text-xl font-black bg-transparent border-none p-0 focus:ring-0 text-black mt-1" 
+                  value={config.counts.part3_sa || 6} 
+                  onChange={e => handleCountChange('part3_sa', e.target.value)} 
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-[#ffffff] p-3 border-2 border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] text-center">
+                <span className={labelClass}>Trắc nghiệm (câu)</span>
+                <input type="number" className="w-full text-center text-xl font-black bg-transparent border-none p-0 focus:ring-0 text-black" value={config.counts.mc || 25} onChange={e => handleCountChange('mc', e.target.value)} />
+              </div>
+              <div className="bg-[#ffffff] p-3 border-2 border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] text-center">
+                <span className={labelClass}>Tự luận (câu)</span>
+                <input type="number" className="w-full text-center text-xl font-black bg-transparent border-none p-0 focus:ring-0 text-black" value={config.counts.essay || 3} onChange={e => handleCountChange('essay', e.target.value)} />
+              </div>
+            </div>
+          )}
+
+          {/* Matrix levels */}
+          <div className="pt-2">
+            <span className="text-xs font-black uppercase tracking-widest block mb-2 text-black">
+              Ma trận 4 mức độ tư duy:
+            </span>
             <div className="grid grid-cols-4 gap-2">
-                {[
-                    { k: 'lv1', l: 'NB', c: 'border-blue-200 text-blue-600 bg-blue-50/30' },
-                    { k: 'lv2', l: 'TH', c: 'border-emerald-200 text-emerald-600 bg-emerald-50/30' },
-                    { k: 'lv3', l: 'VD', c: 'border-amber-200 text-amber-600 bg-amber-50/30' },
-                    { k: 'lv4', l: 'VDC', c: 'border-rose-200 text-rose-600 bg-rose-50/30' }
-                ].map((item) => (
-                    <div key={item.k} className={`p-3 rounded-2xl border text-center transition-all hover:scale-105 ${item.c}`}>
-                        <div className="text-[9px] font-black opacity-60 mb-1">{item.l}</div>
-                        <input type="number" className="w-full text-center font-black bg-transparent border-none p-0 focus:ring-0 text-base" value={(config.matrix as any)[item.k]} onChange={e => handleMatrixChange(item.k as any, e.target.value)} />
-                    </div>
-                ))}
+              {[
+                { k: 'lv1', l: 'Nhận biết (NB)', c: 'bg-[#93C5FD]' },
+                { k: 'lv2', l: 'Thông hiểu (TH)', c: 'bg-[#86EFAC]' },
+                { k: 'lv3', l: 'Vận dụng (VD)', c: 'bg-[#FDE047]' },
+                { k: 'lv4', l: 'VDC (Nâng cao)', c: 'bg-[#FCA5A5]' }
+              ].map((item) => (
+                <div key={item.k} className={`p-2.5 border-2 border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] text-center ${item.c}`}>
+                  <div className="text-[9px] font-black uppercase text-black mb-1">{item.l}</div>
+                  <input type="number" min="0" className="w-full text-center font-black bg-transparent border-none p-0 focus:ring-0 text-base text-black" value={(config.matrix as any)[item.k]} onChange={e => handleMatrixChange(item.k as any, e.target.value)} />
+                </div>
+              ))}
             </div>
-            
-            <div className={`flex items-center justify-center gap-2 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${isMatrixValid ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200' : 'bg-rose-100 text-rose-600 animate-pulse'}`}>
-                {isMatrixValid ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-                {isMatrixValid ? `Hợp lệ: ${matrixTotal} câu` : `Chênh lệch: ${matrixTotal - questionsTotal} câu`}
-            </div>
+          </div>
+          
+          <div className={`flex items-center justify-center gap-2 py-2.5 border-2 border-black font-black text-xs uppercase tracking-widest ${isMatrixValid ? 'bg-[#A3E635] text-black' : 'bg-[#FF5E5B] text-black animate-pulse'}`}>
+            {isMatrixValid ? <CheckCircle2 className="w-4 h-4 stroke-[3]" /> : <AlertCircle className="w-4 h-4 stroke-[3]" />}
+            {isMatrixValid ? `Hợp lệ: Tổng ${matrixTotal} câu` : `Lệch: Tổng ma trận ${matrixTotal} / ${questionsTotal} câu`}
+          </div>
         </div>
 
         <button
           type="submit"
           disabled={isLoading || !config.subject || !config.topic || !isMatrixValid}
-          className={`w-full group flex items-center justify-center gap-4 py-5 px-8 rounded-3xl text-white font-black shadow-xl transition-all duration-300 transform hover:-translate-y-1 active:scale-95
-            ${(isLoading || !isMatrixValid)
-              ? 'bg-slate-200 cursor-not-allowed text-slate-600' 
-              : 'bg-gradient-to-r from-indigo-600 to-violet-700 hover:shadow-indigo-500/40'}`}
+          className={`w-full relative flex items-center justify-center gap-3 py-4 px-6 rounded-none text-black font-black uppercase tracking-widest text-lg border-4 border-black shadow-[6px_6px_0_0_rgba(0,0,0,1)] transition-all duration-75 active:translate-y-[6px] active:translate-x-[6px] active:shadow-none cursor-pointer
+            ${(isLoading || !isMatrixValid || !config.subject || !config.topic)
+              ? 'bg-[#E2E8F0] cursor-not-allowed text-gray-500 shadow-none border-gray-400' 
+              : 'bg-[#FF90E8] hover:bg-[#F472B6]'}`}
         >
           {isLoading ? (
-             <span className="w-6 h-6 border-4 border-white/20 border-t-white rounded-full animate-spin"/>
+            <>
+              <span className="w-5 h-5 border-4 border-black border-t-transparent rounded-full animate-spin"/>
+              <span>Đang thiết kế đề thi...</span>
+            </>
           ) : (
             <>
-              <Wand2 className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-              THIẾT KẾ ĐỀ {useContext ? 'ĐỒNG BỘ' : ''}
+              <Wand2 className="w-6 h-6 stroke-[3]" />
+              <span>Thiết Kế Đề Thi LaTeX ({is2025 ? 'Format 2025' : 'Classic'})</span>
             </>
           )}
         </button>

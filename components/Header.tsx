@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { FileEdit, Sparkles, HelpCircle } from 'lucide-react';
 
 interface HeaderProps {
@@ -18,11 +18,11 @@ const Header: React.FC<HeaderProps> = ({ onOpenReadme }) => {
             </div>
             <div>
               <h1 className="text-2xl font-black text-black tracking-widest uppercase">
-                Yuta<span className="text-[#00CECB]">!</span>LaTeX
+                Yuta<span className="text-[#00CECB]">!</span>LaTeX Math
               </h1>
               <p className="text-[10px] text-black font-black tracking-widest uppercase flex items-center gap-1">
                 <span className="w-2 h-2 border-2 border-black rounded-none bg-[#A3E635]"></span>
-                Powered by Gemini
+                Soạn Thảo & Tự Động Hóa Toán Học
               </p>
             </div>
           </div>
@@ -37,7 +37,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenReadme }) => {
 
              <div className="hidden sm:flex flex-col items-end mr-2">
                 <span className="text-xs font-black text-black uppercase tracking-widest">Yuta Education</span>
-                <span className="text-[10px] text-black font-bold uppercase border-b-2 border-black">Standardized Exams</span>
+                <span className="text-[10px] text-black font-bold uppercase border-b-2 border-black">Toán Học & Manim</span>
              </div>
              <div className="flex items-center gap-2 px-4 py-2 rounded-none bg-[#FFED66] border-4 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
                 <Sparkles className="w-4 h-4 text-black stroke-[3]" />

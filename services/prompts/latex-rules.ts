@@ -1,11 +1,240 @@
-export const LATEX_TECHNICAL_RULES = `
-QUY TẮC KỸ THUẬT LATEX (BẮT BUỘC ĐỂ KHÔNG BỊ LỖI HIỂN THỊ):
-1. KHÔNG SỬ DỤNG MARKDOWN: Tuyệt đối không dùng **, *, #, - (dấu gạch đầu dòng markdown) bên trong mã nguồn LaTeX. Thay vào đó hãy dùng \\textbf{}, \\textit{}, \\section{}, \\begin{itemize}. BẮT BUỘC phải bọc toàn bộ mã nguồn LaTeX cuối cùng trong block markdown \`\`\`latex ... \`\`\` để tiện cho việc copy.
-2. TIẾNG VIỆT & TRÌNH BIÊN DỊCH: Bắt buộc thiết kế để biên dịch bằng pdfLaTeX. Sử dụng gói lệnh \\usepackage[utf8]{inputenc} và \\usepackage[T1]{fontenc}, kết hợp \\usepackage{vietnam}. KHÔNG dùng fontspec hay xelatex.
-3. TOÁN HỌC & CÔNG THỨC: Tất cả công thức toán học, biến số phải nằm trong $...$ hoặc \\[ ... \\]. Không để công thức toán ở dạng text thường. ĐẢM BẢO đã đóng ngoặc $ hoặc \\] hợp lệ.
-4. KÝ TỰ ĐẶC BIỆT & ESCAPE: Bắt buộc escape các ký tự đặc biệt của LaTeX. Muốn viết phần trăm (%) phải viết là \\%. Muốn viết dấu & phải viết là \\&. Các ký tự _, $, {, } cũng phải escape (\\_, \\$, \\{, \\}). Ký tự % là comment, nếu dùng để comment phải xuống dòng ngay sau đó.
-5. CẤU TRÚC BỀN VỮNG: Phải bao gồm đầy đủ từ \\documentclass cho đến \\end{document}. Đảm bảo mọi môi trường \\begin{...} đều phải có \\end{...} đóng lại tương ứng, không được thiếu.
-6. THIẾT KẾ UI (HỘP & TIÊU ĐỀ): Giảm thiểu tối đa số lượng box. Nếu dùng tcolorbox thì BẮT BUỘC thiết lập viền vuông vức (dùng tùy chọn sharp corners, ví dụ: \\begin{tcolorbox}[sharp corners]), KHÔNG ĐƯỢC bo tròn. Các tiêu đề \\section, \\subsection mặc định phải tô màu xanh dương (kiểu color{myblue} hoặc color{blue}).
+﻿export const LATEX_TECHNICAL_RULES = `
+QUY TẮC KỸ THUẬT LATEX TOÁN HỌC (BẮT BUỘC ĐỂ BIÊN DỊCH 100% THÀNH CÔNG VỚI PDFLATEX):
+1. KHÔNG SỬ DỤNG CÚ PHÁP MARKDOWN: Tuyệt đối không dùng **, *, #, - (dấu gạch đầu dòng markdown) bên trong mã nguồn LaTeX. Thay vào đó hãy dùng \\textbf{}, \\textit{}, \\section{}, \\begin{itemize}, \\begin{enumerate}. BẮT BUỘC phải bọc toàn bộ mã nguồn LaTeX cuối cùng trong block markdown \`\`\`latex ... \`\`\` để tiện cho việc copy và xuất file.
+2. TIẾNG VIỆT & TRÌNH BIÊN DỊCH: Bắt buộc tương thích pdfLaTeX. Sử dụng gói lệnh:
+   \\usepackage[utf8]{inputenc}
+   \\usepackage[T1]{fontenc}
+   \\usepackage{vietnam}
+   KHÔNG dùng fontspec hay xelatex.
+3. TOÁN HỌC & KÝ HIỆU:
+   - Mọi biểu thức toán học, biến số, hàm số, phương trình phải nằm trong $...$ hoặc \\[ ... \\].
+   - Tên góc, đoạn thẳng, vectơ: dùng $\\widehat{ABC}$, $AB$, $\\vec{u}$ hoặc $\\overrightarrow{AB}$.
+   - Tích phân, vi phân, giới hạn: $\\int_{a}^{b} f(x)\\,\\mathrm{d}x$, $\\lim_{x \\to x_0} f(x)$.
+   - Đảm bảo đã đóng mở ngoặc $ hoặc \\[ \\] đầy đủ, không thiếu.
+4. KÝ TỰ ĐẶC BIỆT & ESCAPE:
+   - Bắt buộc escape: \\% (phần trăm), \\& (và), \\_ (gạch dưới), \\$ (đô la), \\{ \\} (ngoặc nhọn khi in chữ).
+   - Ký tự % là comment trong LaTeX, nếu dùng comment thì xuống dòng ngay sau đó.
+5. VẼ HÌNH HỌC & ĐỒ THỊ TIKZ:
+   - Sử dụng \\usepackage{tikz}, \\usepackage{pgfplots}, \\pgfplotsset{compat=1.18}.
+   - Thư viện TikZ cần thiết: \\usetikzlibrary{arrows.meta, positioning, calc, angles, quotes, patterns}.
+   - Khi vẽ hình học không gian (khối chóp, lăng trụ, nón, trụ, cầu): nét đứt dùng [dashed], nét liền dùng [thick], góc vuông dùng \\pic [draw, angle radius=2mm] {right angle = ...}.
+   - Bảng biến thiên: Dùng cấu trúc bảng chuẩn sạch (tabular/array) hoặc tikzpicture với các hàng $x$, $f'(x)$, $f(x)$ và mũi tên $\\nearrow, \\searrow$ thẳng hàng.
+6. THIẾT KẾ UI & KHUNG VIỀN:
+   - Giảm thiểu tối đa số lượng box dư thừa.
+   - Nếu dùng tcolorbox, BẮT BUỘC dùng [sharp corners] để viền vuông vức hiện đại, không dùng bo tròn.
+   - Tiêu đề dùng màu xanh dương dịu (\\definecolor{myblue}{RGB}{0,102,204}).
+`;
+
+export const EXAM_TEMPLATE_2025 = `
+% !TEX program = pdflatex
+\\documentclass[12pt,a4paper]{article}
+
+\\usepackage[a4paper,top=1.5cm,bottom=1.5cm,left=1.5cm,right=1.5cm]{geometry}
+\\usepackage[utf8]{inputenc}
+\\usepackage[T1]{fontenc}
+\\usepackage{vietnam}
+\\usepackage{mathptmx}
+\\usepackage{amsmath,amssymb}
+\\usepackage{enumitem}
+\\usepackage{multicol}
+\\usepackage{fancyhdr}
+\\usepackage{titlesec}
+\\usepackage{tabularx}
+\\usepackage{array}
+\\usepackage{tikz}
+\\usepackage{pgfplots}
+\\pgfplotsset{compat=1.18}
+\\usetikzlibrary{arrows.meta, positioning, calc, angles, quotes, patterns}
+\\usepackage[table]{xcolor}
+\\definecolor{myblue}{RGB}{0,102,204}
+\\definecolor{darkgreen}{RGB}{0,128,0}
+
+\\usepackage[most]{tcolorbox}
+\\tcbset{sharp corners}
+
+\\setlength{\\parindent}{0pt}
+\\setlength{\\parskip}{3pt}
+\\renewcommand{\\baselinestretch}{1.12}
+
+\\pagestyle{fancy}
+\\fancyhf{}
+\\lhead{\\textbf{\\small [TRƯỜNG/SỞ GD\\&ĐT]}}
+\\rhead{\\textbf{\\small ĐỀ THI TOÁN HỌC 2025--2026}}
+\\cfoot{\\small Trang \\thepage}
+\\renewcommand{\\headrulewidth}{0.4pt}
+
+% Macros định dạng câu hỏi
+\\newcommand{\\cauhoi}[1]{\\vspace{6pt}\\noindent\\textbf{Câu #1.}}
+\\newcommand{\\dapan}[4]{
+\\begin{multicols}{4}
+    \\begin{enumerate}[label=\\textbf{\\Alph*.}, itemsep=1pt, leftmargin=*]
+        \\item #1
+        \\item #2
+        \\item #3
+        \\item #4
+    \\end{enumerate}
+\\end{multicols}
+\\vspace{-4pt}
+}
+
+\\newcommand{\\yDungSai}[4]{
+\\begin{enumerate}[label=\\textbf{\\alph*)}, itemsep=2pt, leftmargin=1.5cm]
+    \\item #1
+    \\item #2
+    \\item #3
+    \\item #4
+\\end{enumerate}
+}
+
+\\newcommand{\\traLoiNgan}{\\hfill\\fbox{\\textbf{Đáp số:}\\hspace{3cm}}}
+
+\\begin{document}
+
+\\begin{center}
+    \\begin{tabularx}{\\linewidth}{X C}
+        \\textbf{[TÊN SỞ GD\\&ĐT / TRƯỜNG]} & \\textbf{KỲ THI ĐÁNH GIÁ NĂNG LỰC TOÁN HỌC} \\\\
+        \\textbf{ĐỀ CHÍNH THỨC} & \\textbf{NĂM HỌC 2025 -- 2026} \\\\
+        \\textit{(Đề thi có XX trang)} & \\textbf{Môn: TOÁN HỌC} \\\\
+        & \\textit{Thời gian làm bài: [XX] phút (không kể thời gian phát đề)}
+    \\end{tabularx}
+\\end{center}
+\\vspace{3pt}
+\\hrule height 1pt
+\\vspace{10pt}
+
+% ----------------------------------------------------
+% PHẦN I: TRẮC NGHIỆM NHIỀU LỰA CHỌN
+% ----------------------------------------------------
+\\noindent\\textbf{\\large\\color{myblue}PHẦN I. Câu trắc nghiệm nhiều phương án lựa chọn.} \\\\
+\\textit{Thí sinh trả lời từ câu 1 đến câu [XX]. Mỗi câu hỏi thí sinh chỉ chọn một phương án đúng nhất.}
+\\vspace{5pt}
+
+% Chèn các câu hỏi phần 1 dùng \\cauhoi{n} và \\dapan{A}{B}{C}{D}
+
+\\vspace{15pt}
+% ----------------------------------------------------
+% PHẦN II: TRẮC NGHIỆM ĐÚNG / SAI
+% ----------------------------------------------------
+\\noindent\\textbf{\\large\\color{myblue}PHẦN II. Câu trắc nghiệm đúng sai.} \\\\
+\\textit{Thí sinh trả lời từ câu 1 đến câu [XX]. Trong mỗi ý a), b), c), d) ở mỗi câu, thí sinh chọn đúng hoặc sai.}
+\\vspace{5pt}
+
+% Chèn các câu hỏi phần 2 dùng \\cauhoi{n} và \\yDungSai{ý a}{ý b}{ý c}{ý d}
+
+\\vspace{15pt}
+% ----------------------------------------------------
+% PHẦN III: TRẮC NGHIỆM TRẢ LỜI NGẮN
+% ----------------------------------------------------
+\\noindent\\textbf{\\large\\color{myblue}PHẦN III. Câu trắc nghiệm trả lời ngắn.} \\\\
+\\textit{Thí sinh trả lời từ câu 1 đến câu [XX]. Thí sinh điền kết quả vào ô tương ứng.}
+\\vspace{5pt}
+
+% Chèn các câu hỏi phần 3 dùng \\cauhoi{n} và \\traLoiNgan
+
+\\newpage
+% ====================================================
+% HƯỚNG DẪN GIẢI CHI TIẾT & BẢNG ĐÁP ÁN
+% ====================================================
+\\begin{center}
+    {\\Large\\bfseries\\color{myblue} ĐÁP ÁN VÀ HƯỚNG DẪN GIẢI CHI TIẾT}
+\\end{center}
+\\vspace{10pt}
+
+\\subsection*{\\color{myblue}BẢNG ĐÁP ÁN PHẦN I}
+% Bảng đáp án Phần I dạng ma trận cột
+
+\\subsection*{\\color{myblue}BẢNG ĐÁP ÁN PHẦN II}
+% Bảng đáp án Phần II dạng a: Đ/S, b: Đ/S, c: Đ/S, d: Đ/S
+
+\\subsection*{\\color{myblue}BẢNG ĐÁP ÁN PHẦN III}
+% Bảng đáp số Phần III dạng số/phân số
+
+\\vspace{10pt}
+\\subsection*{\\color{myblue}LỜI GIẢI CHI TIẾT TỪNG CÂU}
+% Lời giải chi tiết theo từng câu hỏi
+
+\\end{document}
+`;
+
+export const EXAM_TEMPLATE_CLASSIC = `
+% !TEX program = pdflatex
+\\documentclass[12pt,a4paper]{article}
+
+\\usepackage[a4paper,top=1.8cm,bottom=1.8cm,left=1.5cm,right=1.5cm]{geometry}
+\\usepackage[utf8]{inputenc}
+\\usepackage[T1]{fontenc}
+\\usepackage{vietnam}
+\\usepackage{mathptmx}
+\\usepackage{amsmath,amssymb}
+\\usepackage{enumitem}
+\\usepackage{multicol}
+\\usepackage{fancyhdr}
+\\usepackage{titlesec}
+\\usepackage{tabularx}
+\\usepackage{array}
+\\usepackage{tikz}
+\\usepackage{pgfplots}
+\\pgfplotsset{compat=1.18}
+\\usepackage[table]{xcolor}
+\\definecolor{myblue}{RGB}{0,102,204}
+
+\\usepackage[most]{tcolorbox}
+\\tcbset{sharp corners}
+
+\\setlength{\\parindent}{0pt}
+\\setlength{\\parskip}{3pt}
+\\renewcommand{\\baselinestretch}{1.12}
+
+\\pagestyle{fancy}
+\\fancyhf{}
+\\lhead{\\textbf{KỲ THI/BÀI KIỂM TRA}}
+\\rhead{\\textbf{Môn thi: [TÊN MÔN]}}
+\\cfoot{\\small Trang \\thepage}
+\\renewcommand{\\headrulewidth}{0.4pt}
+
+\\newcommand{\\cauhoi}[1]{\\vspace{6pt}\\noindent{\\textbf{Câu #1.}}}
+\\newcommand{\\dapan}[4]{ 
+\\begin{multicols}{4}
+    \\begin{enumerate}[label=\\textbf{\\Alph*.}, itemsep=2pt, leftmargin=*]
+        \\item #1
+        \\item #2
+        \\item #3
+        \\item #4
+    \\end{enumerate}
+\\end{multicols}
+\\vspace{-4pt}
+}
+
+\\begin{document}
+
+\\begin{center}
+    {\\Large\\bfseries ĐỀ THI ĐÁNH GIÁ NĂNG LỰC TOÁN HỌC}\\\\[5pt]
+    {\\large\\bfseries Môn: TOÁN HỌC - Chuyên đề: [CHUYÊN ĐỀ]}\\\\[5pt]
+    \\textit{Thời gian làm bài: [XX] phút}
+\\end{center}
+\\vspace{5pt}
+\\noindent\\rule{\\linewidth}{0.8pt}
+\\vspace{10pt}
+
+\\section*{\\color{myblue}I. PHẦN TRẮC NGHIỆM}
+% Điền các câu hỏi trắc nghiệm
+
+\\section*{\\color{myblue}II. PHẦN TỰ LUẬN}
+% Điền các câu hỏi tự luận
+
+\\newpage
+\\begin{center}
+    {\\Large\\bfseries ĐÁP ÁN VÀ HƯỚNG DẪN GIẢI CHI TIẾT}
+\\end{center}
+\\vspace{10pt}
+
+\\section*{\\color{myblue}I. PHẦN TRẮC NGHIỆM}
+% Bảng đáp án trắc nghiệm
+
+\\section*{\\color{myblue}II. PHẦN TỰ LUẬN}
+% Lời giải tự luận phân tích từng bước
+
+\\end{document}
 `;
 
 export const ROADMAP_TEMPLATE = `
@@ -27,11 +256,11 @@ export const ROADMAP_TEMPLATE = `
 \\usepackage{pgffor}
 \\usepackage{tikz}
 \\usepackage[table]{xcolor}
-\\definecolor{myblue}{RGB}{0,112,192}
+\\definecolor{myblue}{RGB}{0,102,204}
 \\usetikzlibrary{arrows.meta, positioning}
 
 \\usepackage[most]{tcolorbox}
-\\tcbset{sharp corners} % Yeu cau box vuong vuc
+\\tcbset{sharp corners}
 
 \\setlength{\\parindent}{0pt}
 \\setlength{\\parskip}{5pt}
@@ -57,13 +286,10 @@ export const ROADMAP_TEMPLATE = `
 \\vspace{10pt}
 
 \\section{Tổng quan và Định hướng (Mindset)}
-% Viết phần Mindset chuẩn bị tinh thần
 
 \\section{Bản đồ Lộ trình Tổng thể}
-% Vẽ bảng tóm tắt thời gian và các chặng
 
 \\section{Chi tiết các chặng}
-% Chi tiết từng Giai đoạn, các khái niệm, bài tập
 
 \\end{document}
 `;
@@ -86,12 +312,14 @@ export const PRE_ALGEBRA_TEMPLATE = `
 \\usepackage{array}
 \\usepackage{pgffor}
 \\usepackage{tikz}
+\\usepackage{pgfplots}
+\\pgfplotsset{compat=1.18}
 \\usepackage[table]{xcolor}
-\\definecolor{myblue}{RGB}{0,112,192}
-\\usetikzlibrary{arrows.meta}
+\\definecolor{myblue}{RGB}{0,102,204}
+\\usetikzlibrary{arrows.meta, calc, positioning}
 
 \\usepackage[most]{tcolorbox}
-\\tcbset{sharp corners} % Yeu cau box vuong vuc
+\\tcbset{sharp corners}
 
 \\setlength{\\parindent}{0pt}
 \\setlength{\\parskip}{5pt}
@@ -128,7 +356,7 @@ export const PRE_ALGEBRA_TEMPLATE = `
 \\begin{titlepage}
 \\begin{center}
     \\vspace*{1.2cm}
-    {\\Large\\bfseries TÀI LIỆU HỌC TẬP}\\\\[8pt]
+    {\\Large\\bfseries TÀI LIỆU HỌC TẬP TOÁN HỌC}\\\\[8pt]
     {\\Large\\bfseries CHUYÊN SÂU}\\\\[10pt]
     {\\Large\\bfseries CHỦ ĐỀ: [MỤC TIÊU BÀI HỌC CỤ THỂ]}\\\\[8pt]
     {\\Huge\\bfseries [TÊN CHỦ ĐỀ CHÍNH]}\\\\[10pt]
@@ -152,118 +380,24 @@ Ngày học: \\dotfill & Điểm: \\dotfill
 
 \\section{[TÊN BÀI HỌC CHÍNH]}
 
-\\dangbai{Phần 1. Vocabulary Box -- Từ vựng trọng tâm}
-% Sinh bảng từ vựng bằng tabularx với các cột C và phần \\ghinho tóm tắt lý thuyết tại đây (Nếu có tùy chọn Song Ngữ, bỏ đi nếu Thuần Việt)
+\\dangbai{Phần 1. Lý thuyết trọng tâm}
 
-\\dangbai{Phần 2. Lý thuyết nền tảng}
-% Sinh nội dung lý thuyết thuần học thuật tại đây, kết hợp vẽ hình minh họa bằng TikZ nếu cần thiết.
-
-\\dangbai{Phần 3. Guided Examples -- Ví dụ có hướng dẫn}
-% Sinh tối thiểu 3-5 ví dụ áp dụng cấu trúc \\vidu, \\loigiai, có giải thích.
+\\dangbai{Phần 2. Ví dụ mẫu & Phương pháp giải}
 
 \\trangbaitap
-\\dangbai{Phần 4. Multiple Choice Practice -- Bài tập trắc nghiệm}
-% Sinh các câu hỏi trắc nghiệm dùng \\baitap, có ghi chú từ khóa \\textit{Từ khóa:} và \\dongke[2] hoặc \\dongke[3].
+\\dangbai{Phần 3. Bài tập trắc nghiệm}
 
 \\trangbaitap
-\\dangbai{Phần 5. Short Answer Practice -- Bài tập tự luận}
-% Sinh câu hỏi tự luận, dịch thuật toán học hoặc tính toán nâng cao sử dụng \\baitap và \\dongke[4].
+\\dangbai{Phần 4. Bài tập tự luận & Dòng kẻ chấm}
 
 \\vspace{20pt}
-\\section{Answer Key -- Đáp án}
-% Sinh ma trận đáp án trắc nghiệm gọn gàng chi tiết theo bảng nhiều cột.
-% Tự luận ghi kết quả ngắn gọn.
-
-\\vspace{20pt}
-\\section{Vocabulary Review -- Ôn tập từ vựng}
-% Nếu song ngữ: hệ thống lại từ vựng bằng tabularx.
+\\section{Đáp án & Hướng dẫn giải ngắn gọn}
 
 \\vfill
 \\begin{center}
 \\rule{0.65\\linewidth}{0.4pt}\\\\[5pt]
 \\textbf{Chúc các em học tốt!}
 \\end{center}
-
-\\end{document}
-`;
-
-export const EXAM_TEMPLATE = `
-% !TEX program = pdflatex
-\\documentclass[12pt,a4paper]{article}
-
-\\usepackage[a4paper,top=1.8cm,bottom=1.8cm,left=1.5cm,right=1.5cm]{geometry}
-\\usepackage[utf8]{inputenc}
-\\usepackage[T1]{fontenc}
-\\usepackage{vietnam}
-\\usepackage{mathptmx}
-\\usepackage{amsmath,amssymb}
-\\usepackage{enumitem}
-\\usepackage{multicol}
-\\usepackage{fancyhdr}
-\\usepackage{titlesec}
-\\usepackage{tabularx}
-\\usepackage{array}
-\\usepackage{tikz}
-\\usepackage[table]{xcolor}
-\\definecolor{myblue}{RGB}{0,112,192}
-
-\\usepackage[most]{tcolorbox}
-\\tcbset{sharp corners} % Yeu cau box vuong vuc
-
-\\setlength{\\parindent}{0pt}
-\\setlength{\\parskip}{3pt}
-\\renewcommand{\\baselinestretch}{1.1}
-\\setlist[itemize]{leftmargin=1.2cm}
-\\setlist[enumerate]{leftmargin=1cm,itemsep=4pt}
-
-\\pagestyle{fancy}
-\\fancyhf{}
-\\lhead{\\textbf{KỲ THI/BÀI KIỂM TRA}}
-\\rhead{\\textbf{Môn thi: [TÊN MÔN]}}
-\\cfoot{\\small Trang \\thepage}
-\\renewcommand{\\headrulewidth}{0.4pt}
-
-\\newcommand{\\cauhoi}[1]{\\vspace{6pt}\\noindent{\\textbf{Câu #1.}}}
-\\newcommand{\\dapan}[4]{ 
-\\begin{multicols}{4}
-    \\begin{enumerate}[label=\\textbf{\\Alph*.}, itemsep=2pt, leftmargin=*]
-        \\item #1
-        \\item #2
-        \\item #3
-        \\item #4
-    \\end{enumerate}
-\\end{multicols}
-\\vspace{-4pt}
-}
-
-\\begin{document}
-
-\\begin{center}
-    {\\Large\\bfseries ĐỀ THI ĐÁNH GIÁ NĂNG LỰC}\\\\[5pt]
-    {\\large\\bfseries Môn: [MÔN] - Tên chủ đề/Phạm vi kiến thức}\\\\[5pt]
-    \\textit{Thời gian làm bài: [XX] phút}
-\\end{center}
-\\vspace{5pt}
-\\noindent\\rule{\\linewidth}{0.8pt}
-\\vspace{10pt}
-
-\\section*{\\color{myblue}I. PHẦN TRẮC NGHIỆM}
-% Điền các câu hỏi trắc nghiệm dùng lệnh \\cauhoi và \\dapan
-
-\\section*{\\color{myblue}II. PHẦN TỰ LUẬN}
-% Điền các câu hỏi tự luận
-
-\\newpage
-\\begin{center}
-    {\\Large\\bfseries ĐÁP ÁN VÀ HƯỚNG DẪN GIẢI CHI TIẾT}
-\\end{center}
-\\vspace{10pt}
-
-\\section*{\\color{myblue}I. PHẦN TRẮC NGHIỆM}
-% Bảng đáp án trắc nghiệm nhiều cột
-
-\\section*{\\color{myblue}II. PHẦN TỰ LUẬN}
-% Lời giải tự luận phân tích từng bước
 
 \\end{document}
 `;

@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Book, User, Layout, Wand2, Info, GraduationCap, School , ChevronDown, Link as LinkIcon} from "lucide-react";
+﻿import React, { useState, useEffect } from 'react';
+import { Book, User, Layout, Wand2, Info, GraduationCap, ChevronDown } from "lucide-react";
 import { WorksheetConfig, GenerationStatus } from '../types';
 
 interface WorksheetFormProps {
   onSubmit: (data: WorksheetConfig) => void;
   status: GenerationStatus;
-  initialContext?: string;
   contextTopic?: string;
   contextSubject?: string;
   contextGrade?: string;
@@ -19,11 +18,12 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
   contextGrade 
 }) => {
   const [config, setConfig] = useState<WorksheetConfig>({
-    subject: contextSubject || '',
+    subject: contextSubject || 'Toán học',
     topic: contextTopic || '',
-    grade: contextGrade || '',
+    grade: contextGrade || '12',
     teacherName: 'Giáo viên',
-    language: 'bilingual'
+    language: 'vietnamese',
+    details: ''
   });
 
   useEffect(() => {
@@ -41,15 +41,17 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(config);
+    if (config.subject && config.topic && config.teacherName) {
+      onSubmit(config);
+    }
   };
 
   const handleChange = (field: keyof WorksheetConfig, value: any) => {
     setConfig(prev => ({ ...prev, [field]: value }));
   };
 
-  const inputClass = "w-full pl-10 pr-4 py-2.5 bg-[#ffffff] rounded-none border-[3px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] focus:ring-0 focus:translate-y-1 focus:translate-x-1 focus:shadow-none transition-all text-sm font-bold text-black placeholder:text-gray-700 uppercase";
-  const selectClass = "w-full pl-10 pr-8 py-2.5 bg-[#ffffff] rounded-none border-[3px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] focus:ring-0 focus:translate-y-1 focus:translate-x-1 focus:shadow-none transition-all text-sm font-bold text-black uppercase  cursor-pointer appearance-none";
+  const inputClass = "w-full pl-10 pr-4 py-2.5 bg-[#ffffff] rounded-none border-[3px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] focus:ring-0 focus:translate-y-1 focus:translate-x-1 focus:shadow-none transition-all text-sm font-bold text-black placeholder:text-gray-500 uppercase";
+  const selectClass = "w-full pl-10 pr-8 py-2.5 bg-[#ffffff] rounded-none border-[3px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] focus:ring-0 focus:translate-y-1 focus:translate-x-1 focus:shadow-none transition-all text-sm font-bold text-black uppercase cursor-pointer appearance-none";
   const labelClass = "block text-xs font-black text-black mb-1.5 uppercase tracking-widest";
   const iconClass = "pointer-events-none absolute left-3.5 top-[13px] w-4 h-4 text-black font-black";
 
@@ -57,12 +59,12 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
     <div className="bg-[#ffffff] rounded-none shadow-[8px_8px_0_0_rgba(0,0,0,1)] border-4 border-black p-6 lg:p-8 h-fit sticky top-28 overflow-y-auto max-h-[calc(100vh-9rem)] scrollbar-hide">
       
       <div className="flex items-center gap-4 mb-8 border-b-4 border-black pb-4">
-        <div className="w-12 h-12 bg-[#FF5E5B] flex items-center justify-center text-black border-4 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] rounded-none">
+        <div className="w-12 h-12 bg-[#A3E635] flex items-center justify-center text-black border-4 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] rounded-none">
             <Book className="w-6 h-6 stroke-[3]" />
         </div>
         <div>
             <h2 className="text-2xl font-black text-black uppercase tracking-widest">Phiếu Bài Tập</h2>
-            <p className="text-xs text-black font-bold uppercase tracking-wider">Chuẩn Retro LaTeX (XeLaTeX)</p>
+            <p className="text-xs text-black font-bold uppercase tracking-wider">Chuẩn PDFLaTeX & Dòng Chấm</p>
         </div>
       </div>
       
@@ -78,34 +80,36 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
             </div>
 
             <div className="space-y-4">
-                <div className="group relative">
-                    <label className={labelClass}>Môn học</label>
-                    <div className="relative">
-                        <Book className={iconClass} />
-                        <input
-                            type="text"
-                            className={inputClass}
-                            placeholder="Vd: Toán học"
-                            value={config.subject}
-                            onChange={e => handleChange('subject', e.target.value)}
-                            required
-                        />
-                    </div>
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="group relative">
+                      <label className={labelClass}>Môn học</label>
+                      <div className="relative">
+                          <Book className={iconClass} />
+                          <input
+                              type="text"
+                              className={inputClass}
+                              placeholder="Vd: Toán học"
+                              value={config.subject}
+                              onChange={e => handleChange('subject', e.target.value)}
+                              required
+                          />
+                      </div>
+                  </div>
 
-                <div className="group relative">
-                    <label className={labelClass}>Lớp</label>
-                    <div className="relative">
-                        <GraduationCap className={iconClass} />
-                        <input
-                            type="text"
-                            className={inputClass}
-                            placeholder="Vd: 9"
-                            value={config.grade}
-                            onChange={e => handleChange('grade', e.target.value)}
-                            required
-                        />
-                    </div>
+                  <div className="group relative">
+                      <label className={labelClass}>Lớp</label>
+                      <div className="relative">
+                          <GraduationCap className={iconClass} />
+                          <input
+                              type="text"
+                              className={inputClass}
+                              placeholder="Vd: 12"
+                              value={config.grade}
+                              onChange={e => handleChange('grade', e.target.value)}
+                              required
+                          />
+                      </div>
+                  </div>
                 </div>
                 
                 <div className="group relative">
@@ -115,7 +119,7 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
                         <input
                             type="text"
                             className={inputClass}
-                            placeholder="Vd: Số Nguyên"
+                            placeholder="Vd: Tích phân & Ứng dụng hình học"
                             value={config.topic}
                             onChange={e => handleChange('topic', e.target.value)}
                             required
@@ -123,44 +127,46 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
                     </div>
                 </div>
 
-                <div className="group relative">
-                    <label className={labelClass}>Ngôn ngữ</label>
-                    <div className="relative">
-                        <Wand2 className={iconClass} />
-                        <select
-                            className={selectClass}
-                            value={config.language || 'bilingual'}
-                            onChange={e => handleChange('language', e.target.value)}
-                        >
-                             <option value="bilingual">Song ngữ Anh - Việt</option>
-                             <option value="vietnamese">Thuần Việt</option>
-                             <option value="english">Thuần Anh</option>
-                        </select>
-<ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-                    </div>
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="group relative">
+                      <label className={labelClass}>Ngôn ngữ</label>
+                      <div className="relative">
+                          <Wand2 className={iconClass} />
+                          <select
+                              className={selectClass}
+                              value={config.language || 'vietnamese'}
+                              onChange={e => handleChange('language', e.target.value)}
+                          >
+                              <option value="vietnamese">Tiếng Việt</option>
+                              <option value="bilingual">Song ngữ Anh - Việt</option>
+                              <option value="english">Tiếng Anh</option>
+                          </select>
+                          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black pointer-events-none stroke-[3]" />
+                      </div>
+                  </div>
 
-                <div className="group relative">
-                    <label className={labelClass}>Người biên soạn (Giáo viên)</label>
-                    <div className="relative">
-                        <User className={iconClass} />
-                        <input
-                            type="text"
-                            className={inputClass}
-                            placeholder="Vd: Thầy Trần Huy Hoàng"
-                            value={config.teacherName}
-                            onChange={e => handleChange('teacherName', e.target.value)}
-                            required
-                        />
-                    </div>
+                  <div className="group relative">
+                      <label className={labelClass}>Người biên soạn (Giáo viên)</label>
+                      <div className="relative">
+                          <User className={iconClass} />
+                          <input
+                              type="text"
+                              className={inputClass}
+                              placeholder="Vd: Thầy Yuta"
+                              value={config.teacherName}
+                              onChange={e => handleChange('teacherName', e.target.value)}
+                              required
+                          />
+                      </div>
+                  </div>
                 </div>
 
                 <div className="group relative mt-4">
                     <label className={labelClass}>Yêu cầu nâng cao (Tùy chọn)</label>
                     <div className="relative">
                         <textarea
-                            className={inputClass + " min-h-[80px] pt-3 pl-4"}
-                            placeholder="Vd: Chỉ ra 5 bài toán thực tế kết hợp vận động..."
+                            className="w-full p-3 bg-[#ffffff] rounded-none border-[3px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] text-sm font-medium text-black placeholder:text-gray-500 min-h-[80px]"
+                            placeholder="Vd: 5 bài toán thực tế, có dòng kẻ chấm (\dongke) để học sinh làm trực tiếp..."
                             value={config.details || ''}
                             onChange={e => handleChange('details', e.target.value)}
                         />
@@ -175,8 +181,8 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
           disabled={isLoading || !config.subject || !config.topic || !config.teacherName}
           className={`w-full relative flex items-center justify-center gap-3 py-4 px-6 rounded-none text-black font-black uppercase tracking-widest text-lg border-4 border-black shadow-[6px_6px_0_0_rgba(0,0,0,1)] transition-all duration-75 active:translate-y-[6px] active:translate-x-[6px] active:shadow-none
             ${(isLoading || !config.subject || !config.topic || !config.teacherName)
-              ? 'bg-[#E2E8F0] cursor-not-allowed text-gray-700 shadow-none border-gray-400' 
-              : 'bg-[#A3E635] hover:bg-[#00CECB]'}`}
+              ? 'bg-[#E2E8F0] cursor-not-allowed text-gray-500 shadow-none border-gray-400' 
+              : 'bg-[#A3E635] hover:bg-[#86EFAC]'}`}
         >
           {isLoading ? (
              <>
@@ -186,7 +192,7 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
           ) : (
             <>
               <Wand2 className="w-6 h-6 stroke-[3]" />
-              <span>Tạo Worksheet</span>
+              <span>Tạo Worksheet LaTeX</span>
             </>
           )}
         </button>
