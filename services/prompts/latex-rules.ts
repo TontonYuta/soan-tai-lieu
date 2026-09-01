@@ -1,26 +1,28 @@
-﻿export const LATEX_TECHNICAL_RULES = `
-QUY TẮC KỸ THUẬT LATEX TOÁN HỌC (BẮT BUỘC ĐỂ BIÊN DỊCH 100% THÀNH CÔNG VỚI PDFLATEX):
-1. KHÔNG SỬ DỤNG CÚ PHÁP MARKDOWN: Tuyệt đối không dùng **, *, #, - (dấu gạch đầu dòng markdown) bên trong mã nguồn LaTeX. Thay vào đó hãy dùng \\textbf{}, \\textit{}, \\section{}, \\begin{itemize}, \\begin{enumerate}. BẮT BUỘC phải bọc toàn bộ mã nguồn LaTeX cuối cùng trong block markdown \`\`\`latex ... \`\`\` để tiện cho việc copy và xuất file.
-2. TIẾNG VIỆT & TRÌNH BIÊN DỊCH: Bắt buộc tương thích pdfLaTeX. Sử dụng gói lệnh:
+export const LATEX_TECHNICAL_RULES = `
+QUY TẮC KỸ THUẬT LATEX TOÁN HỌC (BẮT BUỘC ĐỂ BIÊN DỊCH 100% THÀNH CÔNG VỚI PDFLATEX TRÊN OVERLEAF):
+1. QUY TẮC ĐẦU RA (OUTPUT FORMAT - BẮT BUỘC TUYỆT ĐỐI):
+   - BẮT BUỘC chỉ xuất ra duy nhất 1 khối mã nguồn LaTeX hoàn chỉnh bắt đầu bằng \`\`\`latex và kết thúc bằng \`\`\`.
+   - TUYỆT ĐỐI KHÔNG xuất bất kỳ câu chào hỏi, lời dẫn, chú thích hay thẻ nào bên ngoài khối \`\`\`latex ... \`\`\`.
+   - Mã nguồn phải chứa đầy đủ từ \\documentclass đến \\end{document}, sẵn sàng biên dịch trực tiếp không thiếu sót.
+2. KHÔNG DÙNG CÚ PHÁP MARKDOWN TRONG CODE: Tuyệt đối không dùng **, *, #, - bên trong mã LaTeX. Dùng \\textbf{}, \\textit{}, \\section{}, \\begin{itemize}, \\begin{enumerate}.
+3. TIẾNG VIỆT & TRÌNH BIÊN DỊCH: Bắt buộc tương thích pdfLaTeX. Sử dụng gói lệnh:
    \\usepackage[utf8]{inputenc}
    \\usepackage[T1]{fontenc}
    \\usepackage{vietnam}
    KHÔNG dùng fontspec hay xelatex.
-3. TOÁN HỌC & KÝ HIỆU:
+4. TOÁN HỌC & KÝ HIỆU:
    - Mọi biểu thức toán học, biến số, hàm số, phương trình phải nằm trong $...$ hoặc \\[ ... \\].
    - Tên góc, đoạn thẳng, vectơ: dùng $\\widehat{ABC}$, $AB$, $\\vec{u}$ hoặc $\\overrightarrow{AB}$.
    - Tích phân, vi phân, giới hạn: $\\int_{a}^{b} f(x)\\,\\mathrm{d}x$, $\\lim_{x \\to x_0} f(x)$.
    - Đảm bảo đã đóng mở ngoặc $ hoặc \\[ \\] đầy đủ, không thiếu.
-4. KÝ TỰ ĐẶC BIỆT & ESCAPE:
+5. KÝ TỰ ĐẶC BIỆT & ESCAPE:
    - Bắt buộc escape: \\% (phần trăm), \\& (và), \\_ (gạch dưới), \\$ (đô la), \\{ \\} (ngoặc nhọn khi in chữ).
-   - Ký tự % là comment trong LaTeX, nếu dùng comment thì xuống dòng ngay sau đó.
-5. VẼ HÌNH HỌC & ĐỒ THỊ TIKZ:
+6. VẼ HÌNH HỌC & ĐỒ THỊ TIKZ:
    - Sử dụng \\usepackage{tikz}, \\usepackage{pgfplots}, \\pgfplotsset{compat=1.18}.
    - Thư viện TikZ cần thiết: \\usetikzlibrary{arrows.meta, positioning, calc, angles, quotes, patterns}.
    - Khi vẽ hình học không gian (khối chóp, lăng trụ, nón, trụ, cầu): nét đứt dùng [dashed], nét liền dùng [thick], góc vuông dùng \\pic [draw, angle radius=2mm] {right angle = ...}.
    - Bảng biến thiên: Dùng cấu trúc bảng chuẩn sạch (tabular/array) hoặc tikzpicture với các hàng $x$, $f'(x)$, $f(x)$ và mũi tên $\\nearrow, \\searrow$ thẳng hàng.
-6. THIẾT KẾ UI & KHUNG VIỀN:
-   - Giảm thiểu tối đa số lượng box dư thừa.
+7. THIẾT KẾ UI & KHUNG VIỀN:
    - Nếu dùng tcolorbox, BẮT BUỘC dùng [sharp corners] để viền vuông vức hiện đại, không dùng bo tròn.
    - Tiêu đề dùng màu xanh dương dịu (\\definecolor{myblue}{RGB}{0,102,204}).
 `;
@@ -41,6 +43,10 @@ export const EXAM_TEMPLATE_2025 = `
 \\usepackage{titlesec}
 \\usepackage{tabularx}
 \\usepackage{array}
+\\newcolumntype{C}{>{\\centering\\arraybackslash}X}
+\\newcolumntype{R}{>{\\raggedleft\\arraybackslash}X}
+\\newcolumntype{L}{>{\\raggedright\\arraybackslash}X}
+
 \\usepackage{tikz}
 \\usepackage{pgfplots}
 \\pgfplotsset{compat=1.18}
@@ -172,6 +178,8 @@ export const EXAM_TEMPLATE_CLASSIC = `
 \\usepackage{titlesec}
 \\usepackage{tabularx}
 \\usepackage{array}
+\\newcolumntype{C}{>{\\centering\\arraybackslash}X}
+
 \\usepackage{tikz}
 \\usepackage{pgfplots}
 \\pgfplotsset{compat=1.18}
@@ -237,6 +245,86 @@ export const EXAM_TEMPLATE_CLASSIC = `
 \\end{document}
 `;
 
+export const LEARNING_TEMPLATE = `
+% !TEX program = pdflatex
+\\documentclass[12pt,a4paper]{article}
+
+\\usepackage[a4paper,top=1.8cm,bottom=1.8cm,left=1.8cm,right=1.8cm]{geometry}
+\\usepackage[utf8]{inputenc}
+\\usepackage[T1]{fontenc}
+\\usepackage{vietnam}
+\\usepackage{mathptmx}
+\\usepackage{amsmath,amssymb}
+\\usepackage{enumitem}
+\\usepackage{multicol}
+\\usepackage{fancyhdr}
+\\usepackage{titlesec}
+\\usepackage{tabularx}
+\\usepackage{array}
+\\newcolumntype{C}{>{\\centering\\arraybackslash}X}
+\\newcolumntype{L}{>{\\raggedright\\arraybackslash}X}
+\\newcolumntype{R}{>{\\raggedleft\\arraybackslash}X}
+
+\\usepackage{tikz}
+\\usepackage{pgfplots}
+\\pgfplotsset{compat=1.18}
+\\usetikzlibrary{arrows.meta, positioning, calc, angles, quotes, patterns}
+\\usepackage[table]{xcolor}
+\\definecolor{myblue}{RGB}{0,102,204}
+\\definecolor{darkgreen}{RGB}{0,128,0}
+
+\\usepackage[most]{tcolorbox}
+\\tcbset{sharp corners}
+
+\\setlength{\\parindent}{0pt}
+\\setlength{\\parskip}{5pt}
+\\renewcommand{\\baselinestretch}{1.12}
+
+\\pagestyle{fancy}
+\\fancyhf{}
+\\lhead{\\small\\textbf{Tài Liệu Bài Học Toán Học}}
+\\rhead{\\small\\textbf{Chuyên đề: [TÊN CHUYÊN ĐỀ]}}
+\\cfoot{\\small Trang \\thepage}
+\\renewcommand{\\headrulewidth}{0.4pt}
+
+\\newcommand{\\hopkienthuc}[2]{
+\\begin{tcolorbox}[colback=blue!5!white,colframe=myblue,title=\\textbf{#1},fonttitle=\\bfseries]
+#2
+\\end{tcolorbox}
+}
+\\newcommand{\\dinhly}[2]{
+\\begin{tcolorbox}[colback=green!5!white,colframe=darkgreen,title=\\textbf{Định lý: #1},fonttitle=\\bfseries]
+#2
+\\end{tcolorbox}
+}
+\\newcommand{\\vidu}[1]{\\vspace{6pt}\\noindent\\textbf{\\color{myblue}Ví dụ #1.}}
+\\newcommand{\\loigiai}{\\par\\textbf{Lời giải.}}
+\\newcommand{\\ghinho}{\\textbf{\\color{red}Ghi nhớ: }}
+\\newcommand{\\dangtoan}[1]{\\vspace{10pt}\\subsection*{\\color{myblue}#1}}
+
+\\begin{document}
+
+\\begin{center}
+    {\\huge\\bfseries\\color{myblue} [TÊN BÀI HỌC]}\\\\[8pt]
+    {\\large\\bfseries Môn: TOÁN HỌC --- Lớp: [LỚP]}\\\\[4pt]
+    \\textit{[TRƯỜNG / SỞ GD\\&ĐT]}
+\\end{center}
+\\vspace{5pt}
+\\noindent\\rule{\\linewidth}{0.8pt}
+\\vspace{10pt}
+
+\\section*{\\color{myblue}I. TÓM TẮT LÝ THUYẾT TRỌNG TÂM}
+% Trình bày lý thuyết dùng \\hopkienthuc hoặc \\dinhly
+
+\\section*{\\color{myblue}II. CÁC DẠNG TOÁN VÀ PHƯƠNG PHÁP GIẢI}
+% Trình bày các dạng toán dùng \\dangtoan, \\vidu, \\loigiai
+
+\\section*{\\color{myblue}III. BÀI TẬP TỰ LUYỆN}
+% Trình bày bài tập tự luyện
+
+\\end{document}
+`;
+
 export const ROADMAP_TEMPLATE = `
 % !TEX program = pdflatex
 \\documentclass[12pt,a4paper]{article}
@@ -253,10 +341,14 @@ export const ROADMAP_TEMPLATE = `
 \\usepackage{titlesec}
 \\usepackage{tabularx}
 \\usepackage{array}
+\\newcolumntype{C}{>{\\centering\\arraybackslash}X}
+\\newcolumntype{L}{>{\\raggedright\\arraybackslash}X}
+\\newcolumntype{R}{>{\\raggedleft\\arraybackslash}X}
 \\usepackage{pgffor}
 \\usepackage{tikz}
 \\usepackage[table]{xcolor}
 \\definecolor{myblue}{RGB}{0,102,204}
+\\definecolor{darkgreen}{RGB}{0,128,0}
 \\usetikzlibrary{arrows.meta, positioning}
 
 \\usepackage[most]{tcolorbox}
@@ -268,31 +360,39 @@ export const ROADMAP_TEMPLATE = `
 
 \\pagestyle{fancy}
 \\fancyhf{}
-\\lhead{\\small Lộ trình học tập}
-\\rhead{\\small Mục tiêu: [MỤC TIÊU]}
-\\cfoot{\\small \\thepage}
+\\lhead{\\small\\textbf{Lộ trình học tập}}
+\\rhead{\\small\\textbf{Mục tiêu: [MỤC TIÊU]}}
+\\cfoot{\\small Trang \\thepage}
 \\renewcommand{\\headrulewidth}{0.4pt}
 
-\\titleformat{\\section}{\\Large\\bfseries\\color{myblue}}{\\thesection.}{0.5em}{}
-\\titleformat{\\subsection}{\\large\\bfseries\\color{myblue}}{}{0pt}{}
+\\newcommand{\\giaidoan}[2]{
+\\begin{tcolorbox}[colback=blue!5!white,colframe=myblue,title=\\textbf{Giai đoạn #1: #2},fonttitle=\\bfseries]
+}
+\\newcommand{\\endgiaidoan}{\\end{tcolorbox}}
 
 \\begin{document}
 
 \\begin{center}
     {\\huge\\bfseries\\color{myblue} LỘ TRÌNH HỌC TẬP TỪ A ĐẾN Z}\\\\[10pt]
     {\\Large Chuyên đề: [TÊN CHUYÊN ĐỀ]}\\\\[5pt]
-    \\textit{Thời gian dự kiến: [X] tuần}
+    \\textit{Thời gian dự kiến: [X] tuần --- Mục tiêu: [MỤC TIÊU]}
 \\end{center}
+\\vspace{5pt}
+\\noindent\\rule{\\linewidth}{0.8pt}
 \\vspace{10pt}
 
-\\section{Tổng quan và Định hướng (Mindset)}
+\\section*{\\color{myblue}I. TỔNG QUAN VÀ ĐỊNH HƯỚNG TƯ DUY}
+% Mindset và phương pháp học
 
-\\section{Bản đồ Lộ trình Tổng thể}
+\\section*{\\color{myblue}II. CHI TIẾT CÁC GIAI ĐOẠN HỌC TẬP}
+% Dùng \\giaidoan{1}{Tên giai đoạn} ... \\endgiaidoan
 
-\\section{Chi tiết các chặng}
+\\section*{\\color{myblue}III. TIÊU CHÍ ĐÁNH GIÁ VÀ CHECKPOINT}
+% Bảng tiêu chí và bài test đánh giá
 
 \\end{document}
 `;
+
 
 export const PRE_ALGEBRA_TEMPLATE = `
 % !TEX program = pdflatex
@@ -310,6 +410,7 @@ export const PRE_ALGEBRA_TEMPLATE = `
 \\usepackage{titlesec}
 \\usepackage{tabularx}
 \\usepackage{array}
+\\newcolumntype{C}{>{\\centering\\arraybackslash}X}
 \\usepackage{pgffor}
 \\usepackage{tikz}
 \\usepackage{pgfplots}
@@ -349,7 +450,6 @@ export const PRE_ALGEBRA_TEMPLATE = `
 \\newcommand{\\loigiai}{\\par\\textbf{Lời giải.}}
 \\newcommand{\\ghinho}{\\textbf{Ghi nhớ.}}
 \\newcommand{\\baitap}[1]{\\vspace{6pt}\\noindent{\\color{myblue}\\textbf{Bài #1.}}}
-\\newcolumntype{C}{>{\\centering\\arraybackslash}X}
 
 \\begin{document}
 

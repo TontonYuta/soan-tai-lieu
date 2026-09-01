@@ -1,13 +1,17 @@
-﻿import React, { useState } from 'react';
-import { Map, Target, Calendar, Award, Wand2, Info, ChevronDown, BookOpen } from "lucide-react";
+import React, { useState } from 'react';
+import { Map, Target, Calendar, Award, Wand2, Info, ChevronDown, BookOpen, Zap } from "lucide-react";
 import { RoadmapConfig, GenerationStatus } from '../types';
+import PdfUploadZone from './PdfUploadZone';
+
 
 interface RoadmapFormProps {
   onSubmit: (data: RoadmapConfig) => void;
+  onDirectAutomate?: (data: RoadmapConfig) => void;
   status: GenerationStatus;
 }
 
-const RoadmapForm: React.FC<RoadmapFormProps> = ({ onSubmit, status }) => {
+const RoadmapForm: React.FC<RoadmapFormProps> = ({ onSubmit, onDirectAutomate, status }) => {
+
   const [config, setConfig] = useState<RoadmapConfig>({
     subject: 'Toán học',
     topic: '',
@@ -158,8 +162,17 @@ const RoadmapForm: React.FC<RoadmapFormProps> = ({ onSubmit, status }) => {
                     </div>
                 </div>
 
+                <div className="group relative mt-3">
+                    <PdfUploadZone
+                      attachedPdf={config.attachedPdf || null}
+                      onPdfChange={(pdfData) => handleChange('attachedPdf', pdfData || undefined)}
+                      title="Đính Kèm File Đề Cương / Khung Chương Trình PDF (RAG):"
+                      description="AI sẽ bám sát khung chương trình trong file PDF này để xây dựng lộ trình học tập tối ưu."
+                    />
+                </div>
+
                 <div className="group relative mt-2">
-                    <label className={labelClass}>Yêu cầu nâng cao / Đề cương sẵn có (Tùy chọn)</label>
+                    <label className={labelClass}>Yêu cầu nâng cao / Ghi chú (Tùy chọn)</label>
                     <textarea
                         className="w-full p-3 bg-[#ffffff] rounded-none border-[3px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] text-sm font-medium text-black placeholder:text-gray-500 min-h-[70px]"
                         placeholder="Vd: Chia theo 4 giai đoạn, mỗi tuần kèm bài tập tự luyện và checkpoint đánh giá..."
@@ -170,10 +183,11 @@ const RoadmapForm: React.FC<RoadmapFormProps> = ({ onSubmit, status }) => {
             </div>
         </div>
 
+
         <button
           type="submit"
           disabled={isLoading || !config.subject || !config.topic}
-          className={`w-full relative flex items-center justify-center gap-3 py-4 px-6 rounded-none text-black font-black uppercase tracking-widest text-lg border-4 border-black shadow-[6px_6px_0_0_rgba(0,0,0,1)] transition-all duration-75 active:translate-y-[6px] active:translate-x-[6px] active:shadow-none
+          className={`w-full relative flex items-center justify-center gap-3 py-4 px-6 rounded-none text-black font-black uppercase tracking-widest text-lg border-4 border-black shadow-[6px_6px_0_0_rgba(0,0,0,1)] transition-all duration-75 active:translate-y-[6px] active:translate-x-[6px] active:shadow-none cursor-pointer
             ${(isLoading || !config.subject || !config.topic)
               ? 'bg-[#E2E8F0] cursor-not-allowed text-gray-500 shadow-none border-gray-400' 
               : 'bg-[#FF5E5B] hover:bg-[#E04845]'}`}
@@ -185,8 +199,8 @@ const RoadmapForm: React.FC<RoadmapFormProps> = ({ onSubmit, status }) => {
              </>
           ) : (
             <>
-              <Wand2 className="w-6 h-6 stroke-[3]" />
-              <span>Tạo Lộ Trình LaTeX</span>
+              <Zap className="w-6 h-6 stroke-[3] fill-black" />
+              <span>⚡ Thiết Kế Lộ Trình Học Tập (LaTeX)</span>
             </>
           )}
         </button>
@@ -194,5 +208,6 @@ const RoadmapForm: React.FC<RoadmapFormProps> = ({ onSubmit, status }) => {
     </div>
   );
 };
+
 
 export default RoadmapForm;

@@ -1,4 +1,12 @@
-﻿export interface ExamConfig {
+export interface AttachedPdfData {
+  fileName: string;
+  tempPath?: string;
+  numPages: number;
+  fileSize?: string;
+  text: string;
+}
+
+export interface ExamConfig {
   school: string;       
   examName: string;     
   year: string;         
@@ -22,6 +30,7 @@
   };
   includeTikZ?: boolean; // Tự động vẽ hình học / đồ thị / BBT TikZ
   referenceContent?: string;
+  attachedPdf?: AttachedPdfData;
   language?: 'bilingual' | 'vietnamese' | 'english';
   details?: string;
 }
@@ -35,6 +44,7 @@ export interface LearningConfig {
   goal: 'summary' | 'detailed' | 'exercises'; 
   tone: 'academic' | 'creative' | 'simple'; 
   audience: string;
+  attachedPdf?: AttachedPdfData;
   language?: 'bilingual' | 'vietnamese' | 'english';
   details?: string;
 }
@@ -46,6 +56,7 @@ export interface RoadmapConfig {
   currentLevel: string; // Vd: Mất gốc, Đã có căn bản
   target: string; // Vd: Thi HSG, Đạt điểm 8+
   syllabus?: string; // Đề cương có sẵn (Tùy chọn)
+  attachedPdf?: AttachedPdfData;
   language?: 'bilingual' | 'vietnamese' | 'english';
   details?: string;
 }
@@ -55,6 +66,7 @@ export interface WorksheetConfig {
   topic: string;
   grade: string;
   teacherName: string;
+  attachedPdf?: AttachedPdfData;
   language?: 'bilingual' | 'vietnamese' | 'english';
   details?: string;
 }
@@ -67,6 +79,7 @@ export interface SimilarExerciseConfig {
   count: number;
   difficulty: 'keep' | 'easier' | 'harder';
   includeSolution: boolean;
+  attachedPdf?: AttachedPdfData;
   language?: 'bilingual' | 'vietnamese' | 'english';
   details?: string;
 }
@@ -88,6 +101,15 @@ export interface VideoConfig {
 export interface BatConfig {
   task: string;
   details?: string;
+}
+
+export interface TTSConfig {
+  subject: string;
+  topic: string;
+  content: string;
+  style: 'normal' | 'expressive' | 'fast';
+  emphasize: boolean;
+  keepTerms: boolean;
 }
 
 export enum GenerationStatus {

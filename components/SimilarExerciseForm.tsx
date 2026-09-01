@@ -1,9 +1,12 @@
-﻿import React, { useState, useEffect } from 'react';
-import { Wand2, Sparkles, BookOpen, Layout, HelpCircle, Info, PlusCircle, CheckSquare, Square, FileText } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { Wand2, Sparkles, BookOpen, Layout, HelpCircle, Info, PlusCircle, CheckSquare, Square, FileText, Zap } from "lucide-react";
 import { SimilarExerciseConfig, GenerationStatus } from '../types';
+import PdfUploadZone from './PdfUploadZone';
+
 
 interface SimilarExerciseFormProps {
   onSubmit: (data: SimilarExerciseConfig) => void;
+  onDirectAutomate?: (data: SimilarExerciseConfig) => void;
   status: GenerationStatus;
   contextTopic?: string;
   contextSubject?: string;
@@ -12,11 +15,13 @@ interface SimilarExerciseFormProps {
 
 const SimilarExerciseForm: React.FC<SimilarExerciseFormProps> = ({ 
   onSubmit, 
+  onDirectAutomate,
   status, 
   contextTopic, 
   contextSubject, 
   contextGrade 
 }) => {
+
   const [config, setConfig] = useState<SimilarExerciseConfig>({
     subject: contextSubject || 'Toán học',
     topic: contextTopic || '',
@@ -44,10 +49,11 @@ const SimilarExerciseForm: React.FC<SimilarExerciseFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (config.subject && config.topic && config.sourceExercises.trim()) {
+    if (config.subject && config.topic && (config.sourceExercises.trim() || config.attachedPdf)) {
       onSubmit(config);
     }
   };
+
 
   const handleChange = (field: keyof SimilarExerciseConfig, value: any) => {
     setConfig(prev => ({ ...prev, [field]: value }));
@@ -137,22 +143,29 @@ const SimilarExerciseForm: React.FC<SimilarExerciseFormProps> = ({
           </div>
         </div>
 
-        {/* SECTION 2: SOURCE EXERCISES */}
+        {/* SECTION 2: SOURCE EXERCISES & PDF */}
         <div className="p-5 bg-[#ffffff] border-[3px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] space-y-4">
           <div className="flex items-center gap-2 mb-2 pb-3 border-b-4 border-black">
             <div className="w-6 h-6 bg-[#00CECB] border-2 border-black flex items-center justify-center text-black">
               <FileText className="w-3.5 h-3.5 stroke-[3]" />
             </div>
-            <h3 className="text-sm font-black text-black uppercase tracking-wider">Bài toán gốc (Dán đề bài mẫu vào đây)</h3>
+            <h3 className="text-sm font-black text-black uppercase tracking-wider">Bài toán gốc (Dán đề hoặc Đính kèm PDF)</h3>
           </div>
 
-          <div className="group relative">
+          <PdfUploadZone
+            attachedPdf={config.attachedPdf || null}
+            onPdfChange={(pdfData) => handleChange('attachedPdf', pdfData || undefined)}
+            title="Cách 1: Đính Kèm File PDF Chứa Bài Toán Mẫu (RAG):"
+            description="AI sẽ tự động đọc bài toán từ file PDF đính kèm để sinh các bài tập tương tự."
+          />
+
+          <div className="group relative pt-2">
+            <label className={labelClass}>Cách 2: Hoặc Dán Trực Tiếp Đề Bài Toán Mẫu (Text / LaTeX):</label>
             <textarea
               className={textareaClass}
               placeholder="Dán câu hỏi hoặc bài toán mẫu (text hoặc mã LaTeX) bạn muốn AI nhân bản hoặc đổi số..."
               value={config.sourceExercises}
               onChange={e => handleChange('sourceExercises', e.target.value)}
-              required
             />
           </div>
         </div>
@@ -213,21 +226,22 @@ const SimilarExerciseForm: React.FC<SimilarExerciseFormProps> = ({
 
         <button
           type="submit"
-          disabled={isLoading || !config.subject || !config.topic || !config.sourceExercises.trim()}
-          className={`w-full relative flex items-center justify-center gap-3 py-4 px-6 rounded-none text-black font-black uppercase tracking-widest text-lg border-4 border-black shadow-[6px_6px_0_0_rgba(0,0,0,1)] transition-all duration-75 active:translate-y-[6px] active:translate-x-[6px] active:shadow-none
-            ${(isLoading || !config.subject || !config.topic || !config.sourceExercises.trim())
+          disabled={isLoading || !config.subject || !config.topic || (!config.sourceExercises.trim() && !config.attachedPdf)}
+          className={`w-full relative flex items-center justify-center gap-3 py-4 px-6 rounded-none text-black font-black uppercase tracking-widest text-lg border-4 border-black shadow-[6px_6px_0_0_rgba(0,0,0,1)] transition-all duration-75 active:translate-y-[6px] active:translate-x-[6px] active:shadow-none cursor-pointer
+            ${(isLoading || !config.subject || !config.topic || (!config.sourceExercises.trim() && !config.attachedPdf))
               ? 'bg-[#E2E8F0] cursor-not-allowed text-gray-500 shadow-none border-gray-400' 
               : 'bg-[#FB7185] hover:bg-[#F43F5E]'}`}
         >
+
           {isLoading ? (
             <>
               <span className="w-5 h-5 border-4 border-black border-t-transparent rounded-full animate-spin"/>
-              <span>Đang tạo prompt...</span>
+              <span>Đang nhân bản bài toán...</span>
             </>
           ) : (
             <>
-              <Wand2 className="w-6 h-6 stroke-[3]" />
-              <span>Tạo Prompt Bài Tập Tương Tự</span>
+              <Zap className="w-6 h-6 stroke-[3] fill-black" />
+              <span>⚡ Nhân Bản Bài Tập Tương Tự (LaTeX)</span>
             </>
           )}
         </button>
@@ -235,5 +249,7 @@ const SimilarExerciseForm: React.FC<SimilarExerciseFormProps> = ({
     </div>
   );
 };
+
+
 
 export default SimilarExerciseForm;

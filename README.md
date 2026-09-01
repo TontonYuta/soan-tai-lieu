@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 # 📐 Yuta!LaTeX Math Studio
 ### Hệ Thống Soạn Thảo Tài Liệu Toán Học Chuẩn LaTeX & Diễn Hoạt Video Manim Tự Động
@@ -66,6 +66,7 @@
 
 ## ⚡ Trải Nghiệm & Tính Năng Tiện Ích
 
+- **🚀 Tự Động Hóa 1-Click (Gemini ➔ Overleaf ➔ Xuất PDF):** Không cần API key, tự động kết nối tài khoản Chrome của bạn, tự động dán prompt vào Gemini, lấy mã LaTeX, dán vào Overleaf, recompile và tải file PDF về máy chỉ với 1 cú click!
 - **Thanh Đồng Bộ Ngữ Cảnh (Forward Context):** Tự động chuyển tiếp thông tin môn học, chủ đề, khối lớp từ Lộ trình $\to$ Bài học $\to$ Bài tập $\to$ Bài tương tự $\to$ Đề thi $\to$ Video mà không cần nhập lại.
 - **Kênh Gemini Cố Định (Fixed Chat Link):** Lưu link phiên chat Gemini vào bộ nhớ để AI nhớ lịch sử các bài trước, tránh trùng lặp kiến thức.
 - **Tải Về 1-Click Ngay Trên Trình Duyệt:**
@@ -75,25 +76,22 @@
 
 ---
 
-## 🛠️ Cài Đặt & Chạy Ứng Dụng Trên Máy Local
+## 🛠️ Cài Đặt & Chạy Ứng Dụng 1-Click
 
-### Yêu Cầu Tiên Quyết
-- [Node.js](https://nodejs.org/) (Phiên bản 18+ trở lên).
-- [Python](https://www.python.org/) 3.9+ (Nếu muốn render video Manim).
-- [FFmpeg](https://ffmpeg.org/) (Dùng cho Manim xuất video MP4).
+### ⚡ Chạy Ngay 1-Click (Khuyên Dùng):
+- **Trên Windows:** Nhấp đúp chuột vào file **`start_app.bat`** (Tự kiểm tra Node.js, cài thư viện và tự bật trình duyệt).
+- **Trên Linux / macOS:** Chạy file `./start_app.sh`
 
-### 1. Cài đặt và khởi chạy Giao diện Web (Frontend)
+### Cách chạy thủ công qua Terminal:
 ```bash
-# Di chuyển vào thư mục dự án
-cd "G:\AppStudio\latex-hóa---yuta"
-
 # Cài đặt dependencies
 npm install
 
-# Khởi chạy máy chủ phát triển (Dev server)
-npm run dev
+# Khởi chạy hệ thống tự động hóa & web app
+npm start
 ```
-Sau đó mở trình duyệt và truy cập: **`http://localhost:3000`** (hoặc port hiển thị trên console).
+Sau đó mở trình duyệt và truy cập: **`http://localhost:3000`**.
+
 
 ### 2. Cài đặt môi trường Manim & FFmpeg (Nếu làm Video Toán)
 ```bash

@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import Header from './components/Header';
 import ExamForm from './components/ExamForm';
 import LearningForm from './components/LearningForm';
@@ -9,6 +9,7 @@ import VideoForm from './components/VideoForm';
 import BatForm from './components/BatForm';
 import OutputDisplay from './components/OutputDisplay';
 import ReadmeModal from './components/ReadmeModal';
+import AutomationModal from './components/AutomationModal';
 import { 
   generateExamPrompt, 
   generateLearningPrompt, 
@@ -42,8 +43,10 @@ import {
   Terminal, 
   Info, 
   ExternalLink,
-  MessageSquareText
+  MessageSquareText,
+  Zap
 } from 'lucide-react';
+
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'roadmap' | 'learning' | 'worksheet' | 'similar' | 'exam' | 'video' | 'bat'>('worksheet');
@@ -51,10 +54,21 @@ const App: React.FC = () => {
   const [promptContent, setPromptContent] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [isReadmeOpen, setIsReadmeOpen] = useState(false);
+  const [isAutomationOpen, setIsAutomationOpen] = useState(false);
+  const [headless, setHeadless] = useState<boolean>(
+    localStorage.getItem('yuta_headless') === 'true'
+  );
+  const [activeAttachedPdf, setActiveAttachedPdf] = useState<{ path?: string; name?: string } | null>(null);
+
+  const handleHeadlessToggle = (val: boolean) => {
+    setHeadless(val);
+    localStorage.setItem('yuta_headless', String(val));
+  };
   
   // Link Gemini cố định
   const [geminiLink, setGeminiLink] = useState<string>(localStorage.getItem('gemini_fixed_link') || '');
   const [isEditingLink, setIsEditingLink] = useState(false);
+
 
   const [learningContext, setLearningContext] = useState<string | null>(null);
   const [contextMetadata, setContextMetadata] = useState<{topic: string, subject: string, grade: string} | null>(null);
@@ -67,84 +81,129 @@ const App: React.FC = () => {
   const handleExamGenerate = (config: ExamConfig) => {
     setStatus(GenerationStatus.LOADING);
     setError(null);
+    if (config.attachedPdf) {
+      setActiveAttachedPdf({ path: config.attachedPdf.tempPath, name: config.attachedPdf.fileName });
+    } else {
+      setActiveAttachedPdf(null);
+    }
     setTimeout(() => {
         try {
             setPromptContent(generateExamPrompt(config));
             setContextMetadata({ topic: config.topic, subject: config.subject, grade: config.grade });
             setLearningContext(`Đề thi: ${config.topic}`);
             setStatus(GenerationStatus.SUCCESS);
+            setIsAutomationOpen(true);
         } catch (err) {
             setStatus(GenerationStatus.ERROR);
             setError('Lỗi khi thiết kế cấu trúc Prompt Đề thi.');
         }
-    }, 400);
+    }, 300);
   };
 
   const handleLearningGenerate = (config: LearningConfig) => {
     setStatus(GenerationStatus.LOADING);
     setError(null);
+    if (config.attachedPdf) {
+      setActiveAttachedPdf({ path: config.attachedPdf.tempPath, name: config.attachedPdf.fileName });
+    } else {
+      setActiveAttachedPdf(null);
+    }
     setTimeout(() => {
         try {
             setPromptContent(generateLearningPrompt(config));
             setContextMetadata({ topic: config.topic, subject: config.subject, grade: config.grade });
             setLearningContext(`Bài học: ${config.topic}`);
             setStatus(GenerationStatus.SUCCESS);
+            setIsAutomationOpen(true);
         } catch (err) {
             setStatus(GenerationStatus.ERROR);
             setError('Lỗi khi khởi tạo Prompt Bài học.');
         }
-    }, 400);
+    }, 300);
   };
 
   const handleRoadmapGenerate = (config: RoadmapConfig) => {
     setStatus(GenerationStatus.LOADING);
     setError(null);
+    if (config.attachedPdf) {
+      setActiveAttachedPdf({ path: config.attachedPdf.tempPath, name: config.attachedPdf.fileName });
+    } else {
+      setActiveAttachedPdf(null);
+    }
     setTimeout(() => {
         try {
             setPromptContent(generateRoadmapPrompt(config));
             setContextMetadata({ topic: config.topic, subject: config.subject, grade: 'Hệ thống' });
             setLearningContext(`Lộ trình: ${config.topic}`);
             setStatus(GenerationStatus.SUCCESS);
+            setIsAutomationOpen(true);
         } catch (err) {
             setStatus(GenerationStatus.ERROR);
             setError('Lỗi khi thiết kế Lộ trình học.');
         }
-    }, 400);
+    }, 300);
   };
 
   const handleWorksheetGenerate = (config: WorksheetConfig) => {
     setStatus(GenerationStatus.LOADING);
     setError(null);
+    if (config.attachedPdf) {
+      setActiveAttachedPdf({ path: config.attachedPdf.tempPath, name: config.attachedPdf.fileName });
+    } else {
+      setActiveAttachedPdf(null);
+    }
     setTimeout(() => {
         try {
             setPromptContent(generateWorksheetPrompt(config));
             setContextMetadata({ topic: config.topic, subject: config.subject, grade: config.grade });
             setLearningContext(`Bài tập: ${config.topic}`);
             setStatus(GenerationStatus.SUCCESS);
+            setIsAutomationOpen(true);
         } catch (err) {
             setStatus(GenerationStatus.ERROR);
             setError('Lỗi khi thiết kế cấu trúc phiếu bài tập.');
         }
-    }, 400);
+    }, 300);
   };
 
   const handleSimilarGenerate = (config: SimilarExerciseConfig) => {
     setStatus(GenerationStatus.LOADING);
     setError(null);
+    if (config.attachedPdf) {
+      setActiveAttachedPdf({ path: config.attachedPdf.tempPath, name: config.attachedPdf.fileName });
+    } else {
+      setActiveAttachedPdf(null);
+    }
     setTimeout(() => {
         try {
             setPromptContent(generateSimilarPrompt(config));
             setContextMetadata({ topic: config.topic, subject: config.subject, grade: config.grade || '12' });
             setLearningContext(`Bài tập tương tự: ${config.topic}`);
             setStatus(GenerationStatus.SUCCESS);
+            setIsAutomationOpen(true);
         } catch (err) {
             setStatus(GenerationStatus.ERROR);
             setError('Lỗi khi thiết kế prompt bài tập tương tự.');
         }
-    }, 400);
+    }, 300);
+  };
+
+
+
+  const handleDirectAutomate = (
+    prompt: string,
+    metadata: { topic: string; subject: string; grade?: string },
+    label: string
+  ) => {
+    setPromptContent(prompt);
+    setContextMetadata({ topic: metadata.topic, subject: metadata.subject, grade: metadata.grade || '12' });
+    setLearningContext(`${label}: ${metadata.topic}`);
+    setStatus(GenerationStatus.SUCCESS);
+    setIsAutomationOpen(true);
   };
 
   const handleVideoScriptGenerate = (config: VideoConfig) => {
+
     setStatus(GenerationStatus.LOADING);
     setError(null);
     setTimeout(() => {
@@ -205,6 +264,16 @@ const App: React.FC = () => {
       <Header onOpenReadme={() => setIsReadmeOpen(true)} />
       
       <ReadmeModal isOpen={isReadmeOpen} onClose={() => setIsReadmeOpen(false)} />
+      <AutomationModal 
+        isOpen={isAutomationOpen} 
+        onClose={() => setIsAutomationOpen(false)} 
+        promptContent={promptContent} 
+        headless={headless}
+        onToggleHeadless={handleHeadlessToggle}
+        attachedPdfPath={activeAttachedPdf?.path}
+        attachedPdfName={activeAttachedPdf?.name}
+      />
+
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
@@ -284,7 +353,25 @@ const App: React.FC = () => {
                 </div>
             </div>
 
+            {/* Quick Automation Mode Bar */}
+            <div className="flex items-center justify-between w-full max-w-2xl mb-4 px-3 py-2 bg-white border-2 border-black shadow-[3px_3px_0_0_rgba(0,0,0,1)] flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <Zap className="w-4 h-4 text-black stroke-[3] fill-black" />
+                <span className="text-[11px] font-black uppercase tracking-wider text-black">Tự Động Hóa:</span>
+              </div>
+              <label className="flex items-center gap-2 text-xs font-black uppercase text-black cursor-pointer bg-[#FFED66] px-3 py-1 border-2 border-black hover:bg-[#FDE047] shadow-[2px_2px_0_0_rgba(0,0,0,1)] select-none">
+                <input
+                  type="checkbox"
+                  checked={headless}
+                  onChange={(e) => handleHeadlessToggle(e.target.checked)}
+                  className="w-4 h-4 border-2 border-black rounded-none accent-black cursor-pointer"
+                />
+                <span>⚡ Chạy ngầm (Ẩn trình duyệt / Headless)</span>
+              </label>
+            </div>
+
             <div className="brutal-card p-2 border-4 border-black shadow-[8px_8px_0_0_rgba(0,0,0,1)] flex items-center gap-2 flex-wrap justify-center bg-[#ffffff]">
+
                 <button
                     onClick={() => setActiveTab('roadmap')}
                     className={`flex items-center gap-2 px-5 py-3 rounded-none text-xs font-black uppercase tracking-widest transition-all cursor-pointer
@@ -375,6 +462,7 @@ const App: React.FC = () => {
             {activeTab === 'roadmap' && (
               <RoadmapForm 
                 onSubmit={handleRoadmapGenerate} 
+                onDirectAutomate={(cfg) => handleDirectAutomate(generateRoadmapPrompt(cfg), { topic: cfg.topic, subject: cfg.subject }, 'Lộ trình')}
                 status={status} 
               />
             )}
@@ -382,6 +470,7 @@ const App: React.FC = () => {
             {activeTab === 'learning' && (
               <LearningForm 
                 onSubmit={handleLearningGenerate} 
+                onDirectAutomate={(cfg) => handleDirectAutomate(generateLearningPrompt(cfg), { topic: cfg.topic, subject: cfg.subject, grade: cfg.grade }, 'Bài học')}
                 status={status} 
                 initialContext={learningContext || undefined}
                 contextTopic={contextMetadata?.topic}
@@ -393,6 +482,7 @@ const App: React.FC = () => {
             {activeTab === 'worksheet' && (
               <WorksheetForm 
                 onSubmit={handleWorksheetGenerate} 
+                onDirectAutomate={(cfg) => handleDirectAutomate(generateWorksheetPrompt(cfg), { topic: cfg.topic, subject: cfg.subject, grade: cfg.grade }, 'Phiếu bài tập')}
                 status={status} 
                 contextTopic={contextMetadata?.topic}
                 contextSubject={contextMetadata?.subject}
@@ -403,6 +493,7 @@ const App: React.FC = () => {
             {activeTab === 'similar' && (
               <SimilarExerciseForm
                 onSubmit={handleSimilarGenerate}
+                onDirectAutomate={(cfg) => handleDirectAutomate(generateSimilarPrompt(cfg), { topic: cfg.topic, subject: cfg.subject, grade: cfg.grade }, 'Bài tập tương tự')}
                 status={status}
                 contextTopic={contextMetadata?.topic}
                 contextSubject={contextMetadata?.subject}
@@ -413,6 +504,7 @@ const App: React.FC = () => {
             {activeTab === 'exam' && (
               <ExamForm 
                 onSubmit={handleExamGenerate} 
+                onDirectAutomate={(cfg) => handleDirectAutomate(generateExamPrompt(cfg), { topic: cfg.topic, subject: cfg.subject, grade: cfg.grade }, 'Đề thi')}
                 status={status} 
                 initialContext={learningContext || undefined}
                 contextTopic={contextMetadata?.topic}
@@ -420,6 +512,7 @@ const App: React.FC = () => {
                 contextGrade={contextMetadata?.grade}
               />
             )}
+
 
             {activeTab === 'video' && (
               <VideoForm 
@@ -448,8 +541,10 @@ const App: React.FC = () => {
               status={status} 
               error={error} 
               onForwardContext={handleForwardContext}
+              onOpenAutomation={() => setIsAutomationOpen(true)}
             />
           </div>
+
 
         </div>
       </main>

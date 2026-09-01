@@ -1,4 +1,4 @@
-﻿import { RoadmapConfig } from "../../types";
+import { RoadmapConfig } from "../../types";
 import { LATEX_TECHNICAL_RULES, ROADMAP_TEMPLATE } from "./latex-rules";
 
 export const generateRoadmapPrompt = (config: RoadmapConfig): string => {
@@ -11,6 +11,17 @@ export const generateRoadmapPrompt = (config: RoadmapConfig): string => {
     languageInstruction = "Sử dụng SONG NGỮ (Anh - Việt).";
   }
 
+  const ragSection = config.attachedPdf ? `
+====================================================
+TÀI LIỆU PDF ĐÍNH KÈM THAM KHẢO (RAG CONTEXT):
+- Tên tài liệu: ${config.attachedPdf.fileName} (${config.attachedPdf.numPages} trang)
+- Nội dung trích xuất từ tài liệu:
+"""
+${config.attachedPdf.text.slice(0, 15000)}
+"""
+- CHỈ THỊ RAG (QUAN TRỌNG): BẮT BUỘC bám sát cấu trúc phân phối chương trình và đề cương trong tài liệu PDF đính kèm để phân kỳ lộ trình học tập.
+====================================================` : '';
+
   return `Đóng vai Chuyên gia Cố vấn Học tập Toán học và Master LaTeX.
 Nhiệm vụ: Thiết kế lộ trình học tập từ A đến Z cho chủ đề được yêu cầu.
 
@@ -22,6 +33,8 @@ I. THÔNG TIN LỘ TRÌNH:
 - Mục tiêu đầu ra: ${config.target}
 - Ngôn ngữ: ${languageInstruction}
 - Yêu cầu nâng cao: ${config.details || "Không"}
+${ragSection}
+
 
 II. QUY TẮC KỸ THUẬT VÀ KHUNG LATEX:
 ${LATEX_TECHNICAL_RULES}
@@ -29,11 +42,8 @@ ${LATEX_TECHNICAL_RULES}
 BẮT BUỘC sử dụng khung sau:
 ${ROADMAP_TEMPLATE}
 
-Trả về toàn bộ mã LaTeX hoàn chỉnh được bọc trong markdown codeblock (\`\`\`latex ... \`\`\`).
-
-[BƯỚC CHUYÊN SÂU: KIỂM TRA LẠI CHÉO (SELF-CHECK)]
-Trước khi xuất ra kết quả cuối cùng, bạn PHẢI tự rà soát và kiểm tra chất lượng bằng một khối \`<self_check> ... </self_check>\`:
-- Lộ trình có thực tế, khả thi và phân bổ thời gian hợp lý không?
-- Cú pháp LaTeX có chuẩn và không dính lỗi biên dịch không?
-Sau khi tự review xong, mới được phép xuất ra đoạn mã LaTeX chuẩn nhất.`;
+III. CHỈ THỊ ĐẦU RA BẮT BUỘC:
+- BẮT BUỘC CHỈ TRẢ VỀ DUY NHẤT 1 KHỐI MÃ NGUỒN LATEX TRONG KHỐI \`\`\`latex ... \`\`\`.
+- TUYỆT ĐỐI KHÔNG xuất bất kỳ câu chào hỏi, lời dẫn, giải thích hay nhận xét nào bên ngoài khối code.
+- Đảm bảo mã nguồn biên dịch trực tiếp 100% không lỗi trên Overleaf và pdfLaTeX.`;
 };

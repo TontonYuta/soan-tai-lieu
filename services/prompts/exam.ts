@@ -1,4 +1,4 @@
-﻿import { ExamConfig } from "../../types";
+import { ExamConfig } from "../../types";
 import { LATEX_TECHNICAL_RULES, EXAM_TEMPLATE_2025, EXAM_TEMPLATE_CLASSIC } from "./latex-rules";
 
 export const generateExamPrompt = (config: ExamConfig): string => {
@@ -45,6 +45,17 @@ export const generateExamPrompt = (config: ExamConfig): string => {
   * Đối với các câu hỏi về Hình học không gian (khối chóp, lăng trụ, nón, trụ, cầu, tọa độ Oxyz): BẮT BUỘC vẽ hình trực quan bằng TikZ (nét đứt [dashed] cho cạnh khuất, nét liền [thick] cho cạnh nhìn thấy, ký hiệu góc vuông).
   * Đối với các câu hỏi Khảo sát hàm số: BẮT BUỘC vẽ Bảng biến thiên hoặc Đồ thị hàm số bằng TikZ/pgfplots sạch đẹp.` : '';
 
+  const ragSection = config.attachedPdf ? `
+====================================================
+TÀI LIỆU PDF ĐÍNH KÈM THAM KHẢO (RAG CONTEXT):
+- Tên tài liệu: ${config.attachedPdf.fileName} (${config.attachedPdf.numPages} trang)
+- Nội dung trích xuất từ tài liệu:
+"""
+${config.attachedPdf.text.slice(0, 15000)}
+"""
+- CHỈ THỊ RAG (QUAN TRỌNG): BẮT BUỘC tham khảo cấu trúc ma trận, câu hỏi và mức độ khó từ tài liệu PDF đính kèm để biên soạn đề thi chuẩn format.
+====================================================` : '';
+
   return `Đóng vai Chuyên gia Khảo thí và Biên soạn đề thi Toán học LaTeX chuyên nghiệp (chuẩn format Bộ GD&ĐT 2025--2026).
 
 I. THÔNG TIN KỲ THI:
@@ -58,6 +69,8 @@ I. THÔNG TIN KỲ THI:
 ${structureDescription}
 ${config.referenceContent ? `- Ngữ cảnh đề cương/tài liệu tham khảo: ${config.referenceContent}` : ''}
 - Yêu cầu bổ sung: ${config.details || "Bám sát định dạng đề thi mới"}
+${ragSection}
+
 
 II. LUẬT NỘI DUNG VÀ VĂN PHONG SƯ PHẠM (BẮT BUỘC):
 - **Bám sát thực tế & Chuẩn mực:** Mọi câu hỏi đều phải chuẩn logic toán học, có số liệu đẹp, không vô lý, nghiệm thực tế.
@@ -72,10 +85,8 @@ IV. KHUNG CODE MẪU ĐỀ THI ĐƯỢC ÁP DỤNG:
 Hãy sử dụng bộ khung sau, thay thế các phần comment \`%\` bằng nội dung câu hỏi thực tế và bảng đáp án + lời giải chi tiết:
 ${is2025Format ? EXAM_TEMPLATE_2025 : EXAM_TEMPLATE_CLASSIC}
 
-[BƯỚC CHUYÊN SÂU: KIỂM TRA LẠI CHÉO (SELF-CHECK)]
-Trước khi xuất ra kết quả cuối cùng, bạn PHẢI tự rà soát và kiểm tra chất lượng bằng khối \`<self_check> ... </self_check>\`:
-- Cấu trúc đề: Đã đủ số câu cho từng Phần chưa?
-- Lỗi hiển thị: Mã LaTeX có thiếu ngoặc, quên macro, thiếu end, sai tên biến, không escape %, &, _, $ không?
-- Hoàn thiện: Bắt buộc bọc toàn bộ code trong block \`\`\`latex ... \`\`\`.
-Sau khi tự review xong, mới được phép xuất ra đoạn mã LaTeX hoàn chỉnh.`;
+V. CHỈ THỊ ĐẦU RA BẮT BUỘC:
+- BẮT BUỘC CHỈ TRẢ VỀ DUY NHẤT 1 KHỐI MÃ NGUỒN LATEX TRONG KHỐI \`\`\`latex ... \`\`\`.
+- TUYỆT ĐỐI KHÔNG xuất bất kỳ câu chào hỏi, lời dẫn, giải thích hay nhận xét nào bên ngoài khối code.
+- Đảm bảo mã nguồn biên dịch trực tiếp 100% không lỗi trên Overleaf và pdfLaTeX.`;
 };

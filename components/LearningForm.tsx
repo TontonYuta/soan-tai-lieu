@@ -1,9 +1,12 @@
-﻿import React, { useState, useEffect } from 'react';
-import { BookOpen, GraduationCap, Wand2, School, Calendar, Layout, Info, ChevronDown, Target, Users } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { BookOpen, GraduationCap, Wand2, School, Calendar, Layout, Info, ChevronDown, Target, Users, Zap } from "lucide-react";
 import { LearningConfig, GenerationStatus } from '../types';
+import PdfUploadZone from './PdfUploadZone';
+
 
 interface LearningFormProps {
   onSubmit: (data: LearningConfig) => void;
+  onDirectAutomate?: (data: LearningConfig) => void;
   status: GenerationStatus;
   initialContext?: string;
   contextTopic?: string;
@@ -22,7 +25,8 @@ const COMMON_SCHOOLS = [
   "Trường Đại học Sư phạm Hà Nội"
 ];
 
-const LearningForm: React.FC<LearningFormProps> = ({ onSubmit, status, contextTopic, contextSubject, contextGrade }) => {
+const LearningForm: React.FC<LearningFormProps> = ({ onSubmit, onDirectAutomate, status, contextTopic, contextSubject, contextGrade }) => {
+
   const currentYear = new Date().getFullYear();
   const [config, setConfig] = useState<LearningConfig>({
     school: COMMON_SCHOOLS[0],
@@ -209,6 +213,15 @@ const LearningForm: React.FC<LearningFormProps> = ({ onSubmit, status, contextTo
                   </div>
                 </div>
 
+                <div className="group relative mt-3">
+                    <PdfUploadZone
+                      attachedPdf={config.attachedPdf || null}
+                      onPdfChange={(pdfData) => handleChange('attachedPdf', pdfData || undefined)}
+                      title="Đính Kèm Tài Liệu Sách / Giáo Trình PDF (RAG):"
+                      description="AI sẽ trích xuất lý thuyết, định lý và ví dụ từ file PDF này để biên soạn bài giảng chuẩn xác."
+                    />
+                </div>
+
                 <div className="group relative mt-2">
                     <label className={labelClass}>Yêu cầu thêm (Tùy chọn)</label>
                     <textarea
@@ -221,10 +234,11 @@ const LearningForm: React.FC<LearningFormProps> = ({ onSubmit, status, contextTo
             </div>
         </div>
 
+
         <button
           type="submit"
           disabled={isLoading || !config.subject || !config.topic}
-          className={`w-full relative flex items-center justify-center gap-3 py-4 px-6 rounded-none text-black font-black uppercase tracking-widest text-lg border-4 border-black shadow-[6px_6px_0_0_rgba(0,0,0,1)] transition-all duration-75 active:translate-y-[6px] active:translate-x-[6px] active:shadow-none
+          className={`w-full relative flex items-center justify-center gap-3 py-4 px-6 rounded-none text-black font-black uppercase tracking-widest text-lg border-4 border-black shadow-[6px_6px_0_0_rgba(0,0,0,1)] transition-all duration-75 active:translate-y-[6px] active:translate-x-[6px] active:shadow-none cursor-pointer
             ${(isLoading || !config.subject || !config.topic)
               ? 'bg-[#E2E8F0] cursor-not-allowed text-gray-500 shadow-none border-gray-400' 
               : 'bg-[#00CECB] hover:bg-[#00B4B1]'}`}
@@ -232,12 +246,12 @@ const LearningForm: React.FC<LearningFormProps> = ({ onSubmit, status, contextTo
           {isLoading ? (
              <>
                <span className="w-5 h-5 border-4 border-black border-t-transparent rounded-full animate-spin"/>
-               <span>Đang tạo bài học...</span>
+               <span>Đang thiết kế bài học...</span>
              </>
           ) : (
             <>
-              <Wand2 className="w-6 h-6 stroke-[3]" />
-              <span>Tạo Prompt Bài Học</span>
+              <Zap className="w-6 h-6 stroke-[3] fill-black" />
+              <span>⚡ Soạn Bài Học Lý Thuyết (LaTeX)</span>
             </>
           )}
         </button>
@@ -245,5 +259,7 @@ const LearningForm: React.FC<LearningFormProps> = ({ onSubmit, status, contextTo
     </div>
   );
 };
+
+
 
 export default LearningForm;

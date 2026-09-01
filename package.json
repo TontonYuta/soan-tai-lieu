@@ -1,23 +1,61 @@
 {
-  "name": "latex-hóa---yuta",
+  "name": "yuta-latex-math-studio",
+  "version": "1.0.0",
+  "description": "Hệ Thống Soạn Thảo Toán Học Chuẩn LaTeX & Tự Động Hóa 1-Click",
+  "author": "Tonton Yuta <contact@yuta.edu.vn>",
   "private": true,
-  "version": "0.0.0",
+  "main": "electron/main.cjs",
   "type": "module",
   "scripts": {
+    "start": "vite",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "electron:dev": "vite build && electron electron/main.cjs",
+    "build:linux": "vite build && electron-builder --linux --x64",
+    "build:appimage": "vite build && electron-builder --linux AppImage",
+    "build:deb": "vite build && electron-builder --linux deb",
+    "build:dir": "vite build && electron-builder --linux dir --x64"
+  },
+  "build": {
+    "appId": "com.yuta.latexstudio",
+    "productName": "Yuta Latex Math Studio",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "node_modules/playwright-core/**/*",
+      "package.json"
+    ],
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb",
+        "dir"
+      ],
+      "maintainer": "Tonton Yuta <contact@yuta.edu.vn>",
+      "category": "Education"
+    }
   },
   "dependencies": {
+    "@google/genai": "^1.34.0",
+    "@types/ws": "^8.18.1",
+    "lucide-react": "^0.562.0",
+    "pdf-parse": "^2.4.5",
+    "playwright-core": "^1.62.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "lucide-react": "^0.562.0",
-    "@google/genai": "^1.34.0"
+    "ws": "^8.21.3"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
+    "@types/pdf-parse": "^1.1.5",
     "@vitejs/plugin-react": "^5.0.0",
+    "electron": "^44.1.0",
+    "electron-builder": "^26.15.3",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }

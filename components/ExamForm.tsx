@@ -1,19 +1,24 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Clock, School, Wand2, BookOpen, GraduationCap, LayoutDashboard, 
   CheckCircle2, AlertCircle, Sparkles, Info, CheckSquare, Square, 
   Sliders, Layers, Zap
 } from "lucide-react";
 import { ExamConfig, GenerationStatus } from '../types';
+import PdfUploadZone from './PdfUploadZone';
+
+
 
 interface ExamFormProps {
   onSubmit: (data: ExamConfig) => void;
+  onDirectAutomate?: (data: ExamConfig) => void;
   status: GenerationStatus;
   initialContext?: string;
   contextTopic?: string;
   contextSubject?: string;
   contextGrade?: string;
 }
+
 
 const COMMON_SCHOOLS = [
   "Sở GD&ĐT Hà Nội",
@@ -370,6 +375,17 @@ const ExamForm: React.FC<ExamFormProps> = ({
               </button>
             </div>
 
+            {/* PDF Upload RAG Zone */}
+            <div className="pt-2">
+
+              <PdfUploadZone
+                attachedPdf={config.attachedPdf || null}
+                onPdfChange={(pdfData) => setConfig(prev => ({ ...prev, attachedPdf: pdfData || undefined }))}
+                title="Đính Kèm File Đề Thi Mẫu / Đề Cương PDF (RAG):"
+                description="AI sẽ đọc ma trận, câu hỏi và hình vẽ trong file đề thi PDF này để thiết kế đề thi tương đương."
+              />
+            </div>
+
             <div className="group relative mt-2">
               <label className={labelClass}>Yêu cầu nâng cao (Tùy chọn)</label>
               <textarea 
@@ -381,6 +397,7 @@ const ExamForm: React.FC<ExamFormProps> = ({
             </div>
           </div>
         </div>
+
 
         {/* SECTION 2: QUESTION COUNTS & MATRIX */}
         <div className="p-5 bg-[#ffffff] border-[3px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] space-y-4">
@@ -482,8 +499,8 @@ const ExamForm: React.FC<ExamFormProps> = ({
             </>
           ) : (
             <>
-              <Wand2 className="w-6 h-6 stroke-[3]" />
-              <span>Thiết Kế Đề Thi LaTeX ({is2025 ? 'Format 2025' : 'Classic'})</span>
+              <Zap className="w-6 h-6 stroke-[3] fill-black" />
+              <span>⚡ Thiết Kế Đề Thi LaTeX ({is2025 ? 'Format 2025' : 'Classic'})</span>
             </>
           )}
         </button>
@@ -491,5 +508,7 @@ const ExamForm: React.FC<ExamFormProps> = ({
     </div>
   );
 };
+
+
 
 export default ExamForm;

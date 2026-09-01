@@ -1,5 +1,5 @@
-﻿import { LearningConfig } from "../../types";
-import { LATEX_TECHNICAL_RULES, ROADMAP_TEMPLATE } from "./latex-rules";
+import { LearningConfig } from "../../types";
+import { LATEX_TECHNICAL_RULES, LEARNING_TEMPLATE } from "./latex-rules";
 
 export const generateLearningPrompt = (config: LearningConfig): string => {
   let languageInstruction = "";
@@ -16,6 +16,17 @@ export const generateLearningPrompt = (config: LearningConfig): string => {
     config.goal === 'detailed' ? 'Biên soạn bài giảng chi tiết toàn diện từ định nghĩa đến chứng minh' :
     'Lý thuyết kết hợp nhiều ví dụ mẫu và phương pháp giải từng dạng toán';
 
+  const ragSection = config.attachedPdf ? `
+====================================================
+TÀI LIỆU PDF ĐÍNH KÈM THAM KHẢO (RAG CONTEXT):
+- Tên tài liệu: ${config.attachedPdf.fileName} (${config.attachedPdf.numPages} trang)
+- Nội dung trích xuất từ tài liệu:
+"""
+${config.attachedPdf.text.slice(0, 15000)}
+"""
+- CHỈ THỊ RAG (QUAN TRỌNG): BẮT BUỘC chắt lọc định nghĩa, định lý, ví dụ mẫu từ tài liệu PDF đính kèm để biên soạn bài giảng chi tiết, logic.
+====================================================` : '';
+
   return `Đóng vai Giáo viên Toán học chuyên nghiệp và Master LaTeX.
 Nhiệm vụ: Biên soạn một tài liệu bài giảng/bài học chuẩn mực cho chủ đề được yêu cầu.
 
@@ -27,20 +38,21 @@ I. THÔNG TIN BÀI HỌC:
 - Đối tượng người học: ${config.audience}
 - Ngôn ngữ: ${languageInstruction}
 - Yêu cầu bổ sung: ${config.details || "Không"}
+${ragSection}
+
 
 II. NGUYÊN TẮC SƯ PHẠM:
 - Đi từ trực quan đến trừu tượng, có ví dụ minh họa và đồ thị/hình vẽ TikZ nếu cần thiết.
-- Trình bày công thức toán học rõ ràng, có đóng khung công thức quan trọng bằng tcolorbox sharp corners.
+- Trình bày công thức toán học rõ ràng, dùng \\hopkienthuc hoặc \\dinhly, \\vidu, \\loigiai.
 
 III. QUY TẮC LATEX:
 ${LATEX_TECHNICAL_RULES}
 
-Trả về toàn bộ mã LaTeX hoàn chỉnh được bọc trong markdown codeblock (\`\`\`latex ... \`\`\`).
+IV. KHUNG TÀI LIỆU NỀN TẢNG:
+${LEARNING_TEMPLATE}
 
-[BƯỚC CHUYÊN SÂU: KIỂM TRA LẠI CHÉO (SELF-CHECK)]
-Trước khi xuất ra kết quả cuối cùng, bạn PHẢI tự rà soát và kiểm tra chất lượng bằng cách viết ra một khối \`<self_check> ... </self_check>\`:
-- Logic toán học: Đã chuẩn xác chưa?
-- Lỗi hiển thị: Mã LaTeX có thiếu ngoặc, quên macro, thiếu $ công thức, không escape % hay _ không?
-- Hoàn thiện: Đã bọc mã bằng \`\`\`latex ... \`\`\` chưa?
-Sau khi tự review xong, mới được phép xuất ra đoạn mã LaTeX chuẩn nhất.`;
+V. CHỈ THỊ ĐẦU RA BẮT BUỘC:
+- BẮT BUỘC CHỈ TRẢ VỀ DUY NHẤT 1 KHỐI MÃ NGUỒN LATEX TRONG KHỐI \`\`\`latex ... \`\`\`.
+- TUYỆT ĐỐI KHÔNG xuất bất kỳ câu chào hỏi, lời dẫn, giải thích hay nhận xét nào bên ngoài khối code.
+- Đảm bảo mã nguồn biên dịch trực tiếp 100% không lỗi trên Overleaf và pdfLaTeX.`;
 };

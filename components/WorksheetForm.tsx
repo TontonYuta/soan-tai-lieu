@@ -1,9 +1,13 @@
-﻿import React, { useState, useEffect } from 'react';
-import { Book, User, Layout, Wand2, Info, GraduationCap, ChevronDown } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { Book, User, Layout, Wand2, Info, GraduationCap, ChevronDown, Zap } from "lucide-react";
 import { WorksheetConfig, GenerationStatus } from '../types';
+import PdfUploadZone from './PdfUploadZone';
+
 
 interface WorksheetFormProps {
+
   onSubmit: (data: WorksheetConfig) => void;
+  onDirectAutomate?: (data: WorksheetConfig) => void;
   status: GenerationStatus;
   contextTopic?: string;
   contextSubject?: string;
@@ -12,11 +16,13 @@ interface WorksheetFormProps {
 
 const WorksheetForm: React.FC<WorksheetFormProps> = ({ 
   onSubmit, 
+  onDirectAutomate,
   status, 
   contextTopic, 
   contextSubject, 
   contextGrade 
 }) => {
+
   const [config, setConfig] = useState<WorksheetConfig>({
     subject: contextSubject || 'Toán học',
     topic: contextTopic || '',
@@ -162,6 +168,13 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
                 </div>
 
                 <div className="group relative mt-4">
+                    <PdfUploadZone 
+                      attachedPdf={config.attachedPdf || null} 
+                      onPdfChange={(pdfData) => handleChange('attachedPdf', pdfData || undefined)} 
+                    />
+                </div>
+
+                <div className="group relative mt-4">
                     <label className={labelClass}>Yêu cầu nâng cao (Tùy chọn)</label>
                     <div className="relative">
                         <textarea
@@ -172,14 +185,14 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
                         />
                     </div>
                 </div>
-
             </div>
         </div>
+
 
         <button
           type="submit"
           disabled={isLoading || !config.subject || !config.topic || !config.teacherName}
-          className={`w-full relative flex items-center justify-center gap-3 py-4 px-6 rounded-none text-black font-black uppercase tracking-widest text-lg border-4 border-black shadow-[6px_6px_0_0_rgba(0,0,0,1)] transition-all duration-75 active:translate-y-[6px] active:translate-x-[6px] active:shadow-none
+          className={`w-full relative flex items-center justify-center gap-3 py-4 px-6 rounded-none text-black font-black uppercase tracking-widest text-lg border-4 border-black shadow-[6px_6px_0_0_rgba(0,0,0,1)] transition-all duration-75 active:translate-y-[6px] active:translate-x-[6px] active:shadow-none cursor-pointer
             ${(isLoading || !config.subject || !config.topic || !config.teacherName)
               ? 'bg-[#E2E8F0] cursor-not-allowed text-gray-500 shadow-none border-gray-400' 
               : 'bg-[#A3E635] hover:bg-[#86EFAC]'}`}
@@ -187,12 +200,12 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
           {isLoading ? (
              <>
                <span className="w-5 h-5 border-4 border-black border-t-transparent rounded-full animate-spin"/>
-               <span>Đang tạo...</span>
+               <span>Đang tạo phiếu bài tập...</span>
              </>
           ) : (
             <>
-              <Wand2 className="w-6 h-6 stroke-[3]" />
-              <span>Tạo Worksheet LaTeX</span>
+              <Zap className="w-6 h-6 stroke-[3] fill-black" />
+              <span>⚡ Soạn Phiếu Bài Tập (LaTeX)</span>
             </>
           )}
         </button>
@@ -200,5 +213,6 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
     </div>
   );
 };
+
 
 export default WorksheetForm;
