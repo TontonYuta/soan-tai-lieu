@@ -89,10 +89,10 @@ function cleanStaleChromiumLocks(profileDir, force = false) {
     for (const f of lockFiles) {
       const p = path.join(profileDir, f);
       try {
-        if (fs.existsSync(p) || fs.lstatSync(p).isSymbolicLink()) {
-          fs.unlinkSync(p);
-        }
-      } catch {}
+        fs.rmSync(p, { force: true, recursive: true });
+      } catch {
+        try { fs.unlinkSync(p); } catch {}
+      }
     }
   }
 }
@@ -1240,6 +1240,7 @@ function startInternalServer(callback) {
             } catch (e) {
               console.warn('Profile Chrome đang bị khóa hoặc lỗi khởi động, thử xóa lock và khởi động lại:', e.message);
               cleanStaleChromiumLocks(userDataDir, true);
+              await new Promise(r => setTimeout(r, 1200));
               try {
                 browserContext = await chromium.launchPersistentContext(userDataDir, {
                   headless: isHeadless,
