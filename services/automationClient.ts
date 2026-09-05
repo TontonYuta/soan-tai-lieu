@@ -1,22 +1,54 @@
 export interface AutomationProgress {
-  step: 'INIT' | 'CONNECTING_CHROME' | 'OPENING_GEMINI' | 'SENDING_PROMPT' | 'WAITING_GEMINI' | 'EXTRACTING_LATEX' | 'OPENING_OVERLEAF' | 'PASTING_CODE' | 'RECOMPILING' | 'DOWNLOADING_PDF' | 'COMPLETED' | 'ERROR';
+  step: 'INIT' | 'CONNECTING_CHROME' | 'OPENING_GEMINI' | 'SENDING_PROMPT' | 'WAITING_GEMINI' | 'EXTRACTING_LATEX' | 'OPENING_OVERLEAF' | 'PASTING_CODE' | 'RECOMPILING' | 'DOWNLOADING_PDF' | 'RENDERING_VIDEO' | 'COMPLETED' | 'ERROR';
   progress: number;
   message: string;
   latexCode?: string;
+  manimCode?: string;
+  scriptContent?: string;
+  srtContent?: string;
+  contentType?: 'latex' | 'manim' | 'script';
   pdfUrl?: string;
   pdfPath?: string;
+  videoUrl?: string;
+  videoPath?: string;
+  audioUrl?: string;
+  audioPath?: string;
+  filePath?: string;
   error?: string;
+  isSeries?: boolean;
+  seriesCount?: number;
+  currentEpisode?: number;
+  playlistVideos?: {
+    episode: number;
+    title: string;
+    videoUrl: string;
+    videoPath: string;
+    audioUrl?: string;
+    audioPath?: string;
+  }[];
 }
 
 export interface AutomationRunParams {
   prompt: string;
   browserType?: 'chrome' | 'firefox' | 'edge';
+  aiProvider?: string;
+  provider?: string;
   aiUrl?: string;
   geminiUrl?: string;
   overleafUrl?: string;
   chromeProfilePath?: string;
   headless?: boolean;
   attachedPdfPath?: string;
+  isSeries?: boolean;
+  seriesCount?: number;
+  seriesOutline?: string;
+  topic?: string;
+  subject?: string;
+  model?: string;
+  modelName?: string;
+  enableVoice?: boolean;
+  voiceName?: string;
+  voiceSpeed?: string;
 }
 
 

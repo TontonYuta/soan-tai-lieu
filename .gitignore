@@ -16,6 +16,9 @@ downloads
 *.AppImage
 *.deb
 *.tar.gz
+media/
+__pycache__/
+*.pyc
 
 
 # Editor directories and files

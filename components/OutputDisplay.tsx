@@ -1,9 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Copy, Check, ExternalLink, Terminal, AlertCircle, Bot, Zap, 
-  ShieldCheck, Download, Play, FileCode, Sparkles 
+  ShieldCheck, Download, Play, FileCode, Sparkles, Volume2, 
+  VolumeX, Subtitles, FileText, Monitor, Film
 } from 'lucide-react';
-import { GenerationStatus } from '../types';
+import { GenerationStatus, VideoConfig } from '../types';
+import { 
+  generateManimStoryboardPrompt, 
+  generateManimCodePrompt, 
+  generateVideoManimPrompt 
+} from '../services/prompts/manim';
 
 interface OutputDisplayProps {
   content: string;
@@ -11,11 +17,31 @@ interface OutputDisplayProps {
   error: string | null;
   onForwardContext?: (targetTab: 'roadmap' | 'learning' | 'worksheet' | 'similar' | 'exam' | 'video' | 'bat') => void;
   onOpenAutomation?: () => void;
+  videoConfig?: VideoConfig | null;
+  onSelectPrompt?: (prompt: string) => void;
 }
 
-const OutputDisplay: React.FC<OutputDisplayProps> = ({ content, status, error, onForwardContext, onOpenAutomation }) => {
+const OutputDisplay: React.FC<OutputDisplayProps> = ({ 
+  content, 
+  status, 
+  error, 
+  onForwardContext, 
+  onOpenAutomation,
+  videoConfig,
+  onSelectPrompt
+}) => {
   const [copied, setCopied] = useState(false);
   const [downloaded, setDownloaded] = useState<string | null>(null);
+  const [isPlayingTTS, setIsPlayingTTS] = useState(false);
+
+  useEffect(() => {
+    // Dừng âm thanh nếu nội dung đổi hoặc unmount
+    return () => {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, [content]);
 
   const handleCopy = () => {
     if (!content) return;
@@ -33,7 +59,6 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({ content, status, error, o
     const targetUrl = localStorage.getItem('yuta_ai_url') || localStorage.getItem('gemini_fixed_link') || 'https://gemini.google.com/app';
     window.open(targetUrl, '_blank');
   };
-
 
   // Helper tải file text
   const downloadFile = (filename: string, text: string) => {
@@ -59,11 +84,139 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({ content, status, error, o
   };
 
   // Xác định định dạng kết quả
-  const isLatex = content.includes('\\documentclass') || content.includes('\\begin{document}') || content.includes('\\usepackage');
-  const isManim = content.includes('from manim import') || content.includes('class MainScene') || content.includes('ThreeDScene');
+  const isManim = content.includes('from manim import') || 
+                  content.includes('class MainScene') || 
+                  content.includes('ThreeDScene') || 
+                  content.includes('Manim') || 
+                  content.includes('VOICEOVER_SCRIPT') ||
+                  content.includes('scene.py') ||
+                  content.includes('KỊCH BẢN SƯ PHẠM') ||
+                  Boolean(videoConfig);
+  const isLatex = !isManim && (content.includes('\\documentclass') || content.includes('\\begin{document}') || content.includes('\\usepackage'));
+  const isVideoScript = !isManim && (content.includes('KỊCH BẢN VIDEO') || content.includes('BẢNG PHÂN CẢNH') || (content.includes('| Thời gian |') && content.includes('Manim Visual')));
   const isBat = content.includes('@echo off') || content.includes('chcp 65001');
 
-  // Xử lý tải script chạy Manim
+  // Quản lý các chế độ sub-tab prompt cho video Manim
+  const [manimTab, setManimTab] = useState<'turn1' | 'turn2' | 'combined'>('turn1');
+  const turn1Prompt = videoConfig ? generateManimStoryboardPrompt(videoConfig) : '';
+  const turn2Prompt = videoConfig ? generateManimCodePrompt(videoConfig) : '';
+  const combinedPrompt = videoConfig ? generateVideoManimPrompt(videoConfig) : '';
+
+  // Trình đọc thử lời thoại TTS (Web Speech API)
+  const handleToggleTTS = () => {
+    if (!('speechSynthesis' in window)) {
+      alert('Trình duyệt của bạn không hỗ trợ Web Speech Synthesis API!');
+      return;
+    }
+
+    if (isPlayingTTS) {
+      window.speechSynthesis.cancel();
+      setIsPlayingTTS(false);
+      return;
+    }
+
+    // Trích xuất lời thoại từ phần kịch bản liền mạch hoặc bảng phân cảnh
+    let voiceText = "";
+    const fullVoiceoverMatch = content.match(/### Danh sách Lời thoại Thuyết minh Liền mạch.*?\n([\s\S]*?)(?:\n---|\n###|$)/i);
+    if (fullVoiceoverMatch && fullVoiceoverMatch[1].trim()) {
+      voiceText = fullVoiceoverMatch[1].replace(/^[“"\[]+|[”"\]]+$/g, '').trim();
+    } else {
+      const lines = content.split('\n');
+      const parts: string[] = [];
+      for (const line of lines) {
+        if (!line.includes('|')) continue;
+        const cells = line.split('|').map(c => c.trim()).filter(Boolean);
+        if (cells.length >= 3) {
+          const raw = cells[2];
+          const clean = raw.replace(/^[“"\[]+|[”"\]]+$/g, '').trim();
+          if (clean && !clean.includes('Lời thoại') && !clean.includes('Audio') && clean.length > 2) {
+            parts.push(clean);
+          }
+        }
+      }
+      voiceText = parts.length > 0 ? parts.join('. ') : content.slice(0, 500);
+    }
+
+    if (!voiceText) {
+      alert('Không tìm thấy đoạn lời thoại để đọc thử!');
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(voiceText);
+    utterance.lang = 'vi-VN';
+    utterance.rate = 1.05;
+
+    const voices = window.speechSynthesis.getVoices();
+    const viVoice = voices.find(v => v.lang.includes('vi') || v.lang.includes('VN'));
+    if (viVoice) {
+      utterance.voice = viVoice;
+    }
+
+    utterance.onend = () => setIsPlayingTTS(false);
+    utterance.onerror = () => setIsPlayingTTS(false);
+
+    setIsPlayingTTS(true);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Sinh file phụ đề .SRT từ bảng phân cảnh
+  const handleDownloadSrt = () => {
+    const lines = content.split('\n');
+    const srtEntries: { start: string; end: string; text: string }[] = [];
+    const timeRegex = /(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2}|Cuối)/i;
+
+    const toSrtTime = (t: string) => {
+      const parts = t.split(':').map(p => parseInt(p, 10));
+      let m = 0, s = 0;
+      if (parts.length === 2) {
+        m = parts[0];
+        s = parts[1];
+      } else if (parts.length === 3) {
+        return `${String(parts[0]).padStart(2, '0')}:${String(parts[1]).padStart(2, '0')}:${String(parts[2]).padStart(2, '0')},000`;
+      }
+      return `00:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')},000`;
+    };
+
+    for (const line of lines) {
+      if (!line.includes('|')) continue;
+      const cells = line.split('|').map(c => c.trim()).filter(Boolean);
+      if (cells.length >= 3) {
+        const timeCell = cells[0];
+        const match = timeCell.match(timeRegex);
+        if (match) {
+          const startTime = match[1];
+          let endTime = match[2];
+          if (endTime.toLowerCase() === 'cuối') {
+            endTime = '01:00';
+          }
+          let voiceText = cells[2] || cells[1];
+          voiceText = voiceText.replace(/^[“"\[]+|[”"\]]+$/g, '').trim();
+
+          if (voiceText && !voiceText.includes('Lời thoại')) {
+            srtEntries.push({
+              start: toSrtTime(startTime),
+              end: toSrtTime(endTime),
+              text: voiceText
+            });
+          }
+        }
+      }
+    }
+
+    if (srtEntries.length === 0) {
+      downloadFile('phude.srt', `1\n00:00:00,000 --> 00:00:10,000\nKịch bản Video Yuta!LaTeX\n`);
+      return;
+    }
+
+    const srtContent = srtEntries.map((e, idx) => {
+      return `${idx + 1}\n${e.start} --> ${e.end}\n${e.text}\n`;
+    }).join('\n');
+
+    downloadFile('phude.srt', srtContent);
+  };
+
+  // Xử lý tải script chạy Manim trên Windows (.bat)
   const handleDownloadManimBat = () => {
     const batContent = `@echo off
 chcp 65001 >nul
@@ -98,7 +251,83 @@ pause
     downloadFile('render_manim.bat', batContent);
   };
 
-  // Xử lý tải script biên dịch LaTeX
+  // Xử lý tải script chạy Manim trên Linux/macOS (.sh)
+  const handleDownloadManimSh = () => {
+    const shContent = `#!/usr/bin/env bash
+set -e
+echo "========================================================"
+echo "  📐 YUTA MANIM STUDIO - RENDER VIDEO TOÁN HỌC (LINUX)"
+echo "========================================================"
+echo ""
+
+if ! command -v manim &> /dev/null; then
+    echo "[LỖI] Chưa cài đặt Manim CE!"
+    echo "Vui lòng chạy: pip install manim"
+    exit 1
+fi
+
+echo "[1/2] Đang render scene.py chất lượng cao (1080p 60fps)..."
+manim -pqh scene.py MainScene
+
+echo ""
+echo "========================================================"
+echo "  [SUCCESS] RENDER VIDEO HOÀN TẤT!"
+echo "========================================================"
+echo ""
+
+VIDEO_PATH="media/videos/scene/1080p60/MainScene.mp4"
+if [ -f "$VIDEO_PATH" ]; then
+    echo "Đang mở video: $VIDEO_PATH"
+    if command -v xdg-open &> /dev/null; then
+        xdg-open "$VIDEO_PATH" 2>/dev/null || true
+    elif command -v open &> /dev/null; then
+        open "$VIDEO_PATH" 2>/dev/null || true
+    fi
+fi
+`;
+    downloadFile('render_manim.sh', shContent);
+  };
+
+
+  // Xử lý tải script biên dịch LaTeX (.sh)
+  const handleDownloadLatexSh = () => {
+    const shContent = `#!/usr/bin/env bash
+set -e
+echo "========================================================"
+echo "  📐 YUTA LATEX STUDIO - BIÊN DỊCH PDFLATEX (LINUX)"
+echo "========================================================"
+echo ""
+
+if ! command -v pdflatex &> /dev/null; then
+    echo "[LỖI] Chưa cài đặt pdflatex! Vui lòng cài: sudo apt install texlive-latex-base"
+    exit 1
+fi
+
+echo "[1/3] Đang biên dịch pdflatex lần 1..."
+pdflatex -interaction=nonstopmode tailieu.tex > /dev/null
+
+echo "[2/3] Đang biên dịch pdflatex lần 2..."
+pdflatex -interaction=nonstopmode tailieu.tex > /dev/null
+
+echo "[3/3] Đang dọn dẹp file phụ..."
+rm -f *.aux *.log *.out *.toc *.synctex.gz
+
+echo ""
+echo "========================================================"
+echo "  [SUCCESS] XUẤT FILE PDF HOÀN TẤT: tailieu.pdf"
+echo "========================================================"
+if [ -f "tailieu.pdf" ]; then
+    if command -v xdg-open &> /dev/null; then
+        xdg-open "tailieu.pdf" 2>/dev/null || true
+    elif command -v open &> /dev/null; then
+        open "tailieu.pdf" 2>/dev/null || true
+    fi
+fi
+`;
+    downloadFile('compile_latex.sh', shContent);
+  };
+
+  // Xử lý tải script biên dịch LaTeX (.bat)
   const handleDownloadLatexBat = () => {
     const batContent = `@echo off
 chcp 65001 >nul
@@ -168,7 +397,7 @@ pause
           <div className="flex items-center gap-2 text-black bg-[#ffffff] px-3 py-1 border-2 border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]">
             <Terminal className="w-4 h-4 text-black stroke-[3]" />
             <span className="text-xs font-black uppercase tracking-widest">
-              {isLatex ? 'LaTeX Source' : isManim ? 'Python Manim Scene' : isBat ? 'Windows Batch (.BAT)' : 'Markdown Prompt'}
+              {isLatex ? 'LaTeX Source' : isManim ? 'Python Manim Scene' : isVideoScript ? 'Video Storyboard & Script' : isBat ? 'Windows Batch (.BAT)' : 'Markdown Prompt'}
             </span>
           </div>
         </div>
@@ -179,10 +408,10 @@ pause
             <button
               onClick={onOpenAutomation}
               className="flex items-center gap-1.5 px-4 py-2 bg-[#A3E635] text-black border-2 border-black text-xs font-black uppercase tracking-widest shadow-[3px_3px_0_0_rgba(0,0,0,1)] hover:bg-[#86EFAC] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all cursor-pointer"
-              title="Tự động dán sang Gemini, lấy mã LaTeX và compile trên Overleaf để ra PDF"
+              title={isManim ? "Tự động sinh mã Manim và render video MP4 trực tiếp" : "Tự động dán sang Gemini, lấy mã LaTeX và compile trên Overleaf để ra PDF"}
             >
               <Zap className="w-4 h-4 stroke-[3] fill-black" />
-              ⚡ Chạy 1-Click (Xuất PDF)
+              {isManim ? '⚡ Tạo Video (1-Click)' : '⚡ Chạy 1-Click (Xuất PDF)'}
             </button>
           )}
 
@@ -208,8 +437,56 @@ pause
         </div>
       </div>
 
+      {/* Multi-Turn Manim Prompt Mode Switcher */}
+      {videoConfig && (
+        <div className="bg-[#f1f5f9] border-b-2 border-black px-4 py-2 flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-black stroke-[3]" />
+            <span className="text-xs font-black uppercase text-black tracking-wider">Chế độ Prompt Video:</span>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => {
+                setManimTab('turn1');
+                if (onSelectPrompt && turn1Prompt) onSelectPrompt(turn1Prompt);
+              }}
+              className={`px-3 py-1 text-xs font-black uppercase border-2 border-black transition-all cursor-pointer ${
+                manimTab === 'turn1' ? 'bg-[#A3E635] text-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]' : 'bg-white text-black hover:bg-[#FFED66]'
+              }`}
+            >
+              🎬 [Lượt 1] Kịch Bản & Lời Thoại
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setManimTab('turn2');
+                if (onSelectPrompt && turn2Prompt) onSelectPrompt(turn2Prompt);
+              }}
+              className={`px-3 py-1 text-xs font-black uppercase border-2 border-black transition-all cursor-pointer ${
+                manimTab === 'turn2' ? 'bg-[#00CECB] text-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]' : 'bg-white text-black hover:bg-[#FFED66]'
+              }`}
+            >
+              💻 [Lượt 2] Lệnh Sinh Code
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setManimTab('combined');
+                if (onSelectPrompt && combinedPrompt) onSelectPrompt(combinedPrompt);
+              }}
+              className={`px-3 py-1 text-xs font-black uppercase border-2 border-black transition-all cursor-pointer ${
+                manimTab === 'combined' ? 'bg-[#FFED66] text-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]' : 'bg-white text-black hover:bg-[#FFED66]'
+              }`}
+            >
+              ⚡ [Prompt Gộp] 1-Shot
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Compiler Notice & Quick Download Bar */}
-      <div className={`px-4 py-2 border-b-2 border-black flex items-center justify-between flex-wrap gap-2 ${isLatex ? 'bg-[#fef2f2]' : isManim ? 'bg-[#faf5ff]' : 'bg-[#f0fdf4]'}`}>
+      <div className={`px-4 py-2 border-b-2 border-black flex items-center justify-between flex-wrap gap-2 ${isLatex ? 'bg-[#fef2f2]' : isManim ? 'bg-[#faf5ff]' : isVideoScript ? 'bg-[#fdf4ff]' : 'bg-[#f0fdf4]'}`}>
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 stroke-[3] text-black" />
           <p className="text-[11px] font-black uppercase text-black">
@@ -217,6 +494,8 @@ pause
               <>Compiler: <span className="bg-[#ffffff] px-1 border border-black text-black">PDFLaTeX</span> | TikZ & pgfplots Ready</>
             ) : isManim ? (
               <>Engine: <span className="bg-[#ffffff] px-1 border border-black text-black">Manim CE</span> | Python 3.9+</>
+            ) : isVideoScript ? (
+              <>Studio: <span className="bg-[#ffffff] px-1 border border-black text-black">Storyboard Table</span> | TTS & SRT Export</>
             ) : (
               <>Format: <span className="bg-[#ffffff] px-1 border border-black text-black">Markdown / Batch</span></>
             )}
@@ -224,7 +503,7 @@ pause
         </div>
 
         {/* Quick Save Buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {isManim ? (
             <>
               <button
@@ -234,10 +513,44 @@ pause
                 <Download className="w-3 h-3 stroke-[3]" /> Tải scene.py
               </button>
               <button
+                onClick={handleDownloadManimSh}
+                className="flex items-center gap-1 text-[11px] font-black text-black bg-[#FFED66] px-2.5 py-1 border border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:bg-[#FFECA1] cursor-pointer"
+                title="Tự động chạy Manim trên Linux/macOS và mở file MP4"
+              >
+                <Play className="w-3 h-3 stroke-[3]" /> Tải render.sh (Linux)
+              </button>
+              <button
                 onClick={handleDownloadManimBat}
                 className="flex items-center gap-1 text-[11px] font-black text-black bg-[#A3E635] px-2.5 py-1 border border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:bg-[#86EFAC] cursor-pointer"
+                title="Tự động chạy Manim trên Windows"
               >
                 <Play className="w-3 h-3 stroke-[3]" /> Tải render.bat
+              </button>
+            </>
+          ) : isVideoScript ? (
+            <>
+              <button
+                onClick={handleToggleTTS}
+                className={`flex items-center gap-1 text-[11px] font-black px-2.5 py-1 border border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] transition-all cursor-pointer ${
+                  isPlayingTTS ? 'bg-[#FF5E5B] text-white animate-pulse' : 'bg-[#FF90E8] text-black hover:bg-[#F472B6]'
+                }`}
+                title="Đọc thử lời thoại kịch bản bằng giọng đọc tiếng Việt"
+              >
+                {isPlayingTTS ? <VolumeX className="w-3 h-3 stroke-[3]" /> : <Volume2 className="w-3 h-3 stroke-[3]" />}
+                {isPlayingTTS ? 'Dừng Đọc' : 'Nghe Thử TTS'}
+              </button>
+              <button
+                onClick={handleDownloadSrt}
+                className="flex items-center gap-1 text-[11px] font-black text-black bg-[#00CECB] px-2.5 py-1 border border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:bg-[#2DD4BF] cursor-pointer"
+                title="Xuất phụ đề .SRT theo mốc thời gian để đưa vào CapCut/Premiere"
+              >
+                <Subtitles className="w-3 h-3 stroke-[3]" /> Xuất Phụ Đề (.SRT)
+              </button>
+              <button
+                onClick={() => downloadFile('kich_ban_video.md', content)}
+                className="flex items-center gap-1 text-[11px] font-black text-black bg-white px-2.5 py-1 border border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:bg-[#FFED66] cursor-pointer"
+              >
+                <Download className="w-3 h-3 stroke-[3]" /> Tải Kịch Bản (.md)
               </button>
             </>
           ) : isLatex ? (
@@ -249,8 +562,16 @@ pause
                 <Download className="w-3 h-3 stroke-[3]" /> Tải .tex
               </button>
               <button
+                onClick={handleDownloadLatexSh}
+                className="flex items-center gap-1 text-[11px] font-black text-black bg-[#FFED66] px-2.5 py-1 border border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:bg-[#FFECA1] cursor-pointer"
+                title="Biên dịch pdflatex trên Linux/macOS"
+              >
+                <Play className="w-3 h-3 stroke-[3]" /> Tải compile.sh (Linux)
+              </button>
+              <button
                 onClick={handleDownloadLatexBat}
                 className="flex items-center gap-1 text-[11px] font-black text-black bg-[#A3E635] px-2.5 py-1 border border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:bg-[#86EFAC] cursor-pointer"
+                title="Biên dịch pdflatex trên Windows"
               >
                 <Play className="w-3 h-3 stroke-[3]" /> Tải compile.bat
               </button>

@@ -84,6 +84,18 @@ export interface SimilarExerciseConfig {
   details?: string;
 }
 
+export interface PlaylistItem {
+  episode: number;
+  title: string;
+  description?: string;
+  videoUrl?: string;
+  videoPath?: string;
+  audioUrl?: string;
+  audioPath?: string;
+  duration?: string;
+  manimCode?: string;
+}
+
 export interface VideoConfig {
   subject: string;
   topic: string;
@@ -91,11 +103,25 @@ export interface VideoConfig {
   tone: 'academic' | 'creative' | 'simple';
   audience: string;
   format: 'horizontal' | 'vertical';
-  mathType?: 'calculus' | '3d_geometry' | 'trigonometry' | 'algebra' | 'vector' | 'custom';
+  category?: 'math' | 'physics' | 'chemistry' | 'computer_science' | 'biology' | 'economics' | 'general' | string;
+  mathType?: string;
+  hookType?: 'trap' | 'visual_intuition' | 'fast_trick' | 'real_world';
   renderQuality?: '480p' | '1080p' | '4k';
   fps?: 30 | 60;
   safeZoneShorts?: boolean;
+  attachedPdf?: AttachedPdfData;
+  language?: 'bilingual' | 'vietnamese' | 'english';
   details?: string;
+  // Giọng đọc AI (TTS Voiceover)
+  enableVoice?: boolean;
+  voiceName?: 'vi-VN-HoaiMyNeural' | 'vi-VN-NamMinhNeural' | string;
+  voiceSpeed?: string;
+  // Chế độ Series / Playlist
+  isSeries?: boolean;
+  seriesCount?: number;
+  seriesOutline?: string;
+  currentEpisodeIndex?: number;
+  playlistVideos?: PlaylistItem[];
 }
 
 export interface BatConfig {

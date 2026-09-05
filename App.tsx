@@ -16,6 +16,8 @@ import {
   generateRoadmapPrompt, 
   generateWorksheetPrompt, 
   generateSimilarPrompt,
+  generateManimStoryboardPrompt,
+  generateManimCodePrompt,
   generateVideoManimPrompt, 
   generateVideoScriptPrompt, 
   generateBatPrompt 
@@ -59,6 +61,15 @@ const App: React.FC = () => {
     localStorage.getItem('yuta_headless') === 'true'
   );
   const [activeAttachedPdf, setActiveAttachedPdf] = useState<{ path?: string; name?: string } | null>(null);
+  const [videoExtraConfig, setVideoExtraConfig] = useState<{
+    isSeries?: boolean;
+    seriesCount?: number;
+    seriesOutline?: string;
+    enableVoice?: boolean;
+    voiceName?: string;
+    voiceSpeed?: string;
+  }>({});
+  const [currentVideoConfig, setCurrentVideoConfig] = useState<VideoConfig | null>(null);
 
   const handleHeadlessToggle = (val: boolean) => {
     setHeadless(val);
@@ -203,7 +214,11 @@ const App: React.FC = () => {
   };
 
   const handleVideoScriptGenerate = (config: VideoConfig) => {
-
+    if (config.attachedPdf) {
+      setActiveAttachedPdf({ path: config.attachedPdf.tempPath, name: config.attachedPdf.fileName });
+    } else {
+      setActiveAttachedPdf(null);
+    }
     setStatus(GenerationStatus.LOADING);
     setError(null);
     setTimeout(() => {
@@ -220,17 +235,31 @@ const App: React.FC = () => {
   };
 
   const handleVideoManimGenerate = (config: VideoConfig) => {
+    setCurrentVideoConfig(config);
+    if (config.attachedPdf) {
+      setActiveAttachedPdf({ path: config.attachedPdf.tempPath, name: config.attachedPdf.fileName });
+    } else {
+      setActiveAttachedPdf(null);
+    }
+    setVideoExtraConfig({
+      isSeries: config.isSeries,
+      seriesCount: config.seriesCount,
+      seriesOutline: config.seriesOutline || config.details,
+      enableVoice: config.enableVoice,
+      voiceName: config.voiceName,
+      voiceSpeed: config.voiceSpeed,
+    });
     setStatus(GenerationStatus.LOADING);
     setError(null);
     setTimeout(() => {
         try {
-            setPromptContent(generateVideoManimPrompt(config));
+            setPromptContent(generateManimStoryboardPrompt(config));
             setContextMetadata({ topic: config.topic, subject: config.subject, grade: config.audience });
-            setLearningContext(`Video Manim: ${config.topic}`);
+            setLearningContext(config.isSeries ? `Chuỗi Playlist (${config.seriesCount || 3} Tập): ${config.topic}` : `Video Manim: ${config.topic}`);
             setStatus(GenerationStatus.SUCCESS);
         } catch (err) {
             setStatus(GenerationStatus.ERROR);
-            setError('Lỗi khi biên soạn code Manim.');
+            setError('Lỗi khi biên soạn kịch bản Manim.');
         }
     }, 400);
   };
@@ -272,6 +301,14 @@ const App: React.FC = () => {
         onToggleHeadless={handleHeadlessToggle}
         attachedPdfPath={activeAttachedPdf?.path}
         attachedPdfName={activeAttachedPdf?.name}
+        isSeries={videoExtraConfig.isSeries}
+        seriesCount={videoExtraConfig.seriesCount}
+        seriesOutline={videoExtraConfig.seriesOutline}
+        enableVoice={videoExtraConfig.enableVoice}
+        voiceName={videoExtraConfig.voiceName}
+        voiceSpeed={videoExtraConfig.voiceSpeed}
+        topic={contextMetadata?.topic}
+        subject={contextMetadata?.subject}
       />
 
 
@@ -516,8 +553,24 @@ const App: React.FC = () => {
 
             {activeTab === 'video' && (
               <VideoForm 
-                onSubmitScript={handleVideoScriptGenerate}
                 onSubmitManim={handleVideoManimGenerate}
+                onDirectAutomateManim={(cfg) => {
+                  setCurrentVideoConfig(cfg);
+                  setActiveAttachedPdf(null);
+                  setVideoExtraConfig({
+                    isSeries: cfg.isSeries,
+                    seriesCount: cfg.seriesCount,
+                    seriesOutline: cfg.seriesOutline || cfg.details,
+                    enableVoice: cfg.enableVoice,
+                    voiceName: cfg.voiceName,
+                    voiceSpeed: cfg.voiceSpeed,
+                  });
+                  handleDirectAutomate(
+                    generateManimStoryboardPrompt(cfg), 
+                    { topic: cfg.topic, subject: cfg.subject, grade: cfg.audience }, 
+                    cfg.isSeries ? `Chuỗi Playlist (${cfg.seriesCount || 3} Tập)` : 'Video Manim'
+                  );
+                }}
                 status={status} 
                 contextTopic={contextMetadata?.topic}
                 contextSubject={contextMetadata?.subject}
@@ -540,6 +593,8 @@ const App: React.FC = () => {
               content={promptContent} 
               status={status} 
               error={error} 
+              videoConfig={activeTab === 'video' ? currentVideoConfig : null}
+              onSelectPrompt={(p) => setPromptContent(p)}
               onForwardContext={handleForwardContext}
               onOpenAutomation={() => setIsAutomationOpen(true)}
             />

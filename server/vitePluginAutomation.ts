@@ -16,15 +16,26 @@ export function vitePluginAutomation(): Plugin {
         fs.mkdirSync(downloadsDir, { recursive: true });
       }
 
-      // 1. API: Phục vụ tĩnh các file tải về (/downloads/filename.pdf)
+      // 1. API: Phục vụ tĩnh các file tải về (/downloads/filename.pdf, .mp4, .tex, etc.)
       server.middlewares.use('/downloads', (req, res, next) => {
         const filePath = path.join(downloadsDir, decodeURIComponent(req.url?.replace(/^\//, '') || ''));
         if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
           const ext = path.extname(filePath).toLowerCase();
           if (ext === '.pdf') {
             res.setHeader('Content-Type', 'application/pdf');
-          } else if (ext === '.tex') {
+          } else if (ext === '.tex' || ext === '.py' || ext === '.txt' || ext === '.srt') {
             res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+          } else if (ext === '.mp4') {
+            res.setHeader('Content-Type', 'video/mp4');
+            res.setHeader('Accept-Ranges', 'bytes');
+          } else if (ext === '.mp3') {
+            res.setHeader('Content-Type', 'audio/mpeg');
+            res.setHeader('Accept-Ranges', 'bytes');
+          } else if (ext === '.wav') {
+            res.setHeader('Content-Type', 'audio/wav');
+            res.setHeader('Accept-Ranges', 'bytes');
+          } else if (ext === '.md') {
+            res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
           }
           fs.createReadStream(filePath).pipe(res);
           return;
@@ -82,6 +93,11 @@ export function vitePluginAutomation(): Plugin {
                 headless: !!options.headless,
                 outputDir: downloadsDir,
                 attachedPdfPath: options.attachedPdfPath,
+                isSeries: options.isSeries,
+                seriesCount: options.seriesCount,
+                seriesOutline: options.seriesOutline,
+                topic: options.topic,
+                subject: options.subject,
               },
               (update) => {
                 sendSSE(update);

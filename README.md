@@ -51,27 +51,35 @@
 - Xây dựng bản đồ học tập từ mất gốc đến điểm 8+, 9+ theo từng tuần, từng chặng rõ ràng kèm tiêu chí đánh giá (checkpoint).
 
 ### 6. 🎬 Video & Manim Animation Studio
-- **Kịch bản Lời Thoại Phân Cảnh (Storyboard Table):**
+- **Đính Kèm Tài Liệu PDF (RAG Video):** Tải lên đề thi, bài tập hoặc sách giáo khoa PDF $\to$ AI tự động trích xuất bài toán, hàm số, hình vẽ để dựng kịch bản và mã Manim bám sát tài liệu.
+- **Kịch bản Lời Thoại Phân Cảnh (Storyboard Table) & Xuất Phụ Đề (.SRT):**
   - Cấu trúc từng giây: *Hook 3s đầu $\to$ Trực quan bản chất $\to$ Thực chiến ví dụ $\to$ Call to action*.
-- **Sinh Mã Python Manim CE Chuyên Nghiệp:**
-  - Hỗ trợ chuyên đề: *Giải tích & Đồ thị*, *Hình học không gian 3D xoay 360°*, *Vòng tròn lượng giác động*, *Vectơ Oxyz*, *Biến đổi đại số*.
+  - **4 Chiến lược Hook giữ chân người xem:** *Bẫy đề thi & Cảnh báo sai lầm*, *Bản chất toán học từ số 0*, *Bí quyết giải nhanh 30s*, *Toán học kỳ diệu & Thực tế*.
+  - **Xuất file phụ đề chuẩn `.SRT`:** Tự động chuyển đổi mốc thời gian và lời thoại thành phụ đề để nhập thẳng vào CapCut, Premiere Pro, DaVinci Resolve.
+  - **Nghe thử Lời thoại TTS (Web Speech API):** Trình phát giọng đọc tiếng Việt tích hợp sẵn ngay trên trình duyệt để duyệt lời thoại trước khi thu âm.
+- **Sinh Mã Python Manim CE Chuyên Nghiệp (8 Bộ Preset Toàn Diện):**
+  - Hỗ trợ chuyên đề: *Giải tích & Đồ thị*, *Hình học không gian 3D & Oxyz xoay 360°*, *Vòng tròn lượng giác động*, *Vectơ & Tích có hướng*, *Bảng biến thiên động*, *Số phức & Mặt phẳng Argand*, *Phân phối chuẩn Gauss & Xác suất*, *Biến đổi đại số*.
   - **Tối ưu hóa Video Dọc 9:16 (TikTok / YouTube Shorts / Reels):** Tích hợp **Safe Zone** chừa 15% mép trên và 20% mép dưới tránh bị che bởi giao diện ứng dụng.
-  - Tùy chọn chất lượng Render: Preview nhanh (480p `-pql`), Full HD 60fps (1080p `-pqh`), 4K 60fps (`-pqk`).
+  - Tùy chọn chất lượng & khung hình: Preview nhanh (480p `-pql`), Full HD 60fps (1080p `-pqh`), 4K 60fps (`-pqk`), 30/60 FPS.
 
-### 7. 💻 Tự Động Hóa Windows Batch (.BAT)
-- Tự động sinh file script `.bat` để dọn dẹp file rác LaTeX (`.aux`, `.log`, `.out`, `.toc`, `.synctex.gz`).
-- Hỗ trợ script 1-click render video Manim và tự động mở file `.mp4` sau khi render xong.
+### 7. 💻 Tự Động Hóa Kịch Bản Chạy (Shell & Windows Batch)
+- Hỗ trợ đầy đủ cho cả **Linux / macOS (`.sh`)** và **Windows (`.bat`)**:
+  - 📥 `render_manim.sh` & `render_manim.bat`: 1-click render video Manim và tự động mở file `.mp4` sau khi render xong.
+  - 📥 `compile_latex.sh` & `compile_latex.bat`: Tự động chạy `pdflatex` 2 lần, dọn dẹp file rác (`.aux`, `.log`, `.out`, `.toc`, `.synctex.gz`) và mở file PDF hoàn thiện.
 
 ---
 
 ## ⚡ Trải Nghiệm & Tính Năng Tiện Ích
 
-- **🚀 Tự Động Hóa 1-Click (Gemini ➔ Overleaf ➔ Xuất PDF):** Không cần API key, tự động kết nối tài khoản Chrome của bạn, tự động dán prompt vào Gemini, lấy mã LaTeX, dán vào Overleaf, recompile và tải file PDF về máy chỉ với 1 cú click!
+- **🚀 Tự Động Hóa 1-Click Toàn Diện:**
+  - **Tài liệu LaTeX (Đề thi, Bài học, Phiếu bài tập):** AI Web Automation tự động mở Gemini/AI $\to$ lấy mã LaTeX $\to$ dán Overleaf $\to$ recompile và tải file PDF về máy chỉ với 1 cú click!
+  - **Video Manim & Kịch bản (Tab Video):** AI Web Automation tự động mở Gemini/AI $\to$ trích xuất mã nguồn `scene.py` hoặc bảng phân cảnh Storyboard $\to$ tự động sinh file phụ đề `phude.srt`, script `render_manim.sh` & `render_manim.bat` sẵn sàng render ngay trên máy tính!
 - **Thanh Đồng Bộ Ngữ Cảnh (Forward Context):** Tự động chuyển tiếp thông tin môn học, chủ đề, khối lớp từ Lộ trình $\to$ Bài học $\to$ Bài tập $\to$ Bài tương tự $\to$ Đề thi $\to$ Video mà không cần nhập lại.
 - **Kênh Gemini Cố Định (Fixed Chat Link):** Lưu link phiên chat Gemini vào bộ nhớ để AI nhớ lịch sử các bài trước, tránh trùng lặp kiến thức.
 - **Tải Về 1-Click Ngay Trên Trình Duyệt:**
-  - 📥 `Tải scene.py` & ▶️ `Tải render.bat` (cho video Manim).
-  - 📥 `Tải tailieu.tex` & ▶️ `Tải compile.bat` (tự động chạy `pdflatex` xuất PDF).
+  - 📥 `Tải scene.py`, ▶️ `Tải render.sh (Linux)` & ▶️ `Tải render.bat (Windows)` (cho video Manim).
+  - 📥 `Xuất Phụ Đề (.SRT)` & 🎙️ `Nghe Thử TTS` (cho kịch bản video).
+  - 📥 `Tải tailieu.tex`, ▶️ `Tải compile.sh (Linux)` & ▶️ `Tải compile.bat (Windows)` (tự động biên dịch `pdflatex` ra PDF).
 - **Giao Diện Neo-Brutalism:** Đậm chất hình học, đổ bóng sắc nét, màu sắc trực quan, tối ưu trải nghiệm thị giác.
 
 ---

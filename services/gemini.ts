@@ -1,9 +1,13 @@
-﻿import { generateExamPrompt } from "./prompts/exam";
+import { generateExamPrompt } from "./prompts/exam";
 import { generateLearningPrompt } from "./prompts/learning";
 import { generateRoadmapPrompt } from "./prompts/roadmap";
 import { generateWorksheetPrompt } from "./prompts/worksheet";
 import { generateSimilarPrompt } from "./prompts/similar";
-import { generateVideoManimPrompt } from "./prompts/manim";
+import { 
+  generateManimStoryboardPrompt, 
+  generateManimCodePrompt, 
+  generateVideoManimPrompt 
+} from "./prompts/manim";
 import { generateVideoScriptPrompt } from "./prompts/script";
 import { generateBatPrompt } from "./prompts/bat";
 
@@ -13,6 +17,8 @@ export {
   generateRoadmapPrompt,
   generateWorksheetPrompt,
   generateSimilarPrompt,
+  generateManimStoryboardPrompt,
+  generateManimCodePrompt,
   generateVideoManimPrompt,
   generateVideoScriptPrompt,
   generateBatPrompt
