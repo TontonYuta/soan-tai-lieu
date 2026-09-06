@@ -11,34 +11,59 @@ export function vitePluginAutomation(): Plugin {
   return {
     name: 'vite-plugin-automation',
     configureServer(server: ViteDevServer) {
-      const downloadsDir = path.resolve(process.cwd(), 'downloads');
+      const downloadsDir = path.join(os.homedir(), 'Downloads');
       if (!fs.existsSync(downloadsDir)) {
         fs.mkdirSync(downloadsDir, { recursive: true });
       }
 
-      // 1. API: Phục vụ tĩnh các file tải về (/downloads/filename.pdf, .mp4, .tex, etc.)
+      // 1. API: Phục vụ tĩnh các file tải về (/downloads/...) với HTTP 206 Range Streaming
       server.middlewares.use('/downloads', (req, res, next) => {
-        const filePath = path.join(downloadsDir, decodeURIComponent(req.url?.replace(/^\//, '') || ''));
+        const relPath = decodeURIComponent(req.url?.replace(/^\//, '') || '');
+        const filePath = path.join(downloadsDir, relPath);
         if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
           const ext = path.extname(filePath).toLowerCase();
-          if (ext === '.pdf') {
-            res.setHeader('Content-Type', 'application/pdf');
-          } else if (ext === '.tex' || ext === '.py' || ext === '.txt' || ext === '.srt') {
-            res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-          } else if (ext === '.mp4') {
-            res.setHeader('Content-Type', 'video/mp4');
-            res.setHeader('Accept-Ranges', 'bytes');
-          } else if (ext === '.mp3') {
-            res.setHeader('Content-Type', 'audio/mpeg');
-            res.setHeader('Accept-Ranges', 'bytes');
-          } else if (ext === '.wav') {
-            res.setHeader('Content-Type', 'audio/wav');
-            res.setHeader('Accept-Ranges', 'bytes');
-          } else if (ext === '.md') {
-            res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+          const stat = fs.statSync(filePath);
+          const fileSize = stat.size;
+
+          const mimeMap: Record<string, string> = {
+            '.pdf': 'application/pdf',
+            '.tex': 'text/plain; charset=utf-8',
+            '.py': 'text/plain; charset=utf-8',
+            '.txt': 'text/plain; charset=utf-8',
+            '.srt': 'text/plain; charset=utf-8',
+            '.md': 'text/markdown; charset=utf-8',
+            '.mp4': 'video/mp4',
+            '.webm': 'video/webm',
+            '.mp3': 'audio/mpeg',
+            '.wav': 'audio/wav',
+          };
+
+          const contentType = mimeMap[ext] || 'application/octet-stream';
+          const range = req.headers.range;
+
+          if (range && (ext === '.mp4' || ext === '.webm' || ext === '.mp3' || ext === '.wav')) {
+            const parts = range.replace(/bytes=/, "").split("-");
+            const start = parseInt(parts[0], 10);
+            const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+            const chunksize = (end - start) + 1;
+            const file = fs.createReadStream(filePath, { start, end });
+            res.writeHead(206, {
+              'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+              'Accept-Ranges': 'bytes',
+              'Content-Length': chunksize,
+              'Content-Type': contentType,
+            });
+            file.pipe(res);
+            return;
+          } else {
+            res.writeHead(200, {
+              'Content-Type': contentType,
+              'Content-Length': fileSize,
+              'Accept-Ranges': 'bytes',
+            });
+            fs.createReadStream(filePath).pipe(res);
+            return;
           }
-          fs.createReadStream(filePath).pipe(res);
-          return;
         }
         next();
       });

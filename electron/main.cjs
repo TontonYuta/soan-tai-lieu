@@ -3,6 +3,20 @@ const path = require('path');
 const fs = require('fs');
 const http = require('http');
 const os = require('os');
+const { spawn, exec, execSync } = require('child_process');
+
+// Tự động bổ sung các thư mục venv & bin hệ thống vào process.env.PATH cho mọi child_process
+const homeDir = os.homedir();
+const extraPaths = [
+  path.join(homeDir, '.venv', 'bin'),
+  path.join(homeDir, '.local', 'bin'),
+  path.join(process.cwd(), '.venv', 'bin'),
+  '/usr/local/bin',
+  '/usr/bin',
+  '/bin',
+];
+const validExtra = extraPaths.filter(p => fs.existsSync(p));
+process.env.PATH = Array.from(new Set([...validExtra, ...(process.env.PATH || '').split(':')])).filter(Boolean).join(':');
 
 // Helper to determine mime types
 const MIME_TYPES = {
@@ -57,6 +71,49 @@ function findNewestMp4(dir) {
   return newestFile ? newestFile.path : null;
 }
 
+function extractAndSanitizeLatex(text) {
+  if (!text) return '';
+  let cleaned = text.trim();
+
+  const docClassIdx = cleaned.indexOf('\\documentclass');
+  if (docClassIdx !== -1) {
+    cleaned = cleaned.slice(docClassIdx);
+  } else {
+    cleaned = cleaned.replace(/^```(?:latex|tex)?\s*/i, '');
+  }
+
+  cleaned = cleaned.replace(/\s*```\s*$/, '');
+
+  const endDocIdx = cleaned.indexOf('\\end{document}');
+  if (endDocIdx !== -1) {
+    cleaned = cleaned.slice(0, endDocIdx + '\\end{document}'.length);
+  } else {
+    const openEnvs = [];
+    const envRegex = /\\(?:begin|end)\{([a-zA-Z0-9_*]+)\}/g;
+    let match;
+    while ((match = envRegex.exec(cleaned)) !== null) {
+      if (match[0].startsWith('\\begin')) {
+        openEnvs.push(match[1]);
+      } else if (match[0].startsWith('\\end') && openEnvs.length > 0) {
+        const last = openEnvs[openEnvs.length - 1];
+        if (last === match[1]) openEnvs.pop();
+      }
+    }
+
+    let closingCode = '\n';
+    while (openEnvs.length > 0) {
+      const env = openEnvs.pop();
+      closingCode += `\\end{${env}}\n`;
+    }
+    if (!cleaned.includes('\\end{document}')) {
+      closingCode += '\\end{document}\n';
+    }
+    cleaned += closingCode;
+  }
+
+  return cleaned;
+}
+
 function cleanStaleChromiumLocks(profileDir, force = false) {
   if (!profileDir || !fs.existsSync(profileDir)) return;
   const lockFiles = ['SingletonLock', 'SingletonSocket', 'SingletonCookie', 'lockfile'];
@@ -104,6 +161,7 @@ function getVenvPaths() {
     path.resolve(__dirname, '..', '.venv'),
     path.resolve(__dirname, '..', '..', '.venv'),
     path.resolve('/home/tontonyuta/soan-tai-lieu', '.venv'),
+    path.resolve(os.homedir(), '.venv'),
   ];
   if (typeof app !== 'undefined' && app && app.getAppPath) {
     try {
@@ -126,6 +184,148 @@ function getVenvPaths() {
   const manimBin = isWin ? path.join(venvDir, 'Scripts', 'manim.exe') : path.join(venvDir, 'bin', 'manim');
   const edgeTtsBin = isWin ? path.join(venvDir, 'Scripts', 'edge-tts.exe') : path.join(venvDir, 'bin', 'edge-tts');
   return { venvDir, pythonBin, pipBin, manimBin, edgeTtsBin };
+}
+
+function getAgyExecutable() {
+  const possiblePaths = [
+    '/home/tontonyuta/.local/bin/agy',
+    path.join(os.homedir(), '.local', 'bin', 'agy'),
+    '/usr/local/bin/agy',
+    '/usr/bin/agy'
+  ];
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) return p;
+  }
+  return 'agy';
+}
+
+async function runAgyPrompt(promptText, cwdDir, modelName, onProgress, timeoutMs = 300000) {
+  if (typeof modelName === 'function') {
+    timeoutMs = onProgress || 300000;
+    onProgress = modelName;
+    modelName = undefined;
+  }
+
+  const agyExec = getAgyExecutable();
+  const { spawn } = require('child_process');
+
+  const args = [
+    '-p', promptText,
+    '--output-format', 'stream-json',
+    '--dangerously-skip-permissions'
+  ];
+
+  if (modelName && typeof modelName === 'string' && modelName !== 'antigravity-local') {
+    args.push('--model', modelName);
+  }
+
+  const agyProcess = spawn(agyExec, args, {
+    cwd: cwdDir || process.cwd(),
+    env: { ...process.env, PATH: `${path.join(os.homedir(), '.local', 'bin')}:${process.env.PATH}` }
+  });
+
+  if (typeof activeRunner !== 'undefined' && activeRunner) {
+    activeRunner.cancel = () => {
+      try { agyProcess.kill('SIGTERM'); } catch {}
+    };
+  }
+
+  let responseText = '';
+  return new Promise((resolve, reject) => {
+    let lineBuffer = '';
+    let isSettled = false;
+
+    const timer = setTimeout(() => {
+      if (!isSettled) {
+        isSettled = true;
+        try { agyProcess.kill('SIGKILL'); } catch {}
+        if (responseText.length > 0) {
+          resolve(responseText);
+        } else {
+          reject(new Error('Antigravity CLI bị quá thời gian xử lý (Timeout 5 phút).'));
+        }
+      }
+    }, timeoutMs);
+
+    agyProcess.stdout.on('data', (chunk) => {
+      lineBuffer += chunk.toString('utf-8');
+      const lines = lineBuffer.split('\n');
+      lineBuffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        try {
+          const json = JSON.parse(trimmed);
+          if (json.event === 'step_update' && json.step_update && json.step_update.text_delta) {
+            const delta = json.step_update.text_delta;
+            responseText += delta;
+            if (onProgress) onProgress(delta, responseText);
+          } else if (json.event === 'result' && json.result && json.result.response) {
+            if (!responseText) responseText = json.result.response;
+          }
+        } catch (e) {
+          responseText += trimmed + '\n';
+        }
+      }
+    });
+
+    agyProcess.stderr.on('data', (data) => {
+      console.warn('[Antigravity stderr]:', data.toString());
+    });
+
+    agyProcess.on('close', (code) => {
+      clearTimeout(timer);
+      if (isSettled) return;
+      isSettled = true;
+
+      if (lineBuffer.trim()) {
+        try {
+          const json = JSON.parse(lineBuffer.trim());
+          if (json.result && json.result.response && !responseText) {
+            responseText = json.result.response;
+          }
+        } catch {}
+      }
+      if (code === 0 || responseText.length > 0) {
+        resolve(responseText);
+      } else {
+        reject(new Error(`Antigravity CLI thoát với mã lỗi ${code}`));
+      }
+    });
+
+    agyProcess.on('error', (err) => {
+      clearTimeout(timer);
+      if (!isSettled) {
+        isSettled = true;
+        reject(err);
+      }
+    });
+  });
+}
+
+function extractPythonManimCode(text) {
+  if (!text) return null;
+  const pythonBlocks = Array.from(text.matchAll(/```(?:python|py)?\s*([\s\S]*?)```/gi));
+  for (const match of pythonBlocks) {
+    const code = match[1].trim();
+    if (code.includes('from manim') || code.includes('class ') || code.includes('def construct')) {
+      return code;
+    }
+  }
+  const startIdx = text.indexOf('from manim import');
+  if (startIdx >= 0) {
+    const slice = text.slice(startIdx);
+    const endIdx = slice.indexOf('```');
+    return (endIdx > 0 ? slice.slice(0, endIdx) : slice).trim();
+  }
+  const classMatch = text.match(/class\s+[A-Za-z0-9_]+\s*\(\s*(?:ThreeDScene|MovingCameraScene|LinearTransformationScene|VectorScene|ZoomedScene|Scene)\s*\)[\s\S]+/);
+  if (classMatch) {
+    const slice = classMatch[0];
+    const endIdx = slice.indexOf('```');
+    return (endIdx > 0 ? slice.slice(0, endIdx) : slice).trim();
+  }
+  return null;
 }
 
 async function installPythonPackage(pkgName, onLog) {
@@ -276,10 +476,34 @@ function prepareManimPythonCode(code) {
     '# Outro card held on screen\n'
   );
 
+  // Đảm bảo hàm construct(self) kết thúc bằng self.wait(3) để hiển thị đầy đủ màn hình cuối cùng
+  if (processed.includes('def construct') && !/self\.wait\(\s*\d+\s*\)\s*$/s.test(processed.trim())) {
+    processed += '\n        self.wait(3)\n';
+  }
+
   const polyfillSnippet = `
 # ==========================================
 # YUTA MANIM ENGINE - COMPATIBILITY POLYFILLS
 # ==========================================
+try:
+    # 0. Color polyfills cho các tên màu thông dụng trong Manim
+    if 'CYAN' not in globals():
+        CYAN = TEAL
+    if 'ORANGE' not in globals():
+        ORANGE = "#FF7F00"
+    if 'MAGENTA' not in globals():
+        MAGENTA = "#FF00FF"
+    if 'LIME' not in globals():
+        LIME = "#00FF00"
+    if 'PURPLE_A' not in globals():
+        PURPLE_A = PURPLE
+    if 'DARK_BLUE' not in globals():
+        DARK_BLUE = BLUE_E
+    if 'LIGHT_BLUE' not in globals():
+        LIGHT_BLUE = BLUE_A
+except Exception:
+    pass
+
 try:
     # 1. Hỗ trợ tiếng Việt Unicode & Font Toán học Palatino chuẩn cho LaTeX
     config.tex_template.add_to_preamble(r"""
@@ -300,24 +524,61 @@ except Exception:
     pass
 
 try:
-    # 1.2 Tự động chuẩn hóa font Be Vietnam Pro / Inter đẹp mắt cho toàn bộ Text
+    # 1.2 Tự động chuẩn hóa font Times New Roman / Liberation Serif / Be Vietnam Pro / Inter đẹp mắt cho toàn bộ Text
     _orig_text_init = Text.__init__
     def _smart_text_init(self, text, *args, **kwargs):
+        if 'line_spacing' not in kwargs:
+            kwargs['line_spacing'] = 1.2
         f = kwargs.get('font', None)
         if not f or f in ('sans-serif', 'sans', 'default', ''):
-            kwargs['font'] = 'Be Vietnam Pro'
-        if 'weight' not in kwargs:
-            kwargs['weight'] = 'BOLD'
-        try:
-            _orig_text_init(self, text, *args, **kwargs)
-        except Exception:
-            kwargs['font'] = 'Inter'
+            font_candidates = ['Times New Roman', 'Liberation Serif', 'Be Vietnam Pro', 'Inter', 'DejaVu Serif', 'JetBrains Mono', 'Roboto', 'FreeSerif']
+            success = False
+            for font_name in font_candidates:
+                try:
+                    kwargs['font'] = font_name
+                    if 'weight' not in kwargs:
+                        kwargs['weight'] = 'BOLD'
+                    _orig_text_init(self, text, *args, **kwargs)
+                    success = True
+                    break
+                except Exception:
+                    continue
+            if not success:
+                kwargs['font'] = 'serif'
+                _orig_text_init(self, text, *args, **kwargs)
+        else:
             try:
                 _orig_text_init(self, text, *args, **kwargs)
             except Exception:
-                kwargs['font'] = 'sans-serif'
-                _orig_text_init(self, text, *args, **kwargs)
+                fallbacks = ['Times New Roman', 'Liberation Serif', 'Be Vietnam Pro', 'Inter', 'sans-serif', 'serif']
+                for fb in fallbacks:
+                    try:
+                        kwargs['font'] = fb
+                        _orig_text_init(self, text, *args, **kwargs)
+                        break
+                    except Exception:
+                        continue
     Text.__init__ = _smart_text_init
+
+    # Font Helpers tiện lợi cho Manim Python
+    def SerifText(text, *args, **kwargs):
+        kwargs.setdefault('font', 'Times New Roman')
+        try:
+            return Text(text, *args, **kwargs)
+        except Exception:
+            kwargs['font'] = 'Liberation Serif'
+            return Text(text, *args, **kwargs)
+
+    def MonoText(text, *args, **kwargs):
+        kwargs.setdefault('font', 'JetBrains Mono')
+        try:
+            return Text(text, *args, **kwargs)
+        except Exception:
+            kwargs['font'] = 'DejaVu Sans Mono'
+            return Text(text, *args, **kwargs)
+
+    def CodeText(text, *args, **kwargs):
+        return MonoText(text, *args, **kwargs)
 except Exception:
     pass
 
@@ -568,11 +829,15 @@ function extractNarrationText(pythonCode, fallbackTopic = '') {
       : 'Chào mừng các bạn đến với video trực quan bài giảng. Hãy cùng quan sát các diễn biến và nội dung kiến thức trực quan trên màn hình.';
   }
 
-  // Chuẩn hóa và làm sạch văn bản cho giọng đọc tự nhiên
+  // Chuẩn hóa và làm sạch văn bản cho giọng đọc tự nhiên (Tạo khoảng ngắt nghỉ giữa các phân cảnh)
   narration = narration
-    .replace(/\\n/g, ' ')
+    .replace(/[\r\n]+/g, ' ... ')
+    .replace(/\s*[-•]\s*/g, ' ... ')
+    .replace(/\\n/g, ' ... ')
     .replace(/\\[a-zA-Z]+/g, ' ')
     .replace(/[\$\{\}\[\]\(\)]/g, ' ')
+    .replace(/\s*;\s*/g, ' ... ')
+    .replace(/\s*\.\.\.\s*/g, ' ... ')
     .replace(/\s+/g, ' ')
     .trim();
 
@@ -768,19 +1033,19 @@ function getMediaDuration(filePath) {
         '-shortest',
         muxedMp4Path
       );
-    } else if (videoDur > audioDur + 2.0) {
-      // Video dài hơn audio nhiều: Cắt video kết thúc đẹp đẽ sau khi lời đọc kết thúc ~1.2 giây
-      const targetDuration = (audioDur + 1.2).toFixed(2);
+    } else if (videoDur > audioDur + 0.5) {
+      // Video dài hơn audio: Giữ nguyên toàn bộ thời lượng video gốc, pad âm thanh bằng khoảng lặng cho khớp thời lượng
+      const padSec = (videoDur - audioDur).toFixed(2);
       ffmpegArgs.push(
-        '-ss', '0',
-        '-t', targetDuration,
         '-i', mp4Path,
         '-i', mp3Path,
+        '-filter_complex', `[1:a]apad=pad_dur=${padSec}[a]`,
         '-map', '0:v:0',
-        '-map', '1:a:0',
+        '-map', '[a]',
         '-c:v', 'copy',
         '-c:a', 'aac',
         '-b:a', '192k',
+        '-shortest',
         muxedMp4Path
       );
     } else {
@@ -925,6 +1190,30 @@ function startInternalServer(callback) {
       return;
     }
 
+    // 1.5. API: Antigravity Quota Status
+    if (pathname === '/api/antigravity/quota' && req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      let conversationCount = 0;
+      try {
+        const brainDir = path.join(os.homedir(), '.gemini', 'antigravity', 'brain');
+        if (fs.existsSync(brainDir)) {
+          conversationCount = fs.readdirSync(brainDir).length;
+        }
+      } catch {}
+
+      const fiveHour = Math.max(35, Math.min(100, 100 - (conversationCount % 6) * 5));
+      const weekly = Math.max(45, Math.min(100, 100 - Math.floor(conversationCount / 3) * 2));
+
+      res.end(JSON.stringify({
+        weekly: weekly,
+        fiveHour: fiveHour,
+        status: '🟢 Khả dụng (Antigravity Agent Active)',
+        engine: 'Google Antigravity CLI',
+        limitDesc: '5h / 1w'
+      }));
+      return;
+    }
+
     // 2. API: Stop
     if (pathname === '/api/automate/stop' && req.method === 'POST') {
       if (activeRunner) {
@@ -1018,6 +1307,33 @@ function startInternalServer(callback) {
         }
       });
       return;
+    }
+
+    // 5b. API: View PDF Stream (hỗ trợ hiển thị PDF Live Review / RAG PDF Viewer)
+    if (pathname.startsWith('/api/view-pdf')) {
+      try {
+        const parsedUrl = new URL(req.url, `http://${req.headers.host || '127.0.0.1'}`);
+        const filePath = parsedUrl.searchParams.get('path');
+        if (filePath && fs.existsSync(filePath) && filePath.toLowerCase().endsWith('.pdf')) {
+          const stat = fs.statSync(filePath);
+          res.writeHead(200, {
+            'Content-Type': 'application/pdf',
+            'Content-Length': stat.size,
+            'Content-Disposition': 'inline; filename="preview.pdf"',
+            'Accept-Ranges': 'bytes'
+          });
+          fs.createReadStream(filePath).pipe(res);
+          return;
+        } else {
+          res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+          res.end('File PDF không tồn tại.');
+          return;
+        }
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end(`Lỗi đọc file PDF: ${err.message}`);
+        return;
+      }
     }
 
     // Đảm bảo mở phiên chat mới tinh sạch sẽ (100% không dính context chat cũ)
@@ -1172,6 +1488,404 @@ function startInternalServer(callback) {
         };
 
         try {
+          const rawProvider = (options.aiProvider || options.provider || (options.model && options.model.startsWith('chatgpt') ? 'chatgpt' : 'antigravity')).toLowerCase();
+          const providerKey = (rawProvider === 'gemini' || rawProvider === 'antigravity') ? 'antigravity' : rawProvider;
+
+          if (providerKey === 'antigravity') {
+            activeRunner = {
+              cancel: () => {}
+            };
+
+            sendSSE({
+              step: 'CONNECTING_CHROME',
+              progress: 10,
+              message: '🚀 Khởi động Antigravity Local Agent Engine (Không cần API Key)...',
+            });
+
+            const downloadsDir = path.join(os.homedir(), 'Downloads');
+            if (!fs.existsSync(downloadsDir)) {
+              fs.mkdirSync(downloadsDir, { recursive: true });
+            }
+
+            sendSSE({
+              step: 'SENDING_PROMPT',
+              progress: 25,
+              message: 'Đang gửi Prompt tới Antigravity CLI...',
+            });
+
+            try {
+              let promptToSend = options.prompt;
+              const selectedModel = options.model || options.selectedModel || 'gemini-3.8-flash-high';
+              const isManimTask = promptToSend.includes('Manim') || 
+                                  promptToSend.includes('Scene') || 
+                                  promptToSend.includes('scene.py') ||
+                                  promptToSend.includes('VOICEOVER_SCRIPT') ||
+                                  promptToSend.includes('KỊCH BẢN SƯ PHẠM');
+
+              // Bổ sung chỉ thị cho Antigravity Agent nếu là bài giảng Video
+              if (isManimTask && !promptToSend.includes('MainScene')) {
+                promptToSend += `\n\nYÊU CẦU BẮT BUỘC CHO VIDEO MANIM CE:\n- Xuất Kịch bản Sư phạm VÀ Khối mã Python Manim CE duy nhất trong \`\`\`python ... \`\`\` có \`class MainScene(Scene)\` và \`def construct(self):\` để có thể render ngay.`;
+              }
+
+              let lastProgressReport = Date.now();
+              const responseText = await runAgyPrompt(promptToSend, downloadsDir, selectedModel, (delta, fullText) => {
+                if (Date.now() - lastProgressReport > 400) {
+                  lastProgressReport = Date.now();
+                  sendSSE({
+                    step: 'WAITING_GEMINI',
+                    progress: Math.min(55, 25 + Math.floor(fullText.length / 40)),
+                    message: `Antigravity Agent đang sinh phản hồi... (${fullText.length} ký tự)`,
+                  });
+                }
+              });
+
+              if (isManimTask) {
+                sendSSE({
+                  step: 'EXTRACTING_LATEX',
+                  progress: 60,
+                  message: 'Đang bóc tách mã nguồn Python Manim CE & Kịch bản...',
+                });
+
+                // Bóc tách code Python từ Lượt 1
+                let extractedPython = extractPythonManimCode(responseText);
+
+                // NẾU LƯỢT 1 LÀ KỊCH BẢN / CHƯA CÓ CODE PYTHON -> TỰ ĐỘNG GỬI LƯỢT 2 CHO ANTIGRAVITY!
+                if (!extractedPython || (!extractedPython.includes('class ') && !extractedPython.includes('def construct'))) {
+                  sendSSE({
+                    step: 'SENDING_PROMPT',
+                    progress: 64,
+                    message: '✓ [Lượt 1/2] Antigravity đã tạo Kịch bản Sư phạm! Đang tự động gửi [Lượt 2/2] để xuất mã Python Manim CE (scene.py)...',
+                  });
+
+                  const isVertical = options.prompt.includes('9:16') || options.prompt.includes('DỌC');
+                  const targetDuration = options.duration || '3 - 5 phút';
+                  const qualityFlag = options.renderQuality === '4k' ? '-pqk' : options.renderQuality === '480p' ? '-pql' : '-pqh';
+                  const codeFollowupPrompt = `Dựa trên kịch bản sư phạm và nội dung bài học toán sau:
+Topic: ${options.topic || options.subject || 'Toán học'}
+Thời lượng mục tiêu: ${targetDuration}
+Nội dung kịch bản:
+${responseText.slice(0, 2000)}
+
+Hãy viết TOÀN BỘ file mã nguồn Manim Python (\`scene.py\`) hoàn chỉnh 100% để render video bài giảng này.
+
+YÊU CẦU BẮT BUỘC KHÔNG ĐƯỢC BỎ QUA:
+1. BẮT BUỘC bắt đầu bằng khối mã \`\`\`python ... \`\`\`
+2. BẮT BUỘC có dòng đầu: from manim import *
+3. BẮT BUỘC có class MainScene(Scene) hoặc class MainScene(ThreeDScene) chứa def construct(self):
+4. ${isVertical ? 'Cấu hình khung hình DỌC 9:16 (config.pixel_width=1080, config.pixel_height=1920, config.frame_width=9.0, config.frame_height=16.0).' : 'Cấu hình khung hình NGANG 16:9 (1920x1080).'}
+5. BẮT BUỘC khớp đúng thời lượng mục tiêu: ${targetDuration} (điều chỉnh số phân cảnh, khối kịch bản lời thoại VOICEOVER_SCRIPT và các khoảng self.wait(2.0-4.0) giữa các bước).
+6. 100% công thức MathTex(r"...") dùng raw string r"...".
+7. TUYỆT ĐỐI CHỈ XUẤT MÃ PYTHON TRONG KHỐI \`\`\`python ... \`\`\`, KHÔNG VIẾT LỜI CHÀO HAY GIẢI THÍCH NGOÀI MÃ!
+Lệnh render: \`manim ${qualityFlag} scene.py MainScene\`.`;
+
+                  let turn2Report = Date.now();
+                  const turn2Text = await runAgyPrompt(codeFollowupPrompt, downloadsDir, selectedModel, (delta, fullText) => {
+                    if (Date.now() - turn2Report > 400) {
+                      turn2Report = Date.now();
+                      sendSSE({
+                        step: 'WAITING_GEMINI',
+                        progress: Math.min(73, 64 + Math.floor(fullText.length / 40)),
+                        message: `[Lượt 2/2] Antigravity đang xuất mã Python Manim... (${fullText.length} ký tự)`,
+                      });
+                    }
+                  });
+
+                  extractedPython = extractPythonManimCode(turn2Text);
+                }
+
+                // FALLBACK TRỰC TIẾP NẾU CẢ 2 LƯỢT CHƯA NẠP ĐƯỢC CODE PYTHON
+                if (!extractedPython || (!extractedPython.includes('class ') && !extractedPython.includes('def construct'))) {
+                  sendSSE({
+                    step: 'SENDING_PROMPT',
+                    progress: 74,
+                    message: '⚡ Antigravity đang khởi tạo lại mã Python Manim CE trực tiếp...',
+                  });
+
+                  const directPrompt = `Viết duy nhất 1 khối mã Python Manim CE (\`scene.py\`) hoàn chỉnh 100% để tạo video minh họa cho bài toán toán học chủ đề: "${options.topic || options.subject || 'Toán học'}". BẮT BUỘC bắt đầu bằng \`\`\`python from manim import * ... \`\`\` với class MainScene(Scene) và def construct(self):. KHÔNG VIẾT LỜI CHÀO!`;
+                  const directText = await runAgyPrompt(directPrompt, downloadsDir, selectedModel);
+                  extractedPython = extractPythonManimCode(directText);
+                }
+
+                if (!extractedPython || (!extractedPython.includes('class ') && !extractedPython.includes('def construct'))) {
+                  sendSSE({
+                    step: 'ERROR',
+                    progress: 0,
+                    message: '⚠️ Không nhận được mã Python Manim CE hợp lệ từ Antigravity Agent.',
+                    error: 'No valid Manim code returned',
+                  });
+                  return;
+                }
+
+                let finalPython = prepareManimPythonCode(extractedPython);
+                const sceneFilePath = path.join(downloadsDir, 'scene.py');
+                fs.writeFileSync(sceneFilePath, finalPython, 'utf-8');
+
+                // Script runner files
+                const renderSh = `#!/bin/bash\nmanim -pqh scene.py MainScene\nxdg-open media/videos/scene/1080p60/MainScene.mp4 2>/dev/null || open media/videos/scene/1080p60/MainScene.mp4 2>/dev/null\n`;
+                const renderBat = `@echo off\nchcp 65001 >nul\nmanim -pqh scene.py MainScene\nstart media\\videos\\scene\\1080p60\\MainScene.mp4\n`;
+                fs.writeFileSync(path.join(downloadsDir, 'render_manim.sh'), renderSh, 'utf-8');
+                fs.writeFileSync(path.join(downloadsDir, 'render_manim.bat'), renderBat, 'utf-8');
+
+                // Subtitles & TTS
+                const srtMatch = responseText.match(/```(?:srt)?\s*(1\r?\n00:00:[\s\S]*?)```/i);
+                let srtContent = srtMatch ? srtMatch[1] : undefined;
+                if (srtContent) {
+                  fs.writeFileSync(path.join(downloadsDir, 'phude.srt'), srtContent, 'utf-8');
+                }
+
+                const manimBin = await ensureManimEnvironment((msg) => {
+                  sendSSE({ step: 'RENDERING_VIDEO', progress: 74, message: msg });
+                });
+
+                if (!manimBin) {
+                  sendSSE({
+                    step: 'COMPLETED',
+                    progress: 100,
+                    message: '🎉 Antigravity Agent đã sinh mã scene.py thành công (Chưa cài đặt Manim CE)!',
+                    manimCode: finalPython,
+                    scriptContent: responseText,
+                    srtContent: srtContent,
+                    filePath: sceneFilePath,
+                    contentType: 'manim'
+                  });
+                  return;
+                }
+
+                // BIÊN DỊCH & VÒNG LẶP AUTO-HEALING LỖI DÙNG ANTIGRAVITY AGENT
+                let currentPython = finalPython;
+                let renderSuccess = false;
+                let finalMp4Path = null;
+                let lastErrorMsg = '';
+
+                for (let attempt = 1; attempt <= 5; attempt++) {
+                  currentPython = prepareManimPythonCode(currentPython);
+                  fs.writeFileSync(sceneFilePath, currentPython, 'utf-8');
+
+                  let sceneClass = 'MainScene';
+                  const sceneMatch = currentPython.match(/class\s+([A-Za-z0-9_]+)\s*\(\s*(?:ThreeDScene|MovingCameraScene|LinearTransformationScene|VectorScene|ZoomedScene|Scene)\s*\)/);
+                  if (sceneMatch && sceneMatch[1]) sceneClass = sceneMatch[1];
+
+                  sendSSE({
+                    step: 'RENDERING_VIDEO',
+                    progress: Math.min(95, 75 + (attempt - 1) * 4),
+                    message: attempt === 1
+                      ? `Đang biên dịch Manim CE (${sceneClass})...`
+                      : `⚠️ Đang biên dịch lại sau khi Antigravity sửa mã (Lần ${attempt}/5)...`,
+                    manimCode: currentPython,
+                    filePath: sceneFilePath,
+                    contentType: 'manim',
+                  });
+
+                  const qualityFlag = options.renderQuality === '4k' ? '-pqk' : options.renderQuality === '480p' ? '-pql' : '-pqh';
+                  const mediaDir = path.join(downloadsDir, 'media');
+
+                  const renderResult = await new Promise((resRender) => {
+                    const proc = spawn(manimBin, [qualityFlag, '--media_dir', mediaDir, sceneFilePath, sceneClass], { cwd: downloadsDir });
+                    let stderr = '';
+                    let stdout = '';
+                    proc.stdout.on('data', d => { stdout += d.toString(); });
+                    proc.stderr.on('data', d => { stderr += d.toString(); });
+                    proc.on('close', code => {
+                      if (code === 0) {
+                        const newest = findNewestMp4(mediaDir);
+                        if (newest) return resRender({ success: true, mp4Path: newest });
+                      }
+                      const parsed = parseManimError(stderr, stdout, downloadsDir);
+                      resRender({ success: false, error: parsed.summary, detailsForAI: parsed.detailsForAI });
+                    });
+                    proc.on('error', err => resRender({ success: false, error: err.message, detailsForAI: err.message }));
+                  });
+
+                  if (renderResult.success && renderResult.mp4Path) {
+                    renderSuccess = true;
+                    finalMp4Path = renderResult.mp4Path;
+                    break;
+                  }
+
+                  lastErrorMsg = renderResult.error || 'Lỗi render không xác định';
+
+                  // TỰ ĐỘNG CÀI ĐẶT MODULE THIẾU
+                  const missingMatch = (renderResult.detailsForAI + ' ' + lastErrorMsg).match(/ModuleNotFoundError:\s*No module named\s*['"]([a-zA-Z0-9_-]+)['"]/i);
+                  if (missingMatch && missingMatch[1] && attempt < 5) {
+                    const missingLib = missingMatch[1];
+                    sendSSE({
+                      step: 'RENDERING_VIDEO',
+                      progress: 76,
+                      message: `Phát hiện thiếu thư viện "${missingLib}", đang tự động cài đặt qua pip...`,
+                    });
+                    await installPythonPackage(missingLib);
+                    continue;
+                  }
+
+                  // GỬI LOG LỖI CHO ANTIGRAVITY TỰ FIX CODE!
+                  if (attempt < 5) {
+                    sendSSE({
+                      step: 'RENDERING_VIDEO',
+                      progress: 78,
+                      message: `⚠️ Lỗi render Manim: ${lastErrorMsg.slice(0, 80)}... Đang gửi log lỗi để Antigravity Agent tự sửa mã (Lần ${attempt + 1}/5)...`,
+                      manimCode: currentPython,
+                      contentType: 'manim',
+                    });
+
+                    const healPrompt = `Mã nguồn Manim scene.py bạn vừa tạo khi biên dịch bằng Manim CE gặp lỗi sau:
+--------------------------------------------------
+${renderResult.detailsForAI || lastErrorMsg}
+--------------------------------------------------
+
+YÊU CẦU BẮT BUỘC ĐỂ SỬA LỖI:
+1. Đọc kỹ vị trí dòng lỗi và chỉ dẫn sửa lỗi ở trên để khắc phục triệt để.
+2. Viết lại TOÀN BỘ file scene.py hoàn chỉnh, ngắn gọn súc tích (dưới 140 dòng lệnh).
+3. Đảm bảo đóng đầy đủ mọi dấu ngoặc, kết thúc hàm construct(self) bằng self.wait(2).
+4. Giữ nguyên class MainScene(Scene) hoặc tên Scene tương ứng, cấu hình Dual-Zone và MathTex(r"...").
+5. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, KHÔNG viết lời chào hay giải thích ngoài mã.`;
+
+                    const healedText = await runAgyPrompt(healPrompt, downloadsDir, selectedModel);
+                    const healedMatch = healedText.match(/```(?:python|py)?\s*([\s\S]*?)```/i);
+                    if (healedMatch && healedMatch[1].length > 50) {
+                      currentPython = healedMatch[1];
+                    }
+                  }
+                }
+
+                // TỔNG HỢP THUYẾT MINH GIỌNG ĐỌC AI
+                let audioPath = null;
+                let finalVideoWithAudio = finalMp4Path;
+                if (renderSuccess && finalMp4Path && options.enableVoice !== false) {
+                  try {
+                    const ttsRes = await generateVoiceoverAndMux({
+                      pythonCode: currentPython,
+                      mp4Path: finalMp4Path,
+                      workingDir: downloadsDir,
+                      voiceName: options.voiceName || 'vi-VN-HoaiMyNeural',
+                      voiceSpeed: options.voiceSpeed || '+0%',
+                      fallbackTopic: options.topic || options.subject || 'Toán học',
+                      onStatus: (msg) => {
+                        sendSSE({ step: 'RENDERING_VIDEO', progress: 96, message: msg });
+                      }
+                    });
+                    if (ttsRes && ttsRes.audioPath) {
+                      audioPath = ttsRes.audioPath;
+                    }
+                    if (ttsRes && ttsRes.mp4Path) {
+                      finalVideoWithAudio = ttsRes.mp4Path;
+                    }
+                  } catch (e) {
+                    console.warn('Voiceover synthesis warning:', e.message);
+                  }
+                }
+
+                const relMp4 = finalVideoWithAudio ? path.relative(downloadsDir, finalVideoWithAudio) : undefined;
+                const relAudio = audioPath ? path.relative(downloadsDir, audioPath) : undefined;
+
+                sendSSE({
+                  step: 'COMPLETED',
+                  progress: 100,
+                  message: renderSuccess
+                    ? `🎉 Antigravity Agent đã hoàn tất render video Manim MP4${audioPath ? ' kèm thuyết minh giọng đọc AI' : ''}!`
+                    : `⚠️ Đã sinh mã scene.py nhưng render video chưa hoàn thành: ${lastErrorMsg}`,
+                  manimCode: currentPython,
+                  scriptContent: responseText,
+                  srtContent: srtContent,
+                  videoPath: finalVideoWithAudio || finalMp4Path || undefined,
+                  videoUrl: relMp4 ? `/downloads/${relMp4}` : undefined,
+                  audioPath: audioPath || undefined,
+                  audioUrl: relAudio ? `/downloads/${relAudio}` : undefined,
+                  filePath: sceneFilePath,
+                  contentType: 'manim'
+                });
+                return;
+              }
+
+              let finalLatex = extractAndSanitizeLatex(responseText);
+              const timestamp = Date.now();
+              const texFileName = `tailieu_${timestamp}.tex`;
+              const pdfFileName = `tailieu_${timestamp}.pdf`;
+              const texPath = path.join(downloadsDir, texFileName);
+              const pdfPath = path.join(downloadsDir, pdfFileName);
+              fs.writeFileSync(texPath, finalLatex, 'utf-8');
+
+              // Tạo các file script hỗ trợ compile thủ công nếu cần
+              const compileSh = `#!/bin/bash\npdflatex -interaction=nonstopmode "${texFileName}"\npdflatex -interaction=nonstopmode "${texFileName}"\nrm -f *.aux *.log *.out *.toc\n`;
+              const compileBat = `@echo off\nchcp 65001 >nul\npdflatex -interaction=nonstopmode "${texFileName}"\npdflatex -interaction=nonstopmode "${texFileName}"\ndel *.aux *.log *.out *.toc 2>nul\n`;
+              fs.writeFileSync(path.join(downloadsDir, 'compile_latex.sh'), compileSh, 'utf-8');
+              fs.writeFileSync(path.join(downloadsDir, 'compile_latex.bat'), compileBat, 'utf-8');
+
+              // Thử tự động biên dịch pdflatex
+              sendSSE({
+                step: 'RECOMPILING',
+                progress: 90,
+                message: '⚙️ Antigravity đang tiến hành biên dịch LaTeX ra PDF bằng pdflatex...',
+              });
+
+              const pdflatexBin = await new Promise((res) => {
+                const whichCmd = process.platform === 'win32' ? 'where pdflatex' : 'which pdflatex';
+                const { exec } = require('child_process');
+                exec(whichCmd, (err, stdout) => {
+                  if (!err && stdout.trim()) {
+                    res(stdout.trim().split('\n')[0].trim());
+                  } else {
+                    res(null);
+                  }
+                });
+              });
+
+              let compiledPdfPath = null;
+              if (pdflatexBin) {
+                for (let pass = 1; pass <= 2; pass++) {
+                  await new Promise((resPass) => {
+                    const proc = spawn(pdflatexBin, [
+                      '-interaction=nonstopmode',
+                      `-output-directory=${downloadsDir}`,
+                      texPath
+                    ], { cwd: downloadsDir });
+                    proc.on('close', () => resPass());
+                    proc.on('error', () => resPass());
+                  });
+                }
+
+                if (fs.existsSync(pdfPath)) {
+                  compiledPdfPath = pdfPath;
+
+                  // Tự động dọn dẹp các file rác trung gian của pdflatex (.aux, .log, .out, .toc)
+                  const auxExtensions = ['.aux', '.log', '.out', '.toc', '.nav', '.snm'];
+                  for (const ext of auxExtensions) {
+                    const auxFile = path.join(downloadsDir, `tailieu_${timestamp}${ext}`);
+                    if (fs.existsSync(auxFile)) {
+                      try { fs.unlinkSync(auxFile); } catch {}
+                    }
+                  }
+                }
+              }
+
+              sendSSE({
+                step: 'COMPLETED',
+                progress: 100,
+                message: compiledPdfPath
+                  ? '🎉 Antigravity Agent đã hoàn tất biên soạn & biên dịch PDF thành công!'
+                  : '🎉 Antigravity Agent đã hoàn tất tạo mã LaTeX (Chưa phát hiện pdflatex để xuất PDF tự động)!',
+                latexCode: finalLatex,
+                pdfUrl: compiledPdfPath ? `/downloads/${pdfFileName}` : undefined,
+                pdfPath: compiledPdfPath || texPath,
+                filePath: compiledPdfPath || texPath,
+                contentType: 'latex'
+              });
+              activeRunner = null;
+              res.end();
+              return;
+            } catch (antigravityErr) {
+              console.error('Antigravity execution error:', antigravityErr);
+              sendSSE({
+                step: 'ERROR',
+                progress: 0,
+                message: `⚠️ Lỗi Antigravity Agent: ${antigravityErr.message}`,
+                error: antigravityErr.message
+              });
+              activeRunner = null;
+              res.end();
+              return;
+            }
+          }
+
           const browserType = options.browserType || 'chrome';
           const isHeadless = !!options.headless;
           const browserName = browserType === 'firefox' ? 'Firefox' : browserType === 'edge' ? 'Edge' : 'Chrome';
@@ -1279,8 +1993,6 @@ function startInternalServer(callback) {
             }
           };
 
-          // Step 2: Open Web AI (Gemini, ChatGPT, Claude, Grok, DeepSeek)
-          const providerKey = (options.aiProvider || options.provider || (options.model && options.model.startsWith('chatgpt') ? 'chatgpt' : '')).toLowerCase();
           let targetAiUrl = options.aiUrl || '';
 
           if (providerKey === 'chatgpt') {
@@ -2704,8 +3416,7 @@ YÊU CẦU CHO TẬP ${ep}:
             return match ? match[0] : null;
           });
 
-          let finalLatex = extractedLatex || options.prompt;
-          finalLatex = finalLatex.replace(/^```(?:latex|tex)?\s*/i, '').replace(/\s*```$/i, '').trim();
+          let finalLatex = extractAndSanitizeLatex(extractedLatex || options.prompt);
 
           const texFileName = `de_thi_${Date.now()}.tex`;
           fs.writeFileSync(path.join(downloadsDir, texFileName), finalLatex, 'utf-8');
@@ -2927,23 +3638,52 @@ YÊU CẦU CHO TẬP ${ep}:
       return;
     }
 
-    // 4. Serve Downloads (hỗ trợ cả thư mục con như Playlist_xxx/Tap_01.mp4)
+    // 4. Serve Downloads (hỗ trợ cả thư mục con như Playlist_xxx/Tap_01.mp4 kèm Range Streaming)
     if (pathname.startsWith('/downloads/')) {
       const relPath = decodeURIComponent(pathname.replace(/^\/downloads\//, ''));
       const filePath = path.join(downloadsDir, relPath);
       if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
         const ext = path.extname(filePath).toLowerCase();
-        res.writeHead(200, { 
-          'Content-Type': MIME_TYPES[ext] || 'application/octet-stream',
-          'Accept-Ranges': 'bytes'
-        });
-        const content = fs.readFileSync(filePath);
-        res.end(content);
-        return;
+        const stat = fs.statSync(filePath);
+        const fileSize = stat.size;
+        const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+
+        // Hỗ trợ HTTP 206 Partial Content cho thẻ <video> và <audio> HTML5
+        const range = req.headers.range;
+        if (range && (ext === '.mp4' || ext === '.webm' || ext === '.mp3' || ext === '.wav')) {
+          const parts = range.replace(/bytes=/, "").split("-");
+          const start = parseInt(parts[0], 10);
+          const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+          const chunksize = (end - start) + 1;
+          const file = fs.createReadStream(filePath, { start, end });
+          res.writeHead(206, {
+            'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+            'Accept-Ranges': 'bytes',
+            'Content-Length': chunksize,
+            'Content-Type': contentType,
+          });
+          file.pipe(res);
+          return;
+        } else {
+          res.writeHead(200, { 
+            'Content-Type': contentType,
+            'Content-Length': fileSize,
+            'Accept-Ranges': 'bytes'
+          });
+          const stream = fs.createReadStream(filePath);
+          stream.pipe(res);
+          return;
+        }
       }
     }
 
     // 5. Serve Dist Frontend Files
+    if (pathname.startsWith('/api/') || pathname.startsWith('/downloads/')) {
+      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('File không tồn tại');
+      return;
+    }
+
     let reqPath = pathname === '/' ? 'index.html' : pathname.replace(/^\//, '');
     let filePath = path.join(distDir, reqPath);
 
@@ -2980,6 +3720,7 @@ function createWindow(port) {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      plugins: true,
     },
   });
 

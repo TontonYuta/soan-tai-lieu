@@ -103,7 +103,6 @@ const App: React.FC = () => {
             setContextMetadata({ topic: config.topic, subject: config.subject, grade: config.grade });
             setLearningContext(`Đề thi: ${config.topic}`);
             setStatus(GenerationStatus.SUCCESS);
-            setIsAutomationOpen(true);
         } catch (err) {
             setStatus(GenerationStatus.ERROR);
             setError('Lỗi khi thiết kế cấu trúc Prompt Đề thi.');
@@ -125,7 +124,6 @@ const App: React.FC = () => {
             setContextMetadata({ topic: config.topic, subject: config.subject, grade: config.grade });
             setLearningContext(`Bài học: ${config.topic}`);
             setStatus(GenerationStatus.SUCCESS);
-            setIsAutomationOpen(true);
         } catch (err) {
             setStatus(GenerationStatus.ERROR);
             setError('Lỗi khi khởi tạo Prompt Bài học.');
@@ -147,7 +145,6 @@ const App: React.FC = () => {
             setContextMetadata({ topic: config.topic, subject: config.subject, grade: 'Hệ thống' });
             setLearningContext(`Lộ trình: ${config.topic}`);
             setStatus(GenerationStatus.SUCCESS);
-            setIsAutomationOpen(true);
         } catch (err) {
             setStatus(GenerationStatus.ERROR);
             setError('Lỗi khi thiết kế Lộ trình học.');
@@ -169,7 +166,6 @@ const App: React.FC = () => {
             setContextMetadata({ topic: config.topic, subject: config.subject, grade: config.grade });
             setLearningContext(`Bài tập: ${config.topic}`);
             setStatus(GenerationStatus.SUCCESS);
-            setIsAutomationOpen(true);
         } catch (err) {
             setStatus(GenerationStatus.ERROR);
             setError('Lỗi khi thiết kế cấu trúc phiếu bài tập.');
@@ -191,7 +187,6 @@ const App: React.FC = () => {
             setContextMetadata({ topic: config.topic, subject: config.subject, grade: config.grade || '12' });
             setLearningContext(`Bài tập tương tự: ${config.topic}`);
             setStatus(GenerationStatus.SUCCESS);
-            setIsAutomationOpen(true);
         } catch (err) {
             setStatus(GenerationStatus.ERROR);
             setError('Lỗi khi thiết kế prompt bài tập tương tự.');
@@ -566,7 +561,7 @@ const App: React.FC = () => {
                     voiceSpeed: cfg.voiceSpeed,
                   });
                   handleDirectAutomate(
-                    generateManimStoryboardPrompt(cfg), 
+                    generateVideoManimPrompt(cfg), 
                     { topic: cfg.topic, subject: cfg.subject, grade: cfg.audience }, 
                     cfg.isSeries ? `Chuỗi Playlist (${cfg.seriesCount || 3} Tập)` : 'Video Manim'
                   );

@@ -106,6 +106,9 @@ export interface VideoConfig {
   category?: 'math' | 'physics' | 'chemistry' | 'computer_science' | 'biology' | 'economics' | 'general' | string;
   mathType?: string;
   hookType?: 'trap' | 'visual_intuition' | 'fast_trick' | 'real_world';
+  // Bộ Form Mô Phỏng Chuyên Môn & Kiểu Font Chữ
+  simulationMode?: 'geometry' | 'dialogue' | 'calculus' | 'fast_tricks' | 'stem' | 'general';
+  fontStyle?: 'serif' | 'sans';
   renderQuality?: '480p' | '1080p' | '4k';
   fps?: 30 | 60;
   safeZoneShorts?: boolean;

@@ -3,9 +3,10 @@ import {
   X, Play, Square, CheckCircle2, AlertTriangle, Loader2, 
   FileText, ExternalLink, Download, Settings, Copy, Check, Eye,
   FolderOpen, Monitor, Sparkles, Code, Subtitles, Film, ListVideo,
-  Clock, Cpu, Volume2, Mic
+  Clock, Cpu, Volume2, Mic, Zap, Edit3, RefreshCw
 } from 'lucide-react';
 import { AutomationClient, AutomationProgress } from '../services/automationClient';
+import { generateManimRevisionPrompt } from '../services/prompts/manim';
 
 interface AutomationModalProps {
   isOpen: boolean;
@@ -44,6 +45,21 @@ export interface AiProviderConfig {
 }
 
 export const AI_PROVIDERS: AiProviderConfig[] = [
+  {
+    id: 'antigravity',
+    name: 'Antigravity',
+    fullName: 'Antigravity Local Engine (Google)',
+    url: 'local://antigravity-agent',
+    icon: '🚀',
+    bg: 'bg-[#FF5757]',
+    models: [
+      { id: 'gemini-3.8-flash-high', name: 'Gemini 3.8 Flash (High Reasoning)', badge: 'Khuyên Dùng', desc: 'Mô hình mặc định siêu tốc của Antigravity Agent, tư duy logic cao, tối ưu code Manim' },
+      { id: 'gemini-3.1-pro-high', name: 'Gemini 3.1 Pro (High Reasoning)', badge: 'Sâu Tắc & Logic', desc: 'Mô hình Pro chuyên giải các bài toán đại số, tích phân & hình học phức tạp' },
+      { id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6 (Thinking)', badge: 'Vô Địch Code', desc: 'Mô hình Claude Sonnet với khả năng lập trình & thiết kế Visual Engineering đỉnh cao' },
+      { id: 'gpt-oss-120b-medium', name: 'GPT-OSS 120B (Medium)', badge: 'Mã Nguồn Mở', desc: 'Mô hình mã nguồn mở 120B tham số mạnh mẽ cho bài giảng STEM' },
+      { id: 'gemini-3.7-flash-high', name: 'Gemini 3.7 Flash (High)', badge: 'Cân Bằng', desc: 'Mô hình 3.7 Flash phản hồi siêu tốc, chính xác cao' },
+    ]
+  },
   {
     id: 'gemini',
     name: 'Gemini',
@@ -112,6 +128,8 @@ export const isUrlBelongsToProvider = (url: string, providerId: string): boolean
   if (!url) return false;
   const lower = url.toLowerCase();
   switch (providerId) {
+    case 'antigravity':
+      return true;
     case 'chatgpt':
       return lower.includes('chatgpt.com') || lower.includes('openai.com');
     case 'gemini':
@@ -168,6 +186,12 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
   const [copied, setCopied] = useState(false);
   const [showCodePreview, setShowCodePreview] = useState(false);
   const [selectedPlaylistIndex, setSelectedPlaylistIndex] = useState<number>(0);
+  const [revisionFeedback, setRevisionFeedback] = useState<string>('');
+
+  // Quota & Limit State (Antigravity Dynamic Quota)
+  const [quotaWeekly, setQuotaWeekly] = useState<number>(98);
+  const [quota5h, setQuota5h] = useState<number>(95);
+  const [quotaStatus, setQuotaStatus] = useState<string>('🟢 Khả dụng (Antigravity Active)');
 
   // Bấm giờ thời gian làm task (Task Stopwatch Timer)
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
@@ -230,9 +254,11 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
     }
   };
 
-  const [selectedAi, setSelectedAi] = useState<string>(
-    localStorage.getItem('yuta_ai_provider') || 'gemini'
-  );
+  const [selectedAi, setSelectedAi] = useState<string>(() => {
+    const saved = localStorage.getItem('yuta_ai_provider');
+    return (!saved || saved === 'gemini') ? 'antigravity' : saved;
+  });
+  const [enableCreditOverages, setEnableCreditOverages] = useState(false);
 
   const currentAi = AI_PROVIDERS.find((p) => p.id === selectedAi) || AI_PROVIDERS[0];
 
@@ -248,16 +274,27 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
     return getProviderUrl(selectedAi, selectedModel);
   });
 
-  // Đồng bộ nhà cung cấp AI và Model từ localStorage mỗi khi mở Modal
+  // Đồng bộ nhà cung cấp AI và Quota mỗi khi mở Modal
   useEffect(() => {
     if (isOpen) {
-      const savedAi = localStorage.getItem('yuta_ai_provider') || 'gemini';
-      setSelectedAi(savedAi);
-      const prov = AI_PROVIDERS.find((p) => p.id === savedAi) || AI_PROVIDERS[0];
-      const savedModel = localStorage.getItem(`yuta_ai_model_${savedAi}`) || prov.models[0]?.id || '';
+      const savedAi = localStorage.getItem('yuta_ai_provider');
+      const defaultAi = (!savedAi || savedAi === 'gemini') ? 'antigravity' : savedAi;
+      setSelectedAi(defaultAi);
+      localStorage.setItem('yuta_ai_provider', defaultAi);
+      const prov = AI_PROVIDERS.find((p) => p.id === defaultAi) || AI_PROVIDERS[0];
+      const savedModel = localStorage.getItem(`yuta_ai_model_${defaultAi}`) || prov.models[0]?.id || '';
       setSelectedModel(savedModel);
-      const targetUrl = getProviderUrl(savedAi, savedModel);
+      const targetUrl = getProviderUrl(defaultAi, savedModel);
       setAiUrl(targetUrl);
+
+      // Cập nhật Hạn ngạch Antigravity Quota
+      AutomationClient.getQuota().then(data => {
+        if (data) {
+          setQuotaWeekly(data.weekly);
+          setQuota5h(data.fiveHour);
+          setQuotaStatus(data.status);
+        }
+      }).catch(() => {});
     }
   }, [isOpen]);
 
@@ -342,9 +379,28 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
   const currentVideoItem = (hasPlaylist && progress.playlistVideos) 
     ? progress.playlistVideos[Math.min(selectedPlaylistIndex, progress.playlistVideos.length - 1)] 
     : null;
-  const currentVideoUrl = currentVideoItem?.videoUrl || progress.videoUrl;
-  const currentVideoPath = currentVideoItem?.videoPath || progress.videoPath;
-  const currentAudioUrl = currentVideoItem?.audioUrl || progress.audioUrl;
+
+  const rawVideoUrl = currentVideoItem?.videoUrl || progress.videoUrl;
+  const rawVideoPath = currentVideoItem?.videoPath || progress.videoPath;
+
+  const getMediaUrl = (url?: string, filePath?: string) => {
+    if (url && (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:'))) return url;
+    if (url && url.startsWith('/downloads/')) return url;
+    if (url) return `/downloads/${url.replace(/^\//, '')}`;
+    if (filePath) {
+      if (filePath.includes('Downloads/')) {
+        const rel = filePath.split('Downloads/').pop();
+        if (rel) return `/downloads/${rel}`;
+      }
+      const filename = filePath.split('/').pop();
+      if (filename) return `/downloads/${filename}`;
+    }
+    return undefined;
+  };
+
+  const currentVideoUrl = getMediaUrl(rawVideoUrl, rawVideoPath);
+  const currentVideoPath = rawVideoPath;
+  const currentAudioUrl = getMediaUrl(currentVideoItem?.audioUrl || progress.audioUrl, currentVideoItem?.audioPath || progress.audioPath);
   const currentAudioPath = currentVideoItem?.audioPath || progress.audioPath;
 
   const addLog = (msg: string) => {
@@ -353,17 +409,19 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
     setLogs((prev) => [...prev, `[${formatDuration(curSec)}] [${time}] ${msg}`]);
   };
 
-  const handleStart = async () => {
-    if (!promptContent) {
+  const handleStart = async (overridePrompt?: string | React.MouseEvent) => {
+    const isRevision = typeof overridePrompt === 'string' && overridePrompt.trim().length > 0;
+    const activePrompt = isRevision ? (overridePrompt as string) : promptContent;
+    if (!activePrompt) {
       alert('Chưa có nội dung Prompt! Vui lòng chọn cấu hình đề và tạo prompt trước.');
       return;
     }
 
-    const countMatch = promptContent.match(/GỒM ĐÚNG\s*(\d+)\s*TẬP/i) || promptContent.match(/(\d+)\s*tập/i);
+    const countMatch = activePrompt.match(/GỒM ĐÚNG\s*(\d+)\s*TẬP/i) || activePrompt.match(/(\d+)\s*tập/i);
     const detectedSeriesCount = countMatch ? parseInt(countMatch[1], 10) : undefined;
 
-    const effectiveAi = selectedAi || 'gemini';
-    const effectiveModel = selectedModel || currentModel?.id || currentAi.models[0]?.id || 'gemini-3.1-pro';
+    const effectiveAi = (selectedAi && selectedAi !== 'gemini') ? selectedAi : 'antigravity';
+    const effectiveModel = selectedModel || currentModel?.id || currentAi.models[0]?.id || 'gemini-3.8-flash-high';
     const effectiveModelName = currentAi.models.find(m => m.id === effectiveModel)?.name || currentModel?.name || 'Gemini 3.1 Pro';
 
     let effectiveAiUrl = aiUrl;
@@ -376,6 +434,9 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
     setIsRunning(true);
     setLogs([]);
     addLog(`Bắt đầu quy trình tự động hóa 1-Click với ${currentAi.fullName} [Model: ${effectiveModelName}]...`);
+    if (isRevision) {
+      addLog(`✏️ Nhận yêu cầu chỉnh sửa/sửa lỗi từ người dùng -> Đang truyền prompt tinh chỉnh tới Antigravity AGY...`);
+    }
     if (isPlaylistTask) {
       addLog(`Chế độ Chuỗi Playlist: Sản xuất tự động ${seriesCount || detectedSeriesCount || 3} tập video MP4 liên hoàn.`);
     }
@@ -389,7 +450,7 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
 
     await AutomationClient.startPipeline(
       {
-        prompt: promptContent,
+        prompt: activePrompt,
         browserType: browserType,
         aiProvider: effectiveAi,
         provider: effectiveAi,
@@ -421,7 +482,24 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
     );
   };
 
-
+  const handleReGenerateWithFeedback = async () => {
+    if (!revisionFeedback.trim()) return;
+    const currentCode = progress.manimCode || progress.latexCode || '';
+    const revPrompt = generateManimRevisionPrompt(
+      { 
+        subject: subject || 'Toán học',
+        topic: topic || 'Bài giảng',
+        duration: '60 giây',
+        tone: 'simple',
+        audience: 'Học sinh & Người tự học',
+        format: 'vertical' 
+      },
+      currentCode,
+      revisionFeedback
+    );
+    setRevisionFeedback('');
+    await handleStart(revPrompt);
+  };
 
   const handleStop = async () => {
     addLog('Đang gửi lệnh dừng quy trình...');
@@ -672,11 +750,43 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
             </div>
             
             {/* Description of active model */}
-            <div className="text-[10px] text-gray-600 font-bold bg-[#f4f4f5] px-2.5 py-1 border border-black/20 flex items-center justify-between flex-wrap gap-1">
-              <span>💡 {currentModel?.desc || 'Mô hình lập trình AI'}</span>
-              <span className="font-mono text-indigo-700">{currentAi.id === 'chatgpt' ? 'Mode: ' : 'Model: '}{currentModel?.id}</span>
+            <div className={`text-[10px] font-bold px-2.5 py-1.5 border flex items-center justify-between flex-wrap gap-1 ${
+              selectedAi === 'antigravity' ? 'bg-[#FF5757]/15 border-red-500 text-red-950' : 'bg-[#f4f4f5] border-black/20 text-gray-700'
+            }`}>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span>💡 {currentModel?.desc || 'Mô hình lập trình AI'}</span>
+                {selectedAi === 'antigravity' && (
+                  <span className="bg-[#FFED66] text-black font-black uppercase text-[10px] px-2 py-0.5 border border-black shadow-[1px_1px_0_0_rgba(0,0,0,1)]">
+                    ⚡ Hạn Ngạch (Quota): 5 giờ / 1 tuần (5h / 1w) • Auto Reset
+                  </span>
+                )}
+              </div>
+              <span className="font-mono text-indigo-800 font-bold">{currentAi.id === 'chatgpt' ? 'Mode: ' : 'Model: '}{currentModel?.id}</span>
             </div>
           </div>
+
+          {/* Antigravity Quota Compact Indicator (Trích xuất phần trăm hạn ngạch) */}
+          {(selectedAi === 'antigravity' || selectedAi === 'gemini') && (
+            <div className="p-3 bg-[#FFED66]/30 border-2 border-black flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2 font-black uppercase text-black">
+                <Zap className="w-4 h-4 text-purple-700 stroke-[3]" />
+                <span>⚡ Hạn Ngạch Antigravity Quota (Còn Lại):</span>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap font-mono">
+                <div className="flex items-center gap-1.5 bg-emerald-600 text-white font-black px-3 py-1 border border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]" title="Hạn ngạch tuần 1w còn lại">
+                  <span className="text-[10px] text-emerald-100 font-sans font-bold">Hàng tuần (1w):</span>
+                  <span className="text-sm">{quotaWeekly}%</span>
+                </div>
+                <div className="flex items-center gap-1.5 bg-emerald-600 text-white font-black px-3 py-1 border border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]" title="Hạn ngạch 5 tiếng 5h còn lại">
+                  <span className="text-[10px] text-emerald-100 font-sans font-bold">5 Tiếng (5h):</span>
+                  <span className="text-sm">{quota5h}%</span>
+                </div>
+                <div className="flex items-center gap-1.5 bg-white text-black font-bold px-2.5 py-1 border border-black text-xs">
+                  <span className="text-emerald-700 font-black">{quotaStatus}</span>
+                </div>
+              </div>
+            </div>
+          )}
 
 
           {/* Stepper Visualization */}
@@ -1058,6 +1168,45 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
                       <pre>{progress.manimCode || progress.latexCode}</pre>
                     </div>
                   )}
+
+                  {/* KHỐI CHỈNH SỬA & FIX LỖI VIDEO (RE-PROMPT ANTIGRAVITY AGY) */}
+                  <div className="bg-[#FFED66] border-4 border-black p-4 shadow-[6px_6px_0_0_rgba(0,0,0,1)] space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Edit3 className="w-5 h-5 text-black stroke-[3]" />
+                        <h4 className="text-sm font-black uppercase text-black tracking-wider">
+                          ✏️ Chỉnh Sửa Video & Sửa Lỗi (Re-Prompt Antigravity AGY)
+                        </h4>
+                      </div>
+                      <span className="text-[10px] font-black uppercase bg-black text-[#FFED66] px-2 py-0.5 border border-black font-mono">
+                        1-Click Refine
+                      </span>
+                    </div>
+                    <p className="text-xs font-bold text-black">
+                      Nhập các lỗi còn tồn tại trong video hoặc các câu từ cần điều chỉnh (Vd: "Thay màu đồ thị sang màu Vàng", "Sửa câu thoại ở phân cảnh 2 thành...", "Đưa tiêu đề lên cao 0.5 unit..."):
+                    </p>
+                    <textarea
+                      value={revisionFeedback}
+                      onChange={(e) => setRevisionFeedback(e.target.value)}
+                      placeholder="Vd: 1. Sửa lời thoại ở phân cảnh 2 thành: '...'\n2. Đổi màu đồ thị hàm số từ Xanh sang Vàng\n3. Cho hiệu ứng hào quang Outro xuất hiện muộn hơn 1s..."
+                      className="w-full p-3 bg-white border-[3px] border-black text-xs font-bold text-black placeholder:text-gray-500 min-h-[80px] shadow-[3px_3px_0_0_rgba(0,0,0,1)] focus:outline-none"
+                    />
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={handleReGenerateWithFeedback}
+                        disabled={isRunning || !revisionFeedback.trim()}
+                        className={`flex items-center gap-2 px-4 py-2.5 border-[3px] border-black text-xs font-black uppercase shadow-[4px_4px_0_0_rgba(0,0,0,1)] transition-all cursor-pointer ${
+                          isRunning || !revisionFeedback.trim()
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed border-gray-400 shadow-none'
+                            : 'bg-[#A3E635] hover:bg-[#86EFAC] text-black active:translate-x-[2px] active:translate-y-[2px] active:shadow-none'
+                        }`}
+                        title="Tự động truyền phản hồi sửa lỗi cho Antigravity Agent để viết lại mã Python scene.py và render video lại từ đầu"
+                      >
+                        <Zap className="w-4 h-4 stroke-[3] fill-black" />
+                        <span>⚡ Gửi Phản Hồi & Render Lại Video (1-Click)</span>
+                      </button>
+                    </div>
+                  </div>
                 </>
               ) : progress.contentType === 'script' ? (
                 /* VIDEO SCRIPT SUCCESS VIEW */
@@ -1192,11 +1341,11 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
                           <FileText className="w-4 h-4 stroke-[3]" /> Xem Trước Tài Liệu PDF (Live Preview)
                         </span>
                         <span className="text-[11px] font-bold text-gray-700">
-                          Tự động biên dịch từ Overleaf
+                          Tự động biên dịch từ Overleaf / Antigravity Engine
                         </span>
                       </div>
                       <iframe
-                        src={progress.pdfUrl}
+                        src={progress.pdfPath ? `/api/view-pdf?path=${encodeURIComponent(progress.pdfPath)}#toolbar=0` : progress.pdfUrl}
                         className="w-full h-96 border-none bg-[#525659]"
                         title="PDF Live Preview"
                       />
@@ -1237,7 +1386,7 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
               </button>
             ) : (
               <button
-                onClick={handleStart}
+                onClick={() => handleStart()}
                 className="flex items-center gap-2 px-8 py-3 bg-[#A3E635] text-black border-4 border-black text-sm font-black uppercase tracking-widest shadow-[6px_6px_0_0_rgba(0,0,0,1)] hover:bg-[#86EFAC] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all cursor-pointer"
               >
                 <Play className="w-5 h-5 text-black stroke-[3]" /> BẮT ĐẦU CHẠY 1-CLICK

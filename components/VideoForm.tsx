@@ -38,6 +38,8 @@ const VideoForm: React.FC<VideoFormProps> = ({
     safeZoneShorts: true,
     details: '',
     hookType: 'visual_intuition',
+    simulationMode: 'general',
+    fontStyle: 'serif',
     isSeries: false,
     seriesCount: 3,
     seriesOutline: '',
@@ -61,7 +63,7 @@ const VideoForm: React.FC<VideoFormProps> = ({
   const isSeries = Boolean(config.isSeries);
 
   const [selectedAi, setSelectedAi] = useState<string>(
-    () => localStorage.getItem('yuta_ai_provider') || 'gemini'
+    () => localStorage.getItem('yuta_ai_provider') || 'antigravity'
   );
   const currentAi = AI_PROVIDERS.find(p => p.id === selectedAi) || AI_PROVIDERS[0];
   const [selectedModel, setSelectedModel] = useState<string>(() => {
@@ -310,6 +312,69 @@ const VideoForm: React.FC<VideoFormProps> = ({
                 </div>
               </div>
             )}
+
+            {/* Bộ Form Mô Phỏng Chuyên Môn */}
+            <div className="group relative">
+              <label className={labelClass}>🎭 Bộ Form Mô Phỏng Chuyên Môn (Mẫu Diễn Hoạt)</label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {[
+                  { id: 'geometry', label: '📐 Hình học & Vector', desc: 'Tọa độ, khối 3D, mặt phẳng' },
+                  { id: 'dialogue', label: '🎙️ Đối thoại 2 Người', desc: 'Thầy & Trò Q&A sư phạm' },
+                  { id: 'calculus', label: '📊 Giải tích & Hàm số', desc: 'Đồ thị, tiếp tuyến, tích phân' },
+                  { id: 'fast_tricks', label: '⚡ Mẹo & Giải nhanh', desc: 'So sánh 2 cột: Bẫy vs Mẹo 30s' },
+                  { id: 'stem', label: '🧪 STEM & Vật lý - Hóa', desc: 'Quỹ đạo, mô hình phân tử' },
+                  { id: 'general', label: '🎓 Bài giảng Tổng hợp', desc: 'Bố cục Dual-Zone chuẩn' }
+                ].map(m => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => handleChange('simulationMode', m.id)}
+                    className={`p-2.5 border-2 border-black text-left transition-all cursor-pointer ${
+                      (config.simulationMode || 'general') === m.id
+                        ? 'bg-[#00CECB] text-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] translate-x-[1px] translate-y-[1px]'
+                        : 'bg-white text-black hover:bg-slate-100'
+                    }`}
+                  >
+                    <div className="text-[11px] font-black uppercase">{m.label}</div>
+                    <div className="text-[9px] font-bold text-gray-700 leading-tight">{m.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Kiểu Font Chữ & Căn Chỉnh Khoảng Cách */}
+            <div className="group relative">
+              <label className={labelClass}>🔤 Kiểu Font Chữ & Căn Chỉnh Khoảng Cách</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleChange('fontStyle', 'serif')}
+                  className={`p-2.5 border-2 border-black text-left transition-all cursor-pointer ${
+                    (config.fontStyle || 'serif') === 'serif'
+                      ? 'bg-[#FF90E8] text-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] translate-x-[1px] translate-y-[1px]'
+                      : 'bg-white text-black hover:bg-slate-100'
+                  }`}
+                >
+                  <div className="text-[11px] font-black uppercase">✒️ Font Có Chân (Serif)</div>
+                  <div className="text-[9px] font-bold text-gray-700">Times New Roman / Liberation Serif</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleChange('fontStyle', 'sans')}
+                  className={`p-2.5 border-2 border-black text-left transition-all cursor-pointer ${
+                    config.fontStyle === 'sans'
+                      ? 'bg-[#A3E635] text-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] translate-x-[1px] translate-y-[1px]'
+                      : 'bg-white text-black hover:bg-slate-100'
+                  }`}
+                >
+                  <div className="text-[11px] font-black uppercase">🔠 Font Không Chân (Sans-Serif)</div>
+                  <div className="text-[9px] font-bold text-gray-700">Be Vietnam Pro / Inter (Hiện đại)</div>
+                </button>
+              </div>
+              <p className="text-[10px] text-gray-600 font-bold mt-1">
+                ✨ *Tự động ngắt dòng line_spacing=1.2, căn chỉnh khoảng cách chữ chuẩn xác, chống đè lấp 100%.*
+              </p>
+            </div>
 
             {/* Render Quality & FPS */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

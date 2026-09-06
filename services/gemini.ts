@@ -6,7 +6,8 @@ import { generateSimilarPrompt } from "./prompts/similar";
 import { 
   generateManimStoryboardPrompt, 
   generateManimCodePrompt, 
-  generateVideoManimPrompt 
+  generateVideoManimPrompt,
+  generateManimRevisionPrompt
 } from "./prompts/manim";
 import { generateVideoScriptPrompt } from "./prompts/script";
 import { generateBatPrompt } from "./prompts/bat";
@@ -20,6 +21,7 @@ export {
   generateManimStoryboardPrompt,
   generateManimCodePrompt,
   generateVideoManimPrompt,
+  generateManimRevisionPrompt,
   generateVideoScriptPrompt,
   generateBatPrompt
 };

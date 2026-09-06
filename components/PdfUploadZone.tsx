@@ -96,6 +96,16 @@ export const PdfUploadZone: React.FC<PdfUploadZoneProps> = ({
     e.preventDefault();
   };
 
+  const [viewMode, setViewMode] = useState<'text' | 'pdf' | null>(null);
+
+  const toggleViewMode = (mode: 'text' | 'pdf') => {
+    if (viewMode === mode) {
+      setViewMode(null);
+    } else {
+      setViewMode(mode);
+    }
+  };
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
@@ -176,19 +186,35 @@ export const PdfUploadZone: React.FC<PdfUploadZoneProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <button
                 type="button"
-                onClick={() => setShowPreview(!showPreview)}
-                className="px-2 py-1 bg-white border-2 border-black text-[10px] font-black uppercase flex items-center gap-1 hover:bg-gray-100 shadow-[2px_2px_0_0_rgba(0,0,0,1)] cursor-pointer"
+                onClick={() => toggleViewMode('text')}
+                className={`px-2 py-1 border-2 border-black text-[10px] font-black uppercase flex items-center gap-1 shadow-[2px_2px_0_0_rgba(0,0,0,1)] cursor-pointer ${
+                  viewMode === 'text' ? 'bg-[#FFED66] text-black' : 'bg-white hover:bg-gray-100'
+                }`}
               >
-                {showPreview ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                <span>{showPreview ? 'Ẩn Trích Xuất' : 'Xem Nội Dung'}</span>
+                {viewMode === 'text' ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                <span>{viewMode === 'text' ? 'Ẩn Text RAG' : 'Xem Text RAG'}</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => onPdfChange(null)}
+                onClick={() => toggleViewMode('pdf')}
+                className={`px-2 py-1 border-2 border-black text-[10px] font-black uppercase flex items-center gap-1 shadow-[2px_2px_0_0_rgba(0,0,0,1)] cursor-pointer ${
+                  viewMode === 'pdf' ? 'bg-[#00CECB] text-black' : 'bg-white hover:bg-gray-100'
+                }`}
+              >
+                {viewMode === 'pdf' ? <EyeOff className="w-3 h-3" /> : <BookOpen className="w-3 h-3" />}
+                <span>{viewMode === 'pdf' ? 'Ẩn Xem PDF' : 'Review PDF (Trực Quan)'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setViewMode(null);
+                  onPdfChange(null);
+                }}
                 className="px-2 py-1 bg-[#FF5E5B] text-white border-2 border-black text-[10px] font-black uppercase flex items-center gap-1 hover:bg-[#E04845] shadow-[2px_2px_0_0_rgba(0,0,0,1)] cursor-pointer"
               >
                 <Trash2 className="w-3 h-3" />
@@ -197,12 +223,28 @@ export const PdfUploadZone: React.FC<PdfUploadZoneProps> = ({
             </div>
           </div>
 
-          {showPreview && (
-            <div className="mt-2 p-2.5 bg-white border-2 border-black max-h-40 overflow-y-auto font-mono text-[11px] text-gray-800 whitespace-pre-wrap leading-relaxed">
+          {viewMode === 'text' && (
+            <div className="mt-2 p-2.5 bg-white border-2 border-black max-h-48 overflow-y-auto font-mono text-[11px] text-gray-800 whitespace-pre-wrap leading-relaxed">
               {attachedPdf.text ? (
                 attachedPdf.text.slice(0, 3000) + (attachedPdf.text.length > 3000 ? '\n\n... (Đã trích xuất toàn bộ tài liệu)' : '')
               ) : (
                 <span className="italic text-gray-400">Không có văn bản dạng text thuần (tài liệu chứa nhiều ảnh quét). AI sẽ đọc trực tiếp bằng cơ chế Multimodal.</span>
+              )}
+            </div>
+          )}
+
+          {viewMode === 'pdf' && (
+            <div className="mt-2 border-2 border-black bg-slate-800 overflow-hidden shadow-[2px_2px_0_0_rgba(0,0,0,1)]">
+              {attachedPdf.tempPath ? (
+                <iframe
+                  src={`/api/view-pdf?path=${encodeURIComponent(attachedPdf.tempPath)}#toolbar=0`}
+                  className="w-full h-80 border-none bg-slate-700"
+                  title="PDF Visual Review"
+                />
+              ) : (
+                <div className="p-4 text-center text-xs font-bold text-white">
+                  Đang chuẩn bị file PDF để xem trực quan...
+                </div>
               )}
             </div>
           )}

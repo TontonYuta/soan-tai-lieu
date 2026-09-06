@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Map, Target, Calendar, Award, Wand2, Info, ChevronDown, BookOpen, Zap } from "lucide-react";
+import { Map, Target, Calendar, Award, Wand2, Info, ChevronDown, BookOpen, Zap, FileText } from "lucide-react";
 import { RoadmapConfig, GenerationStatus } from '../types';
 import PdfUploadZone from './PdfUploadZone';
 
@@ -184,26 +184,35 @@ const RoadmapForm: React.FC<RoadmapFormProps> = ({ onSubmit, onDirectAutomate, s
         </div>
 
 
-        <button
-          type="submit"
-          disabled={isLoading || !config.subject || !config.topic}
-          className={`w-full relative flex items-center justify-center gap-3 py-4 px-6 rounded-none text-black font-black uppercase tracking-widest text-lg border-4 border-black shadow-[6px_6px_0_0_rgba(0,0,0,1)] transition-all duration-75 active:translate-y-[6px] active:translate-x-[6px] active:shadow-none cursor-pointer
-            ${(isLoading || !config.subject || !config.topic)
-              ? 'bg-[#E2E8F0] cursor-not-allowed text-gray-500 shadow-none border-gray-400' 
-              : 'bg-[#FF5E5B] hover:bg-[#E04845]'}`}
-        >
-          {isLoading ? (
-             <>
-               <span className="w-5 h-5 border-4 border-black border-t-transparent rounded-full animate-spin"/>
-               <span>Đang tạo lộ trình...</span>
-             </>
-          ) : (
-            <>
-              <Zap className="w-6 h-6 stroke-[3] fill-black" />
-              <span>⚡ Thiết Kế Lộ Trình Học Tập (LaTeX)</span>
-            </>
-          )}
-        </button>
+        {/* Action Buttons: 2 nút chuẩn 1-Click */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+          <button
+            type="button"
+            onClick={() => onDirectAutomate ? onDirectAutomate(config) : onSubmit(config)}
+            disabled={isLoading || !config.subject || !config.topic}
+            className={`relative flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-none text-black font-black uppercase tracking-wider text-xs sm:text-sm border-4 border-black shadow-[5px_5px_0_0_rgba(0,0,0,1)] transition-all duration-75 active:translate-y-[3px] active:translate-x-[3px] active:shadow-none cursor-pointer
+              ${(isLoading || !config.subject || !config.topic)
+                ? 'bg-[#E2E8F0] cursor-not-allowed text-gray-500 shadow-none border-gray-400' 
+                : 'bg-[#FF5E5B] hover:bg-[#E04845] text-white'}`}
+            title="Kích hoạt tự động hóa 1-Click: Biên dịch LaTeX trên Overleaf & Xuất PDF"
+          >
+            <Zap className="w-5 h-5 stroke-[3] fill-white" />
+            <span>⚡ Chạy 1-Click (Xuất PDF)</span>
+          </button>
+
+          <button
+            type="submit"
+            disabled={isLoading || !config.subject || !config.topic}
+            className={`relative flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-none text-black font-black uppercase tracking-wider text-xs sm:text-sm border-4 border-black shadow-[5px_5px_0_0_rgba(0,0,0,1)] transition-all duration-75 active:translate-y-[3px] active:translate-x-[3px] active:shadow-none cursor-pointer
+              ${(isLoading || !config.subject || !config.topic)
+                ? 'bg-[#E2E8F0] cursor-not-allowed text-gray-500 shadow-none border-gray-400' 
+                : 'bg-[#FFED66] hover:bg-[#FFECA1] text-black'}`}
+            title="Sinh Prompt LaTeX và hiển thị bên cột xem trước"
+          >
+            <FileText className="w-5 h-5 stroke-[3]" />
+            <span>📝 Tạo Prompt LaTeX</span>
+          </button>
+        </div>
       </form>
     </div>
   );

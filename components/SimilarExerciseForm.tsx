@@ -224,27 +224,35 @@ const SimilarExerciseForm: React.FC<SimilarExerciseFormProps> = ({
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={isLoading || !config.subject || !config.topic || (!config.sourceExercises.trim() && !config.attachedPdf)}
-          className={`w-full relative flex items-center justify-center gap-3 py-4 px-6 rounded-none text-black font-black uppercase tracking-widest text-lg border-4 border-black shadow-[6px_6px_0_0_rgba(0,0,0,1)] transition-all duration-75 active:translate-y-[6px] active:translate-x-[6px] active:shadow-none cursor-pointer
-            ${(isLoading || !config.subject || !config.topic || (!config.sourceExercises.trim() && !config.attachedPdf))
-              ? 'bg-[#E2E8F0] cursor-not-allowed text-gray-500 shadow-none border-gray-400' 
-              : 'bg-[#FB7185] hover:bg-[#F43F5E]'}`}
-        >
+        {/* Action Buttons: 2 nút chuẩn 1-Click */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+          <button
+            type="button"
+            onClick={() => onDirectAutomate ? onDirectAutomate(config) : onSubmit(config)}
+            disabled={isLoading || !config.subject || !config.topic || (!config.sourceExercises.trim() && !config.attachedPdf)}
+            className={`relative flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-none text-black font-black uppercase tracking-wider text-xs sm:text-sm border-4 border-black shadow-[5px_5px_0_0_rgba(0,0,0,1)] transition-all duration-75 active:translate-y-[3px] active:translate-x-[3px] active:shadow-none cursor-pointer
+              ${(isLoading || !config.subject || !config.topic || (!config.sourceExercises.trim() && !config.attachedPdf))
+                ? 'bg-[#E2E8F0] cursor-not-allowed text-gray-500 shadow-none border-gray-400' 
+                : 'bg-[#FB7185] hover:bg-[#F43F5E]'}`}
+            title="Kích hoạt tự động hóa 1-Click: Biên dịch LaTeX trên Overleaf & Xuất PDF"
+          >
+            <Zap className="w-5 h-5 stroke-[3] fill-black" />
+            <span>⚡ Chạy 1-Click (Xuất PDF)</span>
+          </button>
 
-          {isLoading ? (
-            <>
-              <span className="w-5 h-5 border-4 border-black border-t-transparent rounded-full animate-spin"/>
-              <span>Đang nhân bản bài toán...</span>
-            </>
-          ) : (
-            <>
-              <Zap className="w-6 h-6 stroke-[3] fill-black" />
-              <span>⚡ Nhân Bản Bài Tập Tương Tự (LaTeX)</span>
-            </>
-          )}
-        </button>
+          <button
+            type="submit"
+            disabled={isLoading || !config.subject || !config.topic || (!config.sourceExercises.trim() && !config.attachedPdf)}
+            className={`relative flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-none text-black font-black uppercase tracking-wider text-xs sm:text-sm border-4 border-black shadow-[5px_5px_0_0_rgba(0,0,0,1)] transition-all duration-75 active:translate-y-[3px] active:translate-x-[3px] active:shadow-none cursor-pointer
+              ${(isLoading || !config.subject || !config.topic || (!config.sourceExercises.trim() && !config.attachedPdf))
+                ? 'bg-[#E2E8F0] cursor-not-allowed text-gray-500 shadow-none border-gray-400' 
+                : 'bg-[#FFED66] hover:bg-[#FFECA1]'}`}
+            title="Sinh Prompt LaTeX và hiển thị bên cột xem trước"
+          >
+            <FileText className="w-5 h-5 stroke-[3]" />
+            <span>📝 Tạo Prompt LaTeX</span>
+          </button>
+        </div>
       </form>
     </div>
   );

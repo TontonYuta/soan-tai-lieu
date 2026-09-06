@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { 
   Copy, Check, ExternalLink, Terminal, AlertCircle, Bot, Zap, 
   ShieldCheck, Download, Play, FileCode, Sparkles, Volume2, 
-  VolumeX, Subtitles, FileText, Monitor, Film
+  VolumeX, Subtitles, FileText, Monitor, Film, Edit3
 } from 'lucide-react';
 import { GenerationStatus, VideoConfig } from '../types';
 import { 
   generateManimStoryboardPrompt, 
   generateManimCodePrompt, 
-  generateVideoManimPrompt 
+  generateVideoManimPrompt,
+  generateManimRevisionPrompt
 } from '../services/prompts/manim';
 
 interface OutputDisplayProps {
@@ -33,6 +34,7 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({
   const [copied, setCopied] = useState(false);
   const [downloaded, setDownloaded] = useState<string | null>(null);
   const [isPlayingTTS, setIsPlayingTTS] = useState(false);
+  const [revisionFeedback, setRevisionFeedback] = useState('');
 
   useEffect(() => {
     // Dừng âm thanh nếu nội dung đổi hoặc unmount
@@ -597,10 +599,56 @@ pause
       <div className="flex-1 flex flex-col min-h-0 bg-white relative">
         <textarea 
           readOnly
-          className="w-full flex-1 min-h-[480px] p-5 font-mono text-sm leading-relaxed text-black bg-white resize-none focus:outline-none selection:bg-[#FFED66] border-none"
+          className="w-full flex-1 min-h-[400px] p-5 font-mono text-sm leading-relaxed text-black bg-white resize-none focus:outline-none selection:bg-[#FFED66] border-none"
           value={content}
           spellCheck={false}
         />
+
+        {/* SECTION: CHỈNH SỬA CODE MANIM & FIX LỖI VIDEO (RE-PROMPT AGY) */}
+        {isManim && (
+          <div className="border-t-4 border-black bg-[#FFED66] p-4 space-y-2 shrink-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Edit3 className="w-4 h-4 text-black stroke-[3]" />
+                <h4 className="text-xs font-black uppercase text-black tracking-wider">
+                  ✏️ Chỉnh Sửa Code Manim / Sửa Lỗi Video (Re-Prompt AGY)
+                </h4>
+              </div>
+              <span className="text-[10px] font-black uppercase bg-black text-[#FFED66] px-2 py-0.5 border border-black font-mono">
+                AGY Refine
+              </span>
+            </div>
+            <p className="text-[11px] font-bold text-black">
+              Nhập các lỗi còn tồn tại trong video hoặc các câu từ cần điều chỉnh (Vd: "Sửa lời thoại ở phân cảnh 2 thành...", "Đổi màu đồ thị thành màu Vàng", "Đưa tiêu đề lên cao 0.5 unit..."):
+            </p>
+            <textarea
+              value={revisionFeedback}
+              onChange={(e) => setRevisionFeedback(e.target.value)}
+              placeholder="Vd: 1. Sửa lời thoại ở phân cảnh 2 thành: '...'\n2. Đổi màu đồ thị hàm số từ Xanh sang Vàng\n3. Cho hiệu ứng hào quang Outro xuất hiện muộn hơn 1s..."
+              className="w-full p-2.5 bg-white border-2 border-black text-xs font-bold text-black placeholder:text-gray-500 min-h-[70px] focus:outline-none shadow-[2px_2px_0_0_rgba(0,0,0,1)]"
+            />
+            <div className="flex items-center justify-end gap-2">
+              <button
+                onClick={() => {
+                  if (!revisionFeedback.trim() || !onSelectPrompt) return;
+                  const revPrompt = generateManimRevisionPrompt(videoConfig, extractCode(content, 'python'), revisionFeedback);
+                  onSelectPrompt(revPrompt);
+                  setRevisionFeedback('');
+                }}
+                disabled={!revisionFeedback.trim()}
+                className={`flex items-center gap-1.5 px-3 py-2 border-2 border-black text-xs font-black uppercase shadow-[2px_2px_0_0_rgba(0,0,0,1)] transition-all cursor-pointer ${
+                  !revisionFeedback.trim()
+                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed border-gray-400 shadow-none'
+                    : 'bg-[#A3E635] hover:bg-[#86EFAC] text-black active:translate-x-[1px] active:translate-y-[1px] active:shadow-none'
+                }`}
+                title="Tự động tạo prompt sửa lỗi chứa mã hiện tại + danh sách góp ý để gửi cho Antigravity AGY sinh lại code từ đầu"
+              >
+                <Zap className="w-4 h-4 stroke-[3] fill-black" />
+                <span>⚡ Sinh Prompt Sửa Lỗi & Tạo Video Lại</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Compact Forward Context Footer */}
