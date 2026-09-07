@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import ExamForm from './components/ExamForm';
 import LearningForm from './components/LearningForm';
@@ -10,6 +10,9 @@ import BatForm from './components/BatForm';
 import OutputDisplay from './components/OutputDisplay';
 import ReadmeModal from './components/ReadmeModal';
 import AutomationModal from './components/AutomationModal';
+import MobileRemoteHub from './components/MobileRemoteHub';
+import ErrorBoundary from './components/ErrorBoundary';
+import { AutomationClient } from './services/automationClient';
 import { 
   generateExamPrompt, 
   generateLearningPrompt, 
@@ -49,8 +52,20 @@ import {
   Zap
 } from 'lucide-react';
 
+const isElectron = typeof window !== 'undefined' && (
+  Boolean((window as any).electronAPI) || 
+  Boolean((window as any).ipcRenderer) || 
+  navigator.userAgent.toLowerCase().includes('electron')
+);
 
 const App: React.FC = () => {
+  const [viewMode, setViewMode] = useState<'desktop' | 'mobile' | 'auto'>(() => {
+    if (typeof window === 'undefined' || isElectron) return 'desktop';
+    const saved = localStorage.getItem('yuta_view_mode');
+    if (saved === 'desktop' || saved === 'mobile') return saved;
+    return 'auto';
+  });
+
   const [activeTab, setActiveTab] = useState<'roadmap' | 'learning' | 'worksheet' | 'similar' | 'exam' | 'video' | 'bat'>('worksheet');
   const [status, setStatus] = useState<GenerationStatus>(GenerationStatus.IDLE);
   const [promptContent, setPromptContent] = useState<string>('');
@@ -70,20 +85,63 @@ const App: React.FC = () => {
     voiceSpeed?: string;
   }>({});
   const [currentVideoConfig, setCurrentVideoConfig] = useState<VideoConfig | null>(null);
+  const [geminiLink, setGeminiLink] = useState<string>(localStorage.getItem('gemini_fixed_link') || '');
+  const [isEditingLink, setIsEditingLink] = useState(false);
+  const [learningContext, setLearningContext] = useState<string | null>(null);
+  const [contextMetadata, setContextMetadata] = useState<{topic: string, subject: string, grade: string} | null>(null);
+
+  const isMobileUserAgent = typeof window !== 'undefined' && (
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+    window.innerWidth <= 768 ||
+    window.location.hash === '#mobile'
+  );
+
+  const isMobileView = isElectron ? false : (viewMode === 'mobile' ? true : viewMode === 'desktop' ? false : isMobileUserAgent);
+
+  const handleSwitchToDesktop = () => {
+    localStorage.setItem('yuta_view_mode', 'desktop');
+    setViewMode('desktop');
+  };
+
+  const handleSwitchToMobile = () => {
+    localStorage.setItem('yuta_view_mode', 'mobile');
+    setViewMode('mobile');
+  };
+
+  useEffect(() => {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isMobile) {
+      AutomationClient.pingMobile();
+      const interval = setInterval(() => {
+        AutomationClient.pingMobile();
+      }, 4000);
+      return () => clearInterval(interval);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isMobileView) {
+      const checkRemoteState = async () => {
+        const state = await AutomationClient.getCurrentState();
+        if (state && state.isRunning) {
+          setIsAutomationOpen(true);
+        }
+      };
+      checkRemoteState();
+      const interval = setInterval(checkRemoteState, 2000);
+      return () => clearInterval(interval);
+    }
+  }, [isMobileView]);
+
+  if (isMobileView) {
+    return <MobileRemoteHub onSwitchToDesktop={handleSwitchToDesktop} />;
+  }
 
   const handleHeadlessToggle = (val: boolean) => {
     setHeadless(val);
     localStorage.setItem('yuta_headless', String(val));
   };
   
-  // Link Gemini cố định
-  const [geminiLink, setGeminiLink] = useState<string>(localStorage.getItem('gemini_fixed_link') || '');
-  const [isEditingLink, setIsEditingLink] = useState(false);
-
-
-  const [learningContext, setLearningContext] = useState<string | null>(null);
-  const [contextMetadata, setContextMetadata] = useState<{topic: string, subject: string, grade: string} | null>(null);
-
   const handleSaveLink = () => {
     localStorage.setItem('gemini_fixed_link', geminiLink);
     setIsEditingLink(false);
@@ -284,8 +342,12 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header onOpenReadme={() => setIsReadmeOpen(true)} />
+    <ErrorBoundary>
+      <div className="min-h-screen flex flex-col">
+        <Header 
+          onOpenReadme={() => setIsReadmeOpen(true)} 
+          onSwitchToMobile={isMobileUserAgent && !isElectron ? handleSwitchToMobile : undefined}
+        />
       
       <ReadmeModal isOpen={isReadmeOpen} onClose={() => setIsReadmeOpen(false)} />
       <AutomationModal 
@@ -598,7 +660,8 @@ const App: React.FC = () => {
 
         </div>
       </main>
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 };
 

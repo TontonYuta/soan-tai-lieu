@@ -21,6 +21,7 @@
   "build": {
     "appId": "com.yuta.latexstudio",
     "productName": "Yuta Latex Math Studio",
+    "executableName": "yuta-latex-math-studio",
     "directories": {
       "output": "dist-electron"
     },
@@ -43,6 +44,7 @@
   "dependencies": {
     "@google/genai": "^1.34.0",
     "@types/ws": "^8.18.1",
+    "localtunnel": "^2.0.2",
     "lucide-react": "^0.562.0",
     "pdf-parse": "^2.4.5",
     "playwright-core": "^1.62.1",

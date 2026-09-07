@@ -8,6 +8,7 @@ export interface AutomationProgress {
   srtContent?: string;
   contentType?: 'latex' | 'manim' | 'script';
   pdfUrl?: string;
+  pdfPreviewUrl?: string;
   pdfPath?: string;
   videoUrl?: string;
   videoPath?: string;
@@ -36,6 +37,7 @@ export interface AutomationRunParams {
   aiUrl?: string;
   geminiUrl?: string;
   overleafUrl?: string;
+  renderMode?: 'local' | 'overleaf';
   chromeProfilePath?: string;
   headless?: boolean;
   attachedPdfPath?: string;
@@ -54,8 +56,139 @@ export interface AutomationRunParams {
 
 
 
+export interface NetworkInfo {
+  lanIp: string;
+  port: number;
+  mobileUrl: string;
+  wanUrl?: string;
+  isWanActive?: boolean;
+  hasPin?: boolean;
+  isMobileConnected: boolean;
+  mobileDeviceName?: string;
+  mobileIp?: string;
+}
+
+export interface SharedAutomationState {
+  isRunning: boolean;
+  progress: AutomationProgress;
+  logs: string[];
+  startTime?: number;
+  isMobileConnected?: boolean;
+  mobileDeviceName?: string;
+}
+
 export class AutomationClient {
   private static activeAbortController: AbortController | null = null;
+  private static savedPin: string = localStorage.getItem('yuta_security_pin') || '';
+
+  public static setSavedPin(pin: string) {
+    this.savedPin = pin;
+    localStorage.setItem('yuta_security_pin', pin);
+  }
+
+  public static getSavedPin(): string {
+    return this.savedPin;
+  }
+
+  public static getAuthHeaders(): Record<string, string> {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (this.savedPin) {
+      headers['X-Security-Pin'] = this.savedPin;
+    }
+    return headers;
+  }
+
+  public static async startTunnel(): Promise<{ success: boolean; wanUrl?: string; error?: string }> {
+    try {
+      const res = await fetch('/api/system/tunnel/start', {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+      });
+      return await res.json();
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
+  }
+
+  public static async stopTunnel(): Promise<{ success: boolean }> {
+    try {
+      const res = await fetch('/api/system/tunnel/stop', {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+      });
+      return await res.json();
+    } catch {
+      return { success: false };
+    }
+  }
+
+  public static async setSecurityPin(pin: string): Promise<{ success: boolean }> {
+    try {
+      const res = await fetch('/api/system/pin/set', {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({ pin }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        this.setSavedPin(pin);
+      }
+      return data;
+    } catch {
+      return { success: false };
+    }
+  }
+
+  public static async verifyPin(pin: string): Promise<boolean> {
+    try {
+      const res = await fetch('/api/system/pin/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin }),
+      });
+      const data = await res.json();
+      return Boolean(data.valid);
+    } catch {
+      return false;
+    }
+  }
+
+  public static async getNetworkInfo(): Promise<NetworkInfo> {
+    try {
+      const res = await fetch('/api/system/network-info', {
+        headers: this.getAuthHeaders(),
+      });
+      if (!res.ok) throw new Error();
+      return await res.json();
+    } catch {
+      return {
+        lanIp: '127.0.0.1',
+        port: 0,
+        mobileUrl: 'http://localhost',
+        isMobileConnected: false,
+      };
+    }
+  }
+
+  public static async pingMobile(): Promise<void> {
+    try {
+      await fetch('/api/system/mobile-ping', {
+        headers: this.getAuthHeaders(),
+      });
+    } catch {}
+  }
+
+  public static async getCurrentState(): Promise<SharedAutomationState | null> {
+    try {
+      const res = await fetch('/api/automate/current-state', {
+        headers: this.getAuthHeaders(),
+      });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch {
+      return null;
+    }
+  }
 
   public static async checkStatus(): Promise<{ ready: boolean; chromePath: string; hasChrome: boolean; platform: string; userDataDir: string }> {
     try {
@@ -83,7 +216,10 @@ export class AutomationClient {
       this.activeAbortController = null;
     }
     try {
-      await fetch('/api/automate/stop', { method: 'POST' });
+      await fetch('/api/automate/stop', { 
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+      });
     } catch {}
   }
 
@@ -101,7 +237,7 @@ export class AutomationClient {
     try {
       const response = await fetch('/api/automate/stream', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: this.getAuthHeaders(),
         body: JSON.stringify(params),
         signal: abortController.signal,
       });

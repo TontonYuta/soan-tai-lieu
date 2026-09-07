@@ -3,7 +3,7 @@ import {
   X, Play, Square, CheckCircle2, AlertTriangle, Loader2, 
   FileText, ExternalLink, Download, Settings, Copy, Check, Eye,
   FolderOpen, Monitor, Sparkles, Code, Subtitles, Film, ListVideo,
-  Clock, Cpu, Volume2, Mic, Zap, Edit3, RefreshCw
+  Clock, Cpu, Volume2, Mic, Zap, Edit3, RefreshCw, Terminal
 } from 'lucide-react';
 import { AutomationClient, AutomationProgress } from '../services/automationClient';
 import { generateManimRevisionPrompt } from '../services/prompts/manim';
@@ -26,137 +26,16 @@ interface AutomationModalProps {
   subject?: string;
 }
 
-export interface AiModelConfig {
-  id: string;
-  name: string;
-  badge?: string;
-  desc: string;
-  urlModifier?: string;
-}
+import { 
+  AI_PROVIDERS, 
+  AiModelConfig, 
+  AiProviderConfig, 
+  getProviderUrl, 
+  isUrlBelongsToProvider 
+} from '../services/aiProviders';
 
-export interface AiProviderConfig {
-  id: string;
-  name: string;
-  fullName: string;
-  url: string;
-  icon: string;
-  bg: string;
-  models: AiModelConfig[];
-}
-
-export const AI_PROVIDERS: AiProviderConfig[] = [
-  {
-    id: 'antigravity',
-    name: 'Antigravity',
-    fullName: 'Antigravity Local Engine (Google)',
-    url: 'local://antigravity-agent',
-    icon: '🚀',
-    bg: 'bg-[#FF5757]',
-    models: [
-      { id: 'gemini-3.8-flash-high', name: 'Gemini 3.8 Flash (High Reasoning)', badge: 'Khuyên Dùng', desc: 'Mô hình mặc định siêu tốc của Antigravity Agent, tư duy logic cao, tối ưu code Manim' },
-      { id: 'gemini-3.1-pro-high', name: 'Gemini 3.1 Pro (High Reasoning)', badge: 'Sâu Tắc & Logic', desc: 'Mô hình Pro chuyên giải các bài toán đại số, tích phân & hình học phức tạp' },
-      { id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6 (Thinking)', badge: 'Vô Địch Code', desc: 'Mô hình Claude Sonnet với khả năng lập trình & thiết kế Visual Engineering đỉnh cao' },
-      { id: 'gpt-oss-120b-medium', name: 'GPT-OSS 120B (Medium)', badge: 'Mã Nguồn Mở', desc: 'Mô hình mã nguồn mở 120B tham số mạnh mẽ cho bài giảng STEM' },
-      { id: 'gemini-3.7-flash-high', name: 'Gemini 3.7 Flash (High)', badge: 'Cân Bằng', desc: 'Mô hình 3.7 Flash phản hồi siêu tốc, chính xác cao' },
-    ]
-  },
-  {
-    id: 'gemini',
-    name: 'Gemini',
-    fullName: 'Google Gemini',
-    url: 'https://gemini.google.com/app',
-    icon: '✨',
-    bg: 'bg-[#00CECB]',
-    models: [
-      { id: 'gemini-3.1-pro', name: 'Gemini 3.1 Pro', badge: 'Khuyên Dùng', desc: 'Mạnh nhất về logic, suy luận sâu & code Manim hoàn hảo' },
-      { id: 'gemini-3.8-flash', name: 'Gemini 3.8 Flash', badge: 'Mới & Nhanh', desc: 'Thế hệ Flash mới nhất, tốc độ phản hồi cực nhanh, chính xác cao' },
-      { id: 'gemini-3.5-flash-lite', name: 'Gemini 3.5 Flash Lite', badge: 'Siêu Nhẹ', desc: 'Mô hình gọn nhẹ, tối ưu hóa tốc độ phản hồi tức thì' },
-    ]
-  },
-  {
-    id: 'chatgpt',
-    name: 'ChatGPT',
-    fullName: 'ChatGPT (OpenAI)',
-    url: 'https://chatgpt.com',
-    icon: '🟢',
-    bg: 'bg-[#A3E635]',
-    models: [
-      { id: 'chatgpt-think', name: 'Bật Think (Suy nghĩ sâu)', badge: 'Khuyên Dùng', desc: 'Bật chế độ Reason/Think trên ChatGPT để giải toán STEM & lập trình Manim chuẩn xác', urlModifier: 'https://chatgpt.com' },
-      { id: 'chatgpt-no-think', name: 'Tắt Think (Tiêu chuẩn)', badge: 'Nhanh', desc: 'Tắt chế độ Think, phản hồi trực tiếp với tốc độ nhanh nhất', urlModifier: 'https://chatgpt.com' },
-    ]
-  },
-  {
-    id: 'claude',
-    name: 'Claude',
-    fullName: 'Claude (Anthropic)',
-    url: 'https://claude.ai/new',
-    icon: '🟣',
-    bg: 'bg-[#FF90E8]',
-    models: [
-      { id: 'claude-3-7-sonnet', name: 'Claude 3.7 Sonnet', badge: 'Vô Địch Code', desc: 'Hybrid reasoning lập trình số 1 hiện nay', urlModifier: 'https://claude.ai/new?model=claude-3-7-sonnet' },
-      { id: 'claude-3-5-sonnet', name: 'Claude 3.5 Sonnet', badge: 'Chuẩn Mực', desc: 'Code Manim cực kỳ sạch, sư phạm và chặt chẽ', urlModifier: 'https://claude.ai/new' },
-      { id: 'claude-3-5-haiku', name: 'Claude 3.5 Haiku', badge: 'Nhanh Nhẹ', desc: 'Tốc độ phản hồi tức thì cho phân cảnh ngắn', urlModifier: 'https://claude.ai/new' },
-    ]
-  },
-  {
-    id: 'deepseek',
-    name: 'DeepSeek',
-    fullName: 'DeepSeek AI',
-    url: 'https://chat.deepseek.com',
-    icon: '🔵',
-    bg: 'bg-[#60A5FA]',
-    models: [
-      { id: 'deepseek-r1', name: 'DeepSeek-R1 (DeepThink)', badge: 'DeepThink R1', desc: 'Tư duy reasoning toán học mã nguồn mở số 1 thế giới', urlModifier: 'https://chat.deepseek.com' },
-      { id: 'deepseek-v3', name: 'DeepSeek-V3', badge: 'Siêu Tốc', desc: 'Tổng quát siêu tốc, bóc tách code mượt mà', urlModifier: 'https://chat.deepseek.com' },
-    ]
-  },
-  {
-    id: 'grok',
-    name: 'Grok',
-    fullName: 'xAI Grok',
-    url: 'https://grok.com',
-    icon: '⚡',
-    bg: 'bg-[#FFED66]',
-    models: [
-      { id: 'grok-3', name: 'Grok 3 (Think Mode)', badge: 'Mới Nhất', desc: 'Siêu mô hình thế hệ mới của xAI với khả năng suy luận mở rộng', urlModifier: 'https://grok.com' },
-      { id: 'grok-2', name: 'Grok 2', desc: 'Mô hình thế hệ 2 của xAI', urlModifier: 'https://grok.com' },
-    ]
-  }
-];
-
-export const isUrlBelongsToProvider = (url: string, providerId: string): boolean => {
-  if (!url) return false;
-  const lower = url.toLowerCase();
-  switch (providerId) {
-    case 'antigravity':
-      return true;
-    case 'chatgpt':
-      return lower.includes('chatgpt.com') || lower.includes('openai.com');
-    case 'gemini':
-      return lower.includes('gemini.google.com');
-    case 'claude':
-      return lower.includes('claude.ai');
-    case 'deepseek':
-      return lower.includes('deepseek.com');
-    case 'grok':
-      return lower.includes('grok.com') || lower.includes('x.com');
-    default:
-      return true;
-  }
-};
-
-export const getProviderUrl = (providerId: string, modelId?: string): string => {
-  const provider = AI_PROVIDERS.find(p => p.id === providerId) || AI_PROVIDERS[0];
-  if (modelId) {
-    const m = provider.models.find(x => x.id === modelId);
-    if (m?.urlModifier) return m.urlModifier;
-  }
-  const customSaved = localStorage.getItem(`yuta_ai_url_${providerId}`);
-  if (customSaved && isUrlBelongsToProvider(customSaved, providerId)) {
-    return customSaved;
-  }
-  return provider.url;
-};
+export { AI_PROVIDERS, getProviderUrl, isUrlBelongsToProvider };
+export type { AiModelConfig, AiProviderConfig };
 
 export const AutomationModal: React.FC<AutomationModalProps> = ({
   isOpen,
@@ -197,6 +76,51 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef<number | null>(null);
+  const terminalRef = useRef<HTMLDivElement | null>(null);
+
+  // Live log & progress synchronization across Mobile and Desktop
+  useEffect(() => {
+    let interval: any = null;
+    const syncState = () => {
+      AutomationClient.getCurrentState().then((state) => {
+        if (!state) return;
+        if (state.logs && Array.isArray(state.logs) && state.logs.length > 0) {
+          setLogs((prev) => {
+            const merged = [...prev];
+            let changed = false;
+            for (const item of state.logs) {
+              if (!merged.includes(item)) {
+                merged.push(item);
+                changed = true;
+              }
+            }
+            return changed ? merged : prev;
+          });
+        }
+        if (state.isRunning !== undefined) {
+          setIsRunning(state.isRunning);
+        }
+        if (state.progress) {
+          setProgress(state.progress);
+        }
+      }).catch(() => {});
+    };
+
+    if (isOpen) {
+      syncState();
+      interval = setInterval(syncState, 1500);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isOpen]);
+
+  // Tự động cuộn xuống dòng log cuối cùng
+  useEffect(() => {
+    if (terminalRef.current) {
+      terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
+    }
+  }, [logs]);
 
   const formatDuration = (sec: number) => {
     const m = Math.floor(sec / 60);
@@ -239,6 +163,9 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
     if (externalHeadless !== undefined) return externalHeadless;
     return localStorage.getItem('yuta_headless') === 'true';
   });
+  const [renderMode, setRenderMode] = useState<'local' | 'overleaf'>(() => {
+    return (localStorage.getItem('yuta_render_mode') as 'local' | 'overleaf') || 'local';
+  });
 
   useEffect(() => {
     if (externalHeadless !== undefined) {
@@ -255,8 +182,7 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
   };
 
   const [selectedAi, setSelectedAi] = useState<string>(() => {
-    const saved = localStorage.getItem('yuta_ai_provider');
-    return (!saved || saved === 'gemini') ? 'antigravity' : saved;
+    return localStorage.getItem('yuta_ai_provider') || 'antigravity';
   });
   const [enableCreditOverages, setEnableCreditOverages] = useState(false);
 
@@ -277,14 +203,13 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
   // Đồng bộ nhà cung cấp AI và Quota mỗi khi mở Modal
   useEffect(() => {
     if (isOpen) {
-      const savedAi = localStorage.getItem('yuta_ai_provider');
-      const defaultAi = (!savedAi || savedAi === 'gemini') ? 'antigravity' : savedAi;
-      setSelectedAi(defaultAi);
-      localStorage.setItem('yuta_ai_provider', defaultAi);
-      const prov = AI_PROVIDERS.find((p) => p.id === defaultAi) || AI_PROVIDERS[0];
-      const savedModel = localStorage.getItem(`yuta_ai_model_${defaultAi}`) || prov.models[0]?.id || '';
+      const savedAi = localStorage.getItem('yuta_ai_provider') || 'antigravity';
+      setSelectedAi(savedAi);
+      localStorage.setItem('yuta_ai_provider', savedAi);
+      const prov = AI_PROVIDERS.find((p) => p.id === savedAi) || AI_PROVIDERS[0];
+      const savedModel = localStorage.getItem(`yuta_ai_model_${savedAi}`) || prov.models[0]?.id || '';
       setSelectedModel(savedModel);
-      const targetUrl = getProviderUrl(defaultAi, savedModel);
+      const targetUrl = getProviderUrl(savedAi, savedModel);
       setAiUrl(targetUrl);
 
       // Cập nhật Hạn ngạch Antigravity Quota
@@ -404,9 +329,14 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
   const currentAudioPath = currentVideoItem?.audioPath || progress.audioPath;
 
   const addLog = (msg: string) => {
-    const time = new Date().toLocaleTimeString();
+    if (!msg) return;
+    const time = new Date().toLocaleTimeString('vi-VN', { hour12: false });
     const curSec = startTimeRef.current ? Math.floor((Date.now() - startTimeRef.current) / 1000) : 0;
-    setLogs((prev) => [...prev, `[${formatDuration(curSec)}] [${time}] ${msg}`]);
+    const formatted = `[${formatDuration(curSec)}] [${time}] ${msg}`;
+    setLogs((prev) => {
+      if (prev.some((line) => line.includes(msg))) return prev;
+      return [...prev, formatted];
+    });
   };
 
   const handleStart = async (overridePrompt?: string | React.MouseEvent) => {
@@ -420,7 +350,7 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
     const countMatch = activePrompt.match(/GỒM ĐÚNG\s*(\d+)\s*TẬP/i) || activePrompt.match(/(\d+)\s*tập/i);
     const detectedSeriesCount = countMatch ? parseInt(countMatch[1], 10) : undefined;
 
-    const effectiveAi = (selectedAi && selectedAi !== 'gemini') ? selectedAi : 'antigravity';
+    const effectiveAi = selectedAi || 'antigravity';
     const effectiveModel = selectedModel || currentModel?.id || currentAi.models[0]?.id || 'gemini-3.8-flash-high';
     const effectiveModelName = currentAi.models.find(m => m.id === effectiveModel)?.name || currentModel?.name || 'Gemini 3.1 Pro';
 
@@ -457,6 +387,7 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
         aiUrl: effectiveAiUrl,
         geminiUrl: effectiveAi === 'gemini' ? effectiveAiUrl : undefined,
         overleafUrl: overleafUrl || undefined,
+        renderMode: renderMode,
         headless: headless,
         attachedPdfPath: attachedPdfPath,
         isSeries: isPlaylistTask,
@@ -666,7 +597,7 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
                   Tiến độ Playlist:
                 </span>
                 <span className="font-mono bg-white px-2 py-0.5 border border-black">
-                  Đã hoàn thành {progress.playlistVideos!.length}{progress.seriesCount ? `/${progress.seriesCount}` : ''} tập MP4
+                  Đã hoàn thành {(progress.playlistVideos || []).length}{progress.seriesCount ? `/${progress.seriesCount}` : ''} tập MP4
                 </span>
               </div>
             )}
@@ -814,6 +745,9 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
             <div className="flex items-center justify-between flex-wrap gap-2">
               <span className="text-xs font-black uppercase tracking-widest text-black flex items-center gap-2">
                 📜 Nhật ký thực thi:
+                <span className="px-2 py-0.5 bg-[#A3E635] text-black text-[10px] font-mono border border-black animate-pulse">
+                  ⚡ Sync Phone ⇄ PC
+                </span>
               </span>
               <div className="flex items-center gap-2">
                 <label className="flex items-center gap-1.5 text-xs font-black uppercase text-black cursor-pointer bg-[#FFED66] px-2.5 py-1 border-2 border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:bg-[#FDE047] select-none">
@@ -929,22 +863,60 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
                   </span>
                 </div>
 
-                {/* 3. Link Overleaf (Chỉ hiển thị cho LaTeX) */}
+                {/* 3. Chế Độ Biên Dịch LaTeX (Local vs Overleaf) */}
                 {!isManimTask && (
-                  <div>
-                    <label className="block text-[11px] font-black uppercase text-black mb-1">
-                      Link Dự Án Overleaf Của Bạn (Tùy chọn):
+                  <div className="space-y-2">
+                    <label className="block text-[11px] font-black uppercase text-black">
+                      ⚡ Chọn Môi Trường Biên Dịch LaTeX:
                     </label>
-                    <input
-                      type="text"
-                      placeholder="https://www.overleaf.com/project/xxxxxxxxxxxxxxxx"
-                      value={overleafUrl}
-                      onChange={(e) => setOverleafUrl(e.target.value)}
-                      className="w-full bg-white border-2 border-black px-3 py-1.5 text-xs font-bold text-black focus:outline-none"
-                    />
-                    <span className="text-[10px] text-gray-600 font-bold block mt-1">
-                      * Nếu để trống, robot sẽ mở trang quản lý dự án Overleaf mặc định.
-                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRenderMode('local');
+                          localStorage.setItem('yuta_render_mode', 'local');
+                        }}
+                        className={`p-2.5 border-2 border-black text-center text-xs font-black transition-all cursor-pointer ${
+                          renderMode === 'local'
+                            ? 'bg-[#A3E635] text-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]'
+                            : 'bg-white text-black hover:bg-gray-100'
+                        }`}
+                      >
+                        <span className="block text-xs mb-0.5">⚡ Local Máy Tính</span>
+                        <span className="text-[9px] font-bold text-gray-700 block">Biên dịch cục bộ (1-3s) • Ổn định 100%</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRenderMode('overleaf');
+                          localStorage.setItem('yuta_render_mode', 'overleaf');
+                        }}
+                        className={`p-2.5 border-2 border-black text-center text-xs font-black transition-all cursor-pointer ${
+                          renderMode === 'overleaf'
+                            ? 'bg-[#00CECB] text-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]'
+                            : 'bg-white text-black hover:bg-gray-100'
+                        }`}
+                      >
+                        <span className="block text-xs mb-0.5">☁️ Overleaf Cloud</span>
+                        <span className="text-[9px] font-bold text-gray-700 block">Đồng bộ link dự án web</span>
+                      </button>
+                    </div>
+
+                    {renderMode === 'overleaf' && (
+                      <div className="pt-1">
+                        <label className="block text-[10px] font-black uppercase text-gray-800 mb-1">
+                          Link Dự Án Overleaf Của Bạn (Tùy chọn):
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="https://www.overleaf.com/project/xxxxxxxxxxxxxxxx"
+                          value={overleafUrl}
+                          onChange={(e) => setOverleafUrl(e.target.value)}
+                          className="w-full bg-white border-2 border-black px-3 py-1.5 text-xs font-bold text-black focus:outline-none"
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -971,13 +943,46 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
 
 
 
-            {/* Terminal Window */}
-            <div className="bg-[#18181b] border-4 border-black p-3 font-mono text-xs text-[#A3E635] h-36 overflow-y-auto space-y-1 shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
+            {/* Terminal Window Header Bar */}
+            <div className="flex items-center justify-between bg-black text-[#A3E635] px-3 py-1.5 border-4 border-b-0 border-black font-mono text-xs font-black uppercase">
+              <div className="flex items-center gap-2">
+                <Terminal className="w-4 h-4 text-[#A3E635] stroke-[3]" />
+                <span>🖥️ Real-Time System Log ({logs.length} dòng)</span>
+                {isRunning && (
+                  <span className="w-2 h-2 rounded-full bg-[#A3E635] animate-ping ml-1" />
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(logs.join('\n'));
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  className="px-2 py-0.5 bg-[#FFED66] text-black border border-black text-[10px] font-sans font-black uppercase hover:bg-yellow-300 transition-all cursor-pointer"
+                >
+                  {copied ? '✓ Đã Copy Log' : 'Copy All Logs'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLogs([])}
+                  className="px-2 py-0.5 bg-[#FF5E5B] text-white border border-black text-[10px] font-sans font-black uppercase hover:bg-red-600 transition-all cursor-pointer"
+                >
+                  Xóa Log
+                </button>
+              </div>
+            </div>
+
+            {/* Terminal Window Content */}
+            <div ref={terminalRef} className="bg-[#18181b] border-4 border-black p-3 font-mono text-xs text-[#A3E635] h-48 overflow-y-auto space-y-1.5 shadow-[4px_4px_0_0_rgba(0,0,0,1)] select-text">
               {logs.length === 0 ? (
-                <div className="text-gray-500 italic">Nhấn "BẮT ĐẦU CHẠY 1-CLICK" để xem tiến trình thời gian thực...</div>
+                <div className="text-gray-500 italic py-4 text-center">
+                  [Hệ thống sẵn sàng. Nhấn "BẮT ĐẦU CHẠY 1-CLICK" để xem log giám sát thời gian thực...]
+                </div>
               ) : (
                 logs.map((log, idx) => (
-                  <div key={idx} className="leading-tight">
+                  <div key={idx} className="leading-relaxed border-b border-gray-800/60 pb-1 whitespace-pre-wrap font-mono">
                     {log}
                   </div>
                 ))
@@ -998,14 +1003,14 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
                         <h4 className="text-base font-black uppercase text-black flex items-center gap-2">
                           <Sparkles className="w-5 h-5 fill-black" />
                           {hasPlaylist
-                            ? `🎉 1-Click Xuất Trọn Bộ Playlist (${progress.playlistVideos!.length} Tập) Thành Công!`
+                            ? `🎉 1-Click Xuất Trọn Bộ Playlist (${(progress.playlistVideos || []).length} Tập) Thành Công!`
                             : currentVideoUrl 
                             ? '🎉 1-Click Xuất Video Manim MP4 Thành Công!' 
                             : '1-Click Sinh Mã Manim Hoàn Tất!'}
                         </h4>
                         <p className="text-xs font-bold text-black mt-0.5">
                           {hasPlaylist ? (
-                            <>Đã tự động sản xuất <strong>{progress.playlistVideos!.length} tập video MP4</strong> và lưu file mục lục <strong>danh_sach_phat.md</strong>.</>
+                            <>Đã tự động sản xuất <strong>{(progress.playlistVideos || []).length} tập video MP4</strong> và lưu file mục lục <strong>danh_sach_phat.md</strong>.</>
                           ) : currentVideoUrl ? (
                             <>Đã render xong video <strong>{currentVideoPath ? currentVideoPath.split('/').pop() : 'video.mp4'}</strong> và lưu mã nguồn <strong>scene.py</strong>.</>
                           ) : (
@@ -1026,7 +1031,7 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
                           )}
                           {hasPlaylist && (
                             <span className="inline-flex items-center gap-1 text-[11px] font-black bg-[#9333EA] text-white px-2 py-0.5 border border-black shadow-[1px_1px_0_0_rgba(0,0,0,1)]">
-                              <ListVideo className="w-3 h-3" /> {progress.playlistVideos!.length} Tập hoàn thành
+                              <ListVideo className="w-3 h-3" /> {(progress.playlistVideos || []).length} Tập hoàn thành
                             </span>
                           )}
                         </div>
@@ -1095,14 +1100,14 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-xs font-black uppercase text-black flex items-center gap-2">
                           <ListVideo className="w-4 h-4 stroke-[3]" />
-                          Danh Sách Phát Playlist ({progress.playlistVideos!.length} Tập Đã Sản Xuất)
+                          Danh Sách Phát Playlist ({(progress.playlistVideos || []).length} Tập Đã Sản Xuất)
                         </span>
                         <span className="text-[10px] font-black uppercase bg-black text-white px-2 py-0.5 border border-black font-mono">
-                          Đang phát: Tập {selectedPlaylistIndex + 1}/{progress.playlistVideos!.length}
+                          Đang phát: Tập {selectedPlaylistIndex + 1}/{(progress.playlistVideos || []).length}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                        {progress.playlistVideos!.map((item, idx) => (
+                        {(progress.playlistVideos || []).map((item, idx) => (
                           <button
                             key={idx}
                             onClick={() => setSelectedPlaylistIndex(idx)}
@@ -1127,7 +1132,7 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
                         <span className="text-xs font-black uppercase text-black flex items-center gap-2">
                           <Film className="w-4 h-4 stroke-[3]" />
                           {hasPlaylist 
-                            ? `Xem Trực Tiếp [Tập ${selectedPlaylistIndex + 1}/${progress.playlistVideos!.length}] ${currentVideoItem?.title ? `- ${currentVideoItem.title}` : ''}`
+                            ? `Xem Trực Tiếp [Tập ${selectedPlaylistIndex + 1}/${(progress.playlistVideos || []).length}] ${currentVideoItem?.title ? `- ${currentVideoItem.title}` : ''}`
                             : 'Xem Trực Tiếp Video Manim (Live Player)'}
                         </span>
                         <div className="flex items-center gap-2">

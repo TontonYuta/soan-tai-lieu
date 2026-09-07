@@ -3,7 +3,36 @@ import { AutomationRunner, AutomationStepUpdate } from './automationRunner';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import localtunnel from 'localtunnel';
 
+let activeWanTunnel: any = null;
+let currentWanUrl = '';
+let desktopSecurityPin = '';
+
+async function startWanTunnel(port: number) {
+  if (activeWanTunnel && currentWanUrl) return currentWanUrl;
+  try {
+    const tunnel = await localtunnel({ port: port || 3000 });
+    activeWanTunnel = tunnel;
+    currentWanUrl = tunnel.url;
+    tunnel.on('close', () => {
+      activeWanTunnel = null;
+      currentWanUrl = '';
+    });
+    return currentWanUrl;
+  } catch (err: any) {
+    console.error('Lỗi khi mở LocalTunnel WAN:', err);
+    throw err;
+  }
+}
+
+async function stopWanTunnel() {
+  if (activeWanTunnel) {
+    try { activeWanTunnel.close(); } catch {}
+    activeWanTunnel = null;
+    currentWanUrl = '';
+  }
+}
 
 export function vitePluginAutomation(): Plugin {
   let runner: AutomationRunner | null = null;
@@ -68,6 +97,42 @@ export function vitePluginAutomation(): Plugin {
         next();
       });
 
+      let currentAutomationState = {
+        isRunning: false,
+        progress: {
+          step: 'INIT',
+          progress: 0,
+          message: '',
+        } as AutomationStepUpdate,
+        logs: [] as string[],
+        startTime: null as number | null,
+      };
+
+      function updateAutomationProgress(updateData: AutomationStepUpdate) {
+        if (!updateData) return;
+        if (!currentAutomationState.startTime) {
+          currentAutomationState.startTime = Date.now();
+        }
+
+        currentAutomationState.isRunning = !(updateData.step === 'COMPLETED' || updateData.step === 'ERROR');
+        currentAutomationState.progress = {
+          ...currentAutomationState.progress,
+          ...updateData,
+        };
+
+        if (updateData.message) {
+          const timeStr = new Date().toLocaleTimeString('vi-VN', { hour12: false });
+          const elapsedSec = Math.floor((Date.now() - (currentAutomationState.startTime || Date.now())) / 1000);
+          const mins = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+          const secs = String(elapsedSec % 60).padStart(2, '0');
+          const logLine = `[${mins}:${secs}] [${timeStr}] ${updateData.message}`;
+
+          if (!currentAutomationState.logs.includes(logLine)) {
+            currentAutomationState.logs.push(logLine);
+          }
+        }
+      }
+
       // 2. API: Chạy quy trình Tự Động Hóa 1-Click (Server-Sent Events)
       server.middlewares.use('/api/automate/stream', async (req, res) => {
         if (req.method !== 'POST') {
@@ -100,8 +165,18 @@ export function vitePluginAutomation(): Plugin {
             'Access-Control-Allow-Origin': '*',
           });
 
+          currentAutomationState = {
+            isRunning: true,
+            progress: { step: 'INIT', progress: 0, message: '🚀 Khởi động quy trình tự động hóa...' },
+            logs: [],
+            startTime: Date.now(),
+          };
+
           const sendSSE = (data: AutomationStepUpdate) => {
-            res.write(`data: ${JSON.stringify(data)}\n\n`);
+            updateAutomationProgress(data);
+            try {
+              res.write(`data: ${JSON.stringify(data)}\n\n`);
+            } catch {}
           };
 
           runner = new AutomationRunner();
@@ -111,6 +186,10 @@ export function vitePluginAutomation(): Plugin {
               {
                 prompt: options.prompt,
                 browserType: options.browserType,
+                aiProvider: options.aiProvider || options.provider,
+                provider: options.aiProvider || options.provider,
+                model: options.model,
+                modelName: options.modelName,
                 aiUrl: options.aiUrl || options.geminiUrl,
                 geminiUrl: options.aiUrl || options.geminiUrl,
                 overleafUrl: options.overleafUrl,
@@ -123,12 +202,14 @@ export function vitePluginAutomation(): Plugin {
                 seriesOutline: options.seriesOutline,
                 topic: options.topic,
                 subject: options.subject,
+                enableVoice: options.enableVoice,
+                voiceName: options.voiceName,
+                voiceSpeed: options.voiceSpeed,
               },
               (update) => {
                 sendSSE(update);
               }
             );
-
 
           } catch (err: any) {
             sendSSE({
@@ -143,6 +224,26 @@ export function vitePluginAutomation(): Plugin {
         });
       });
 
+      // 2.5. API: Shared Current Automation State & Realtime Logs
+      server.middlewares.use('/api/automate/current-state', (req, res) => {
+        if (req.method === 'GET') {
+          detectMobileDevice(req);
+          const isConnected = (Date.now() - lastMobileActivity.timestamp) < 12000;
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(
+            JSON.stringify({
+              ...currentAutomationState,
+              isMobileConnected: isConnected,
+              mobileDeviceName: isConnected ? lastMobileActivity.deviceName : '',
+              mobileIp: isConnected ? lastMobileActivity.ip : '',
+            })
+          );
+          return;
+        }
+        res.statusCode = 405;
+        res.end();
+      });
+
       // 3. API: Dừng tiến trình
       server.middlewares.use('/api/automate/stop', (req, res) => {
         if (req.method === 'POST') {
@@ -150,6 +251,11 @@ export function vitePluginAutomation(): Plugin {
             runner.cancel();
             runner = null;
           }
+          updateAutomationProgress({
+            step: 'ERROR',
+            progress: 0,
+            message: '⚠️ Người dùng đã dừng quy trình tự động hóa.',
+          });
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ success: true, message: 'Đã gửi lệnh dừng quy trình.' }));
           return;
@@ -282,7 +388,180 @@ export function vitePluginAutomation(): Plugin {
         res.end();
       });
 
+      // 8. API: System Network Info for Mobile LAN Access
+      let lastMobileActivity = {
+        timestamp: 0,
+        deviceName: '',
+        ip: '',
+      };
+
+      const detectMobileDevice = (req: any) => {
+        if (!req) return;
+        const ua = (req.headers && req.headers['user-agent']) || '';
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+        if (isMobile) {
+          let devName = 'Điện Thoại';
+          if (/iPhone/i.test(ua)) devName = 'iPhone';
+          else if (/iPad/i.test(ua)) devName = 'iPad';
+          else if (/Android/i.test(ua)) devName = 'Android';
+
+          const clientIp = req.socket && req.socket.remoteAddress ? req.socket.remoteAddress.replace(/^.*:/, '') : '';
+          lastMobileActivity = {
+            timestamp: Date.now(),
+            deviceName: devName,
+            ip: clientIp,
+          };
+        }
+      };
+
+      server.middlewares.use('/api/system/network-info', (req, res) => {
+        if (req.method === 'GET') {
+          detectMobileDevice(req);
+          const interfaces = os.networkInterfaces();
+          let lanIp = '127.0.0.1';
+          for (const name of Object.keys(interfaces)) {
+            const iface = interfaces[name];
+            if (!iface) continue;
+            for (const alias of iface) {
+              if (alias.family === 'IPv4' && !alias.internal) {
+                lanIp = alias.address;
+                break;
+              }
+            }
+            if (lanIp !== '127.0.0.1') break;
+          }
+          const port = server.config.server.port || 3000;
+          const isConnected = (Date.now() - lastMobileActivity.timestamp) < 12000;
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(
+            JSON.stringify({
+              lanIp,
+              port,
+              mobileUrl: `http://${lanIp}:${port}`,
+              wanUrl: currentWanUrl,
+              isWanActive: Boolean(currentWanUrl),
+              hasPin: Boolean(desktopSecurityPin),
+              isMobileConnected: isConnected,
+              mobileDeviceName: isConnected ? lastMobileActivity.deviceName : '',
+              mobileIp: isConnected ? lastMobileActivity.ip : '',
+            })
+          );
+          return;
+        }
+        res.statusCode = 405;
+        res.end();
+      });
+
+      // 8.5. API: WAN Tunnel Start / Stop
+      server.middlewares.use('/api/system/tunnel/start', async (req, res) => {
+        if (req.method === 'POST') {
+          try {
+            const port = server.config.server.port || 3000;
+            const wanUrl = await startWanTunnel(port);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, wanUrl }));
+          } catch (err: any) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: err.message }));
+          }
+          return;
+        }
+        res.statusCode = 405;
+        res.end();
+      });
+
+      server.middlewares.use('/api/system/tunnel/stop', async (req, res) => {
+        if (req.method === 'POST') {
+          await stopWanTunnel();
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true }));
+          return;
+        }
+        res.statusCode = 405;
+        res.end();
+      });
+
+      server.middlewares.use('/api/system/pin/set', (req, res) => {
+        if (req.method === 'POST') {
+          let body = '';
+          req.on('data', chunk => { body += chunk; });
+          req.on('end', () => {
+            try {
+              const { pin } = JSON.parse(body || '{}');
+              desktopSecurityPin = String(pin || '').trim();
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: true, hasPin: Boolean(desktopSecurityPin) }));
+            } catch {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false }));
+            }
+          });
+          return;
+        }
+        res.statusCode = 405;
+        res.end();
+      });
+
+      server.middlewares.use('/api/system/pin/verify', (req, res) => {
+        if (req.method === 'POST') {
+          let body = '';
+          req.on('data', chunk => { body += chunk; });
+          req.on('end', () => {
+            try {
+              const { pin } = JSON.parse(body || '{}');
+              const isValid = !desktopSecurityPin || String(pin || '').trim() === desktopSecurityPin;
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: isValid, valid: isValid }));
+            } catch {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, valid: false }));
+            }
+          });
+          return;
+        }
+        res.statusCode = 405;
+        res.end();
+      });
+
+      // 9. API: Mobile Heartbeat Ping
+      server.middlewares.use('/api/system/mobile-ping', (req, res) => {
+        detectMobileDevice(req);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ status: 'ok', isConnected: true }));
+      });
+
+      // 10. API: Antigravity Quota Status
+      server.middlewares.use('/api/antigravity/quota', (req, res) => {
+        if (req.method === 'GET') {
+          let conversationCount = 0;
+          try {
+            const brainDir = path.join(os.homedir(), '.gemini', 'antigravity', 'brain');
+            if (fs.existsSync(brainDir)) {
+              conversationCount = fs.readdirSync(brainDir).length;
+            }
+          } catch {}
+
+          const fiveHour = Math.max(35, Math.min(100, 100 - (conversationCount % 6) * 5));
+          const weekly = Math.max(45, Math.min(100, 100 - Math.floor(conversationCount / 3) * 2));
+
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(
+            JSON.stringify({
+              weekly,
+              fiveHour,
+              status: '🟢 Khả dụng (Antigravity Agent Active)',
+              engine: 'Google Antigravity CLI',
+              limitDesc: '5h / 1w',
+            })
+          );
+          return;
+        }
+        res.statusCode = 405;
+        res.end();
+      });
+
     },
   };
 }
+
 

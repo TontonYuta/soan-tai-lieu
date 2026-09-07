@@ -2,7 +2,7 @@ import { chromium, firefox, BrowserContext, Page } from 'playwright-core';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import { spawn, ChildProcess } from 'child_process';
+import { spawn, execSync, ChildProcess } from 'child_process';
 
 export interface AutomationStepUpdate {
   step: 'INIT' | 'CONNECTING_CHROME' | 'OPENING_GEMINI' | 'SENDING_PROMPT' | 'WAITING_GEMINI' | 'EXTRACTING_LATEX' | 'OPENING_OVERLEAF' | 'PASTING_CODE' | 'RECOMPILING' | 'DOWNLOADING_PDF' | 'RENDERING_VIDEO' | 'COMPLETED' | 'ERROR';
@@ -14,6 +14,7 @@ export interface AutomationStepUpdate {
   srtContent?: string;
   contentType?: 'latex' | 'manim' | 'script';
   pdfUrl?: string;
+  pdfPreviewUrl?: string;
   pdfPath?: string;
   videoUrl?: string;
   videoPath?: string;
@@ -32,6 +33,23 @@ export interface AutomationStepUpdate {
     audioUrl?: string;
     audioPath?: string;
   }[];
+}
+
+function generatePdfPreviewImage(pdfPath: string, downloadsDir: string): string | undefined {
+  if (!pdfPath || !fs.existsSync(pdfPath)) return undefined;
+  try {
+    const baseName = path.basename(pdfPath, path.extname(pdfPath));
+    const outputPrefix = path.join(downloadsDir, `preview_${baseName}`);
+    execSync(`pdftoppm -png -r 150 -f 1 -l 1 "${pdfPath}" "${outputPrefix}"`, { stdio: 'ignore' });
+    const files = fs.readdirSync(downloadsDir);
+    const imgFile = files.find(f => f.startsWith(`preview_${baseName}`) && f.endsWith('.png'));
+    if (imgFile) {
+      return `/downloads/${imgFile}`;
+    }
+  } catch (err: any) {
+    console.error('Lỗi khi tạo ảnh preview PDF với pdftoppm:', err.message);
+  }
+  return undefined;
 }
 
 export interface AutomationOptions {
@@ -2795,10 +2813,12 @@ YÊU CẦU CHO TẬP ${ep}:
       let finalLatex = extractedLatex || options.prompt;
       finalLatex = finalLatex.replace(/^```(?:latex|tex)?\s*/i, '').replace(/\s*```$/i, '').trim();
 
-      const texFileName = `de_thi_${Date.now()}.tex`;
+      const timestamp = Date.now();
+      const texFileName = `tailieu_${timestamp}.tex`;
+      const localPdfFileName = `tailieu_${timestamp}.pdf`;
       const texFilePath = path.join(outputDirectory, texFileName);
+      const localPdfPath = path.join(outputDirectory, localPdfFileName);
       fs.writeFileSync(texFilePath, finalLatex, 'utf-8');
-
 
       onProgress({
         step: 'EXTRACTING_LATEX',
@@ -2806,6 +2826,62 @@ YÊU CẦU CHO TẬP ${ep}:
         message: 'Đã trích xuất mã LaTeX thành công!',
         latexCode: finalLatex,
       });
+
+      // Check renderMode: 'local' vs 'overleaf'
+      const renderMode = options.renderMode || 'local';
+
+      if (renderMode === 'local') {
+        onProgress({
+          step: 'RECOMPILING',
+          progress: 85,
+          message: '⚡ Đang biên dịch PDF cục bộ bằng pdflatex (Chế độ Local Fast Render)...',
+        });
+
+        let compiledPdfPath: string | undefined;
+        try {
+          for (let pass = 1; pass <= 2; pass++) {
+            try {
+              execSync(`pdflatex -interaction=nonstopmode -output-directory="${outputDirectory}" "${texFilePath}"`, { cwd: outputDirectory, stdio: 'ignore' });
+            } catch (cErr: any) {
+              console.warn(`Pdflatex local compilation pass ${pass} notice:`, cErr.message);
+            }
+          }
+          if (fs.existsSync(localPdfPath)) {
+            compiledPdfPath = localPdfPath;
+            const auxExtensions = ['.aux', '.log', '.out', '.toc', '.nav', '.snm'];
+            for (const ext of auxExtensions) {
+              const auxFile = path.join(outputDirectory, `tailieu_${timestamp}${ext}`);
+              if (fs.existsSync(auxFile)) {
+                try { fs.unlinkSync(auxFile); } catch {}
+              }
+            }
+          }
+        } catch (cErr: any) {
+          console.warn('Pdflatex local compilation warning:', cErr.message);
+        }
+
+        const pdfPreviewUrl = compiledPdfPath ? generatePdfPreviewImage(compiledPdfPath, outputDirectory) : undefined;
+
+        onProgress({
+          step: 'COMPLETED',
+          progress: 100,
+          message: compiledPdfPath
+            ? `🎉 Local Render hoàn tất! File PDF đã được biên dịch thành công.`
+            : `🎉 Local Render hoàn tất! Đã trích xuất mã LaTeX thành công.`,
+          latexCode: finalLatex,
+          pdfPath: compiledPdfPath || texFilePath,
+          pdfUrl: compiledPdfPath ? `/downloads/${localPdfFileName}` : undefined,
+          pdfPreviewUrl,
+        });
+
+        return {
+          success: true,
+          latexCode: finalLatex,
+          pdfPath: compiledPdfPath || texFilePath,
+          pdfUrl: compiledPdfPath ? `/downloads/${localPdfFileName}` : undefined,
+          pdfPreviewUrl,
+        };
+      }
 
       // 5. Mở Overleaf & Dán Code
       onProgress({
@@ -2992,6 +3068,18 @@ YÊU CẦU CHO TẬP ${ep}:
         }
       }
 
+      if (!pdfSavedPath && fs.existsSync(texFilePath)) {
+        try {
+          execSync(`pdftoppm -v`, { stdio: 'ignore' });
+          const pdflatexCmd = `pdflatex -interaction=nonstopmode -output-directory="${downloadsDir}" "${texFilePath}"`;
+          execSync(pdflatexCmd, { cwd: downloadsDir, stdio: 'ignore' });
+          if (fs.existsSync(targetPdfPath)) {
+            pdfSavedPath = targetPdfPath;
+          }
+        } catch (cErr) {}
+      }
+
+      const pdfPreviewUrl = pdfSavedPath ? generatePdfPreviewImage(pdfSavedPath, downloadsDir) : undefined;
 
       // 8. Hoàn tất
       onProgress({
@@ -3003,6 +3091,7 @@ YÊU CẦU CHO TẬP ${ep}:
         latexCode: finalLatex,
         pdfPath: pdfSavedPath || texFilePath,
         pdfUrl: pdfSavedPath ? `/downloads/${pdfFileName}` : undefined,
+        pdfPreviewUrl,
       });
 
       return {
@@ -3010,6 +3099,7 @@ YÊU CẦU CHO TẬP ${ep}:
         latexCode: finalLatex,
         pdfPath: pdfSavedPath || texFilePath,
         pdfUrl: pdfSavedPath ? `/downloads/${pdfFileName}` : undefined,
+        pdfPreviewUrl,
       };
 
     } catch (error: any) {

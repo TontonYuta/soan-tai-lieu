@@ -37,8 +37,124 @@ const MIME_TYPES = {
   '.md': 'text/markdown; charset=utf-8',
   '.woff': 'font/woff',
   '.woff2': 'font/woff2',
-  '.ttf': 'font/ttf',
 };
+
+let localtunnel;
+try {
+  localtunnel = require('localtunnel');
+} catch (e) {
+  console.warn('localtunnel package not found');
+}
+
+let activeWanTunnel = null;
+let currentWanUrl = '';
+let desktopSecurityPin = '';
+
+async function startWanTunnel(port) {
+  if (activeWanTunnel && currentWanUrl) return currentWanUrl;
+  if (!localtunnel) throw new Error('Thư viện localtunnel chưa được cài đặt.');
+  try {
+    const tunnel = await localtunnel({ port: port || 3000 });
+    activeWanTunnel = tunnel;
+    currentWanUrl = tunnel.url;
+    tunnel.on('close', () => {
+      activeWanTunnel = null;
+      currentWanUrl = '';
+    });
+    return currentWanUrl;
+  } catch (err) {
+    console.error('Lỗi khi mở LocalTunnel WAN:', err);
+    throw err;
+  }
+}
+
+async function stopWanTunnel() {
+  if (activeWanTunnel) {
+    try { activeWanTunnel.close(); } catch {}
+    activeWanTunnel = null;
+    currentWanUrl = '';
+  }
+}
+
+function generatePdfPreviewImage(pdfPath, downloadsDir) {
+  if (!pdfPath || !fs.existsSync(pdfPath)) return undefined;
+  try {
+    const baseName = path.basename(pdfPath, path.extname(pdfPath));
+    const outputPrefix = path.join(downloadsDir, `preview_${baseName}`);
+    execSync(`pdftoppm -png -r 150 -f 1 -l 1 "${pdfPath}" "${outputPrefix}"`, { stdio: 'ignore' });
+    const files = fs.readdirSync(downloadsDir);
+    const imgFile = files.find(f => f.startsWith(`preview_${baseName}`) && f.endsWith('.png'));
+    if (imgFile) {
+      return `/downloads/${imgFile}`;
+    }
+  } catch (err) {
+    console.error('Lỗi khi tạo ảnh preview PDF với pdftoppm:', err.message);
+  }
+  return undefined;
+}
+
+let activeServerPort = 0;
+
+let lastMobileActivity = {
+  timestamp: 0,
+  deviceName: '',
+  ip: ''
+};
+
+function detectMobileDevice(req) {
+  if (!req) return;
+  const ua = (req.headers && req.headers['user-agent']) || '';
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+  if (isMobile) {
+    let devName = 'Điện Thoại';
+    if (/iPhone/i.test(ua)) devName = 'iPhone';
+    else if (/iPad/i.test(ua)) devName = 'iPad';
+    else if (/Android/i.test(ua)) devName = 'Android';
+    
+    const clientIp = req.socket && req.socket.remoteAddress ? req.socket.remoteAddress.replace(/^.*:/, '') : '';
+    lastMobileActivity = {
+      timestamp: Date.now(),
+      deviceName: devName,
+      ip: clientIp
+    };
+  }
+}
+
+let currentAutomationState = {
+  isRunning: false,
+  progress: {
+    step: 'INIT',
+    progress: 0,
+    message: '',
+  },
+  logs: [],
+  startTime: null,
+};
+
+function updateAutomationProgress(updateData) {
+  if (!updateData) return;
+  if (!currentAutomationState.startTime) {
+    currentAutomationState.startTime = Date.now();
+  }
+  
+  currentAutomationState.isRunning = !(updateData.step === 'COMPLETED' || updateData.step === 'ERROR');
+  currentAutomationState.progress = {
+    ...currentAutomationState.progress,
+    ...updateData
+  };
+
+  if (updateData.message) {
+    const timeStr = new Date().toLocaleTimeString('vi-VN', { hour12: false });
+    const elapsedSec = Math.floor((Date.now() - currentAutomationState.startTime) / 1000);
+    const mins = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+    const secs = String(elapsedSec % 60).padStart(2, '0');
+    const logLine = `[${mins}:${secs}] [${timeStr}] ${updateData.message}`;
+    
+    if (!currentAutomationState.logs.includes(logLine)) {
+      currentAutomationState.logs.push(logLine);
+    }
+  }
+}
 
 function findNewestMp4(dir) {
   if (!fs.existsSync(dir)) return null;
@@ -75,41 +191,34 @@ function extractAndSanitizeLatex(text) {
   if (!text) return '';
   let cleaned = text.trim();
 
+  // Strip markdown code fences if present
+  cleaned = cleaned.replace(/^```(?:latex|tex)?\s*/i, '').replace(/\s*```\s*$/, '');
+
   const docClassIdx = cleaned.indexOf('\\documentclass');
   if (docClassIdx !== -1) {
     cleaned = cleaned.slice(docClassIdx);
   } else {
-    cleaned = cleaned.replace(/^```(?:latex|tex)?\s*/i, '');
-  }
+    // Tự động bọc snippet bài tập trong preamble LaTeX hoàn chỉnh
+    cleaned = `\\documentclass[12pt,a4paper]{article}
+\\usepackage[utf8]{vietnam}
+\\usepackage{amsmath,amssymb,amsfonts}
+\\usepackage{tcolorbox}
+\\usepackage{geometry}
+\\geometry{a4paper, margin=2cm}
+\\begin{document}
 
-  cleaned = cleaned.replace(/\s*```\s*$/, '');
+${cleaned}
+
+\\end{document}`;
+  }
 
   const endDocIdx = cleaned.indexOf('\\end{document}');
   if (endDocIdx !== -1) {
     cleaned = cleaned.slice(0, endDocIdx + '\\end{document}'.length);
-  } else {
-    const openEnvs = [];
-    const envRegex = /\\(?:begin|end)\{([a-zA-Z0-9_*]+)\}/g;
-    let match;
-    while ((match = envRegex.exec(cleaned)) !== null) {
-      if (match[0].startsWith('\\begin')) {
-        openEnvs.push(match[1]);
-      } else if (match[0].startsWith('\\end') && openEnvs.length > 0) {
-        const last = openEnvs[openEnvs.length - 1];
-        if (last === match[1]) openEnvs.pop();
-      }
-    }
-
-    let closingCode = '\n';
-    while (openEnvs.length > 0) {
-      const env = openEnvs.pop();
-      closingCode += `\\end{${env}}\n`;
-    }
-    if (!cleaned.includes('\\end{document}')) {
-      closingCode += '\\end{document}\n';
-    }
-    cleaned += closingCode;
   }
+
+  // Tự động sửa lỗi \\addto\\captionsvietnamese khi dùng package vietnam thay vì babel
+  cleaned = cleaned.replace(/\\addto\s*\\captionsvietnamese\s*\{/g, '{');
 
   return cleaned;
 }
@@ -186,6 +295,33 @@ function getVenvPaths() {
   return { venvDir, pythonBin, pipBin, manimBin, edgeTtsBin };
 }
 
+function getPdflatexPath() {
+  try {
+    const whichCmd = process.platform === 'win32' ? 'where pdflatex' : 'which pdflatex';
+    const stdout = execSync(whichCmd, { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'] });
+    const firstPath = stdout.trim().split(/\r?\n/)[0]?.trim();
+    if (firstPath && fs.existsSync(firstPath)) {
+      return firstPath;
+    }
+  } catch (e) {}
+
+  const candidates = process.platform === 'win32'
+    ? [
+        'C:\\miktex\\miktex\\bin\\x64\\pdflatex.exe',
+        'C:\\texlive\\2024\\bin\\windows\\pdflatex.exe',
+        'C:\\Program Files\\MiKTeX\\miktex\\bin\\x64\\pdflatex.exe'
+      ]
+    : [
+        '/usr/bin/pdflatex',
+        '/usr/local/bin/pdflatex',
+        '/Library/TeX/texbin/pdflatex'
+      ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
+  }
+  return 'pdflatex';
+}
+
 function getAgyExecutable() {
   const possiblePaths = [
     '/home/tontonyuta/.local/bin/agy',
@@ -216,7 +352,18 @@ async function runAgyPrompt(promptText, cwdDir, modelName, onProgress, timeoutMs
   ];
 
   if (modelName && typeof modelName === 'string' && modelName !== 'antigravity-local') {
-    args.push('--model', modelName);
+    let cleanModel = modelName.trim();
+    if (cleanModel.includes('(')) {
+      cleanModel = cleanModel.split('(')[0].trim();
+    }
+    const lower = cleanModel.toLowerCase();
+    if (lower.includes('3.8') || lower.includes('3.8-flash')) cleanModel = 'gemini-3.8-flash-high';
+    else if (lower.includes('3.1') || lower.includes('3.1-pro')) cleanModel = 'gemini-3.1-pro-high';
+    else if (lower.includes('sonnet') || lower.includes('claude')) cleanModel = 'claude-sonnet-4-6';
+    else if (lower.includes('120b') || lower.includes('gpt')) cleanModel = 'gpt-oss-120b-medium';
+    else if (lower.includes('3.7') || lower.includes('3.7-flash')) cleanModel = 'gemini-3.7-flash-high';
+
+    args.push('--model', cleanModel);
   }
 
   const agyProcess = spawn(agyExec, args, {
@@ -1169,6 +1316,8 @@ function startInternalServer(callback) {
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
+    detectMobileDevice(req);
+
     if (req.method === 'OPTIONS') {
       res.statusCode = 204;
       res.end();
@@ -1220,8 +1369,35 @@ function startInternalServer(callback) {
         try { activeRunner.cancel(); } catch {}
         activeRunner = null;
       }
+      updateAutomationProgress({
+        step: 'ERROR',
+        progress: 0,
+        message: '⚠️ Người dùng đã gửi lệnh dừng quy trình tự động hóa.'
+      });
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ success: true }));
+      return;
+    }
+
+    // 2.2. API: Mobile Heartbeat Ping
+    if (pathname === '/api/system/mobile-ping' && req.method === 'GET') {
+      detectMobileDevice(req);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ status: 'ok', isConnected: true }));
+      return;
+    }
+
+    // 2.5. API: Shared Current Automation State & Realtime Logs
+    if (pathname === '/api/automate/current-state' && req.method === 'GET') {
+      detectMobileDevice(req);
+      const isConnected = (Date.now() - lastMobileActivity.timestamp) < 10000;
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        ...currentAutomationState,
+        isMobileConnected: isConnected,
+        mobileDeviceName: isConnected ? lastMobileActivity.deviceName : '',
+        mobileIp: isConnected ? lastMobileActivity.ip : ''
+      }));
       return;
     }
 
@@ -1483,13 +1659,23 @@ function startInternalServer(callback) {
           'Connection': 'keep-alive',
         });
 
+        currentAutomationState = {
+          isRunning: true,
+          progress: { step: 'INIT', progress: 0, message: '🚀 Khởi động quy trình tự động hóa...' },
+          logs: [],
+          startTime: Date.now()
+        };
+
         const sendSSE = (data) => {
-          res.write(`data: ${JSON.stringify(data)}\n\n`);
+          updateAutomationProgress(data);
+          try {
+            res.write(`data: ${JSON.stringify(data)}\n\n`);
+          } catch {}
         };
 
         try {
-          const rawProvider = (options.aiProvider || options.provider || (options.model && options.model.startsWith('chatgpt') ? 'chatgpt' : 'antigravity')).toLowerCase();
-          const providerKey = (rawProvider === 'gemini' || rawProvider === 'antigravity') ? 'antigravity' : rawProvider;
+          const rawProvider = (options.aiProvider || options.provider || (options.model && options.model.startsWith('chatgpt') ? 'chatgpt' : 'gemini')).toLowerCase();
+          const providerKey = rawProvider;
 
           if (providerKey === 'antigravity') {
             activeRunner = {
@@ -1857,6 +2043,8 @@ YÊU CẦU BẮT BUỘC ĐỂ SỬA LỖI:
                 }
               }
 
+              const pdfPreviewUrl = compiledPdfPath ? generatePdfPreviewImage(compiledPdfPath, downloadsDir) : undefined;
+
               sendSSE({
                 step: 'COMPLETED',
                 progress: 100,
@@ -1865,6 +2053,7 @@ YÊU CẦU BẮT BUỘC ĐỂ SỬA LỖI:
                   : '🎉 Antigravity Agent đã hoàn tất tạo mã LaTeX (Chưa phát hiện pdflatex để xuất PDF tự động)!',
                 latexCode: finalLatex,
                 pdfUrl: compiledPdfPath ? `/downloads/${pdfFileName}` : undefined,
+                pdfPreviewUrl,
                 pdfPath: compiledPdfPath || texPath,
                 filePath: compiledPdfPath || texPath,
                 contentType: 'latex'
@@ -3418,8 +3607,12 @@ YÊU CẦU CHO TẬP ${ep}:
 
           let finalLatex = extractAndSanitizeLatex(extractedLatex || options.prompt);
 
-          const texFileName = `de_thi_${Date.now()}.tex`;
-          fs.writeFileSync(path.join(downloadsDir, texFileName), finalLatex, 'utf-8');
+          const timestamp = Date.now();
+          const texFileName = `tailieu_${timestamp}.tex`;
+          const localPdfFileName = `tailieu_${timestamp}.pdf`;
+          const texPath = path.join(downloadsDir, texFileName);
+          const localPdfPath = path.join(downloadsDir, localPdfFileName);
+          fs.writeFileSync(texPath, finalLatex, 'utf-8');
 
           sendSSE({
             step: 'EXTRACTING_LATEX',
@@ -3428,6 +3621,59 @@ YÊU CẦU CHO TẬP ${ep}:
             latexCode: finalLatex,
           });
 
+
+          // Check renderMode: 'local' vs 'overleaf'
+          const renderMode = options.renderMode || 'local';
+
+          if (renderMode === 'local') {
+            sendSSE({
+              step: 'RECOMPILING',
+              progress: 85,
+              message: '⚡ Đang biên dịch PDF cục bộ bằng pdflatex (Chế độ Local Fast Render)...',
+            });
+
+            let compiledPdfPath = null;
+
+            const pdflatexBin = getPdflatexPath();
+            if (pdflatexBin) {
+              for (let pass = 1; pass <= 2; pass++) {
+                try {
+                  execSync(`"${pdflatexBin}" -interaction=nonstopmode -output-directory="${downloadsDir}" "${texPath}"`, { cwd: downloadsDir, stdio: 'ignore' });
+                } catch (cErr) {
+                  console.warn(`Pdflatex local compilation pass ${pass} notice:`, cErr.message);
+                }
+              }
+              if (fs.existsSync(localPdfPath)) {
+                compiledPdfPath = localPdfPath;
+                const auxExtensions = ['.aux', '.log', '.out', '.toc', '.nav', '.snm'];
+                for (const ext of auxExtensions) {
+                  const auxFile = path.join(downloadsDir, `tailieu_${timestamp}${ext}`);
+                  if (fs.existsSync(auxFile)) {
+                    try { fs.unlinkSync(auxFile); } catch {}
+                  }
+                }
+              }
+            }
+
+            const pdfPreviewUrl = compiledPdfPath ? generatePdfPreviewImage(compiledPdfPath, downloadsDir) : undefined;
+
+            sendSSE({
+              step: 'COMPLETED',
+              progress: 100,
+              message: compiledPdfPath
+                ? '🎉 Local Render hoàn tất! File PDF đã được biên dịch thành công siêu tốc.'
+                : '🎉 Local Render hoàn tất! Đã trích xuất mã LaTeX thành công.',
+              latexCode: finalLatex,
+              pdfUrl: compiledPdfPath ? `/downloads/${localPdfFileName}` : undefined,
+              pdfPreviewUrl,
+              pdfPath: compiledPdfPath || texPath,
+              filePath: compiledPdfPath || texPath,
+              contentType: 'latex'
+            });
+            activeRunner = null;
+            res.end();
+            return;
+          }
 
           // Step 5: Overleaf
           sendSSE({
@@ -3609,6 +3855,22 @@ YÊU CẦU CHO TẬP ${ep}:
             }
           }
 
+          if (!pdfSavedPath && fs.existsSync(path.join(downloadsDir, texFileName))) {
+            const texPath = path.join(downloadsDir, texFileName);
+            const pdflatexBin = getPdflatexPath();
+            if (pdflatexBin) {
+              try {
+                execSync(`"${pdflatexBin}" -interaction=nonstopmode -output-directory="${downloadsDir}" "${texPath}"`, { cwd: downloadsDir, stdio: 'ignore' });
+                if (fs.existsSync(pdfPath)) {
+                  pdfSavedPath = pdfPath;
+                }
+              } catch (cErr) {
+                console.warn('Pdflatex fallback compilation warning:', cErr.message);
+              }
+            }
+          }
+
+          const pdfPreviewUrl = pdfSavedPath ? generatePdfPreviewImage(pdfSavedPath, downloadsDir) : undefined;
 
           sendSSE({
             step: 'COMPLETED',
@@ -3618,6 +3880,7 @@ YÊU CẦU CHO TẬP ${ep}:
               : '🎉 Hoàn tất! Mã LaTeX đã được đồng bộ sang Overleaf.',
             latexCode: finalLatex,
             pdfUrl: pdfSavedPath ? `/downloads/${pdfFileName}` : undefined,
+            pdfPreviewUrl,
             pdfPath: pdfSavedPath || path.join(downloadsDir, texFileName),
           });
 
@@ -3677,6 +3940,89 @@ YÊU CẦU CHO TẬP ${ep}:
       }
     }
 
+    // 4.4. WAN Tunnel Start/Stop APIs
+    if (pathname === '/api/system/tunnel/start' && req.method === 'POST') {
+      try {
+        const wanUrl = await startWanTunnel(activeServerPort || 3000);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, wanUrl }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+      return;
+    }
+
+    if (pathname === '/api/system/tunnel/stop' && req.method === 'POST') {
+      await stopWanTunnel();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true }));
+      return;
+    }
+
+    if (pathname === '/api/system/pin/set' && req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => { body += chunk; });
+      req.on('end', () => {
+        try {
+          const { pin } = JSON.parse(body || '{}');
+          desktopSecurityPin = String(pin || '').trim();
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, hasPin: Boolean(desktopSecurityPin) }));
+        } catch {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false }));
+        }
+      });
+      return;
+    }
+
+    if (pathname === '/api/system/pin/verify' && req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => { body += chunk; });
+      req.on('end', () => {
+        try {
+          const { pin } = JSON.parse(body || '{}');
+          const isValid = !desktopSecurityPin || String(pin || '').trim() === desktopSecurityPin;
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: isValid, valid: isValid }));
+        } catch {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, valid: false }));
+        }
+      });
+      return;
+    }
+
+    // 4.5. System Network Info for Mobile LAN Access & WAN Tunnel
+    if (pathname === '/api/system/network-info' && req.method === 'GET') {
+      detectMobileDevice(req);
+      const interfaces = os.networkInterfaces();
+      let lanIp = '127.0.0.1';
+      for (const name of Object.keys(interfaces)) {
+        for (const iface of interfaces[name]) {
+          if (iface.family === 'IPv4' && !iface.internal) {
+            lanIp = iface.address;
+            break;
+          }
+        }
+      }
+      const isConnected = (Date.now() - lastMobileActivity.timestamp) < 10000;
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        lanIp,
+        port: activeServerPort,
+        mobileUrl: `http://${lanIp}:${activeServerPort}`,
+        wanUrl: currentWanUrl,
+        isWanActive: Boolean(currentWanUrl),
+        hasPin: Boolean(desktopSecurityPin),
+        isMobileConnected: isConnected,
+        mobileDeviceName: isConnected ? lastMobileActivity.deviceName : '',
+        mobileIp: isConnected ? lastMobileActivity.ip : ''
+      }));
+      return;
+    }
+
     // 5. Serve Dist Frontend Files
     if (pathname.startsWith('/api/') || pathname.startsWith('/downloads/')) {
       res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -3702,8 +4048,9 @@ YÊU CẦU CHO TẬP ${ep}:
     }
   });
 
-  server.listen(0, '127.0.0.1', () => {
+  server.listen(0, '0.0.0.0', () => {
     const port = server.address().port;
+    activeServerPort = port;
     callback(port);
   });
 }

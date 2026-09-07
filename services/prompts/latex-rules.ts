@@ -438,7 +438,7 @@ export const PRE_ALGEBRA_TEMPLATE = `
 \\titleformat{\\section}{\\Large\\bfseries\\color{myblue}}{Bài \\thesection.}{0.5em}{}
 \\titleformat{\\subsection}{\\large\\bfseries\\color{myblue}}{}{0pt}{}
 \\titleformat{\\subsubsection}{\\normalsize\\bfseries\\color{myblue}}{}{0pt}{}
-\\addto\\captionsvietnamese{\\renewcommand{\\contentsname}{Mục lục}}
+\\renewcommand{\\contentsname}{Mục lục}
 
 \\newcommand{\\dongke}[1][4]{%
 \\par\\vspace{2mm}\\textit{Bài làm.}\\par
