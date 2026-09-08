@@ -373,7 +373,7 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
     if (attachedPdfPath) {
       addLog(`Tài liệu RAG đính kèm: ${attachedPdfName || 'document.pdf'}`);
     }
-    if (enableVoice !== false) {
+    if (enableVoice === true) {
       const voiceLabel = (voiceName && voiceName.includes('NamMinh')) ? 'Nam Minh (Nam)' : 'Hoài My (Nữ)';
       addLog(`🎙️ Lồng tiếng AI: Đã kích hoạt thuyết minh giọng đọc [${voiceLabel}].`);
     }
@@ -397,7 +397,7 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
         subject: subject,
         model: effectiveModel,
         modelName: effectiveModelName,
-        enableVoice: enableVoice !== undefined ? enableVoice : true,
+        enableVoice: enableVoice !== undefined ? enableVoice : (typeof window !== 'undefined' ? localStorage.getItem('yuta_manim_enable_voice') === 'true' : false),
         voiceName: voiceName || 'vi-VN-HoaiMyNeural',
         voiceSpeed: voiceSpeed || '+0%',
       },

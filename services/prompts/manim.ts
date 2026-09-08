@@ -151,7 +151,7 @@ VOICEOVER_SCRIPT = """
 // =========================================================================
 export const generateManimCodePrompt = (config: VideoConfig): string => {
   const isVertical = config.format === 'vertical';
-  const qualityFlag = config.renderQuality === '1080p' ? '-pqh' : config.renderQuality === '4k' ? '-pqk' : '-pql';
+  const qualityFlag = config.renderQuality === '1080p' ? '-qh' : config.renderQuality === '4k' ? '-qk' : '-ql';
   const targetDurationStr = config.duration || '3 - 5 phút';
   const chosenFont = getFontDirective(config.fontStyle);
   const simDesc = getSimulationModeDescription(config.simulationMode);
@@ -188,7 +188,7 @@ YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ BỘ NGUYÊN TẮC VISUAL ENGI
 // =========================================================================
 export const generateVideoManimPrompt = (config: VideoConfig): string => {
   const isVertical = config.format === 'vertical';
-  const qualityFlag = config.renderQuality === '1080p' ? '-pqh' : config.renderQuality === '4k' ? '-pqk' : '-pql';
+  const qualityFlag = config.renderQuality === '1080p' ? '-qh' : config.renderQuality === '4k' ? '-qk' : '-ql';
   const targetDurationStr = config.duration || '3 - 5 phút';
   const chosenFont = getFontDirective(config.fontStyle);
   const simDesc = getSimulationModeDescription(config.simulationMode);
@@ -521,7 +521,7 @@ export const generateManimRevisionPrompt = (
   const subjectStr = config?.subject ? `Môn học: "${config.subject}"` : 'Môn học: Toán học / Khoa học';
   const topicStr = config?.topic ? `Chủ đề: "${config.topic}"` : '';
   const isVertical = config?.format === 'vertical';
-  const qualityFlag = config?.renderQuality === '1080p' ? '-pqh' : config?.renderQuality === '4k' ? '-pqk' : '-pql';
+  const qualityFlag = config?.renderQuality === '1080p' ? '-qh' : config?.renderQuality === '4k' ? '-qk' : '-ql';
 
   return `Đóng vai Chuyên gia Diễn hoạt Manim CE & Lập trình Python Sư phạm.
 Nhiệm vụ của bạn là đọc mã nguồn Python Manim (\`scene.py\`) đã được tạo trước đó cùng danh sách CÁC LỖI VÀ YÊU CẦU ĐIỀU CHỈNH từ người dùng, sau đó VIẾT LẠI MÃ PYTHON HOÀN CHỈNH TỪ ĐẦU để sửa triệt để các lỗi và render lại video.

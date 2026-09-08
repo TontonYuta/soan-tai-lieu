@@ -1796,6 +1796,12 @@ function startInternalServer(callback) {
           try {
             res.write(`data: ${JSON.stringify(data)}\n\n`);
           } catch {}
+          if (data.step === 'COMPLETED' || data.step === 'ERROR') {
+            activeRunner = null;
+            setTimeout(() => {
+              try { res.end(); } catch {}
+            }, 600);
+          }
         };
 
         try {
@@ -1883,7 +1889,7 @@ function startInternalServer(callback) {
 
                   const isVertical = options.prompt.includes('9:16') || options.prompt.includes('DỌC');
                   const targetDuration = options.duration || '3 - 5 phút';
-                  const qualityFlag = options.renderQuality === '4k' ? '-pqk' : options.renderQuality === '480p' ? '-pql' : '-pqh';
+                  const qualityFlag = options.renderQuality === '4k' ? '-qk' : options.renderQuality === '480p' ? '-ql' : '-qh';
                   const codeFollowupPrompt = `Dựa trên kịch bản sư phạm và nội dung bài học toán sau:
 Topic: ${options.topic || options.subject || 'Toán học'}
 Thời lượng mục tiêu: ${targetDuration}
@@ -1945,8 +1951,8 @@ YÊU CẦU BẮT BUỘC KHÔNG ĐƯỢC BỎ QUA:
                 fs.writeFileSync(sceneFilePath, finalPython, 'utf-8');
 
                 // Script runner files
-                const renderSh = `#!/bin/bash\nmanim -pqh scene.py MainScene\nxdg-open media/videos/scene/1080p60/MainScene.mp4 2>/dev/null || open media/videos/scene/1080p60/MainScene.mp4 2>/dev/null\n`;
-                const renderBat = `@echo off\nchcp 65001 >nul\nmanim -pqh scene.py MainScene\nstart media\\videos\\scene\\1080p60\\MainScene.mp4\n`;
+                const renderSh = `#!/bin/bash\nmanim -qh scene.py MainScene\nxdg-open media/videos/scene/1080p60/MainScene.mp4 2>/dev/null || open media/videos/scene/1080p60/MainScene.mp4 2>/dev/null || true\n`;
+                const renderBat = `@echo off\nchcp 65001 >nul\nmanim -qh scene.py MainScene\nstart media\\videos\\scene\\1080p60\\MainScene.mp4\n`;
                 fs.writeFileSync(path.join(downloadsDir, 'render_manim.sh'), renderSh, 'utf-8');
                 fs.writeFileSync(path.join(downloadsDir, 'render_manim.bat'), renderBat, 'utf-8');
 
@@ -2000,16 +2006,32 @@ YÊU CẦU BẮT BUỘC KHÔNG ĐƯỢC BỎ QUA:
                     contentType: 'manim',
                   });
 
-                  const qualityFlag = options.renderQuality === '4k' ? '-pqk' : options.renderQuality === '480p' ? '-pql' : '-pqh';
+                  const qualityFlag = options.renderQuality === '4k' ? '-qk' : options.renderQuality === '480p' ? '-ql' : '-qh';
                   const mediaDir = path.join(downloadsDir, 'media');
 
                   const renderResult = await new Promise((resRender) => {
                     const proc = spawn(manimBin, [qualityFlag, '--media_dir', mediaDir, sceneFilePath, sceneClass], { cwd: downloadsDir });
+                    if (activeRunner) activeRunner.childProc = proc;
                     let stderr = '';
                     let stdout = '';
                     proc.stdout.on('data', d => { stdout += d.toString(); });
-                    proc.stderr.on('data', d => { stderr += d.toString(); });
+                    proc.stderr.on('data', d => {
+                      const s = d.toString();
+                      stderr += s;
+                      const match = s.match(/(\d+)%/);
+                      if (match) {
+                        const pct = Math.min(96, 75 + Math.floor(parseInt(match[1], 10) * 0.2));
+                        sendSSE({
+                          step: 'RENDERING_VIDEO',
+                          progress: pct,
+                          message: `Đang render video Manim: ${match[1]}%...`,
+                          manimCode: currentPython,
+                          contentType: 'manim',
+                        });
+                      }
+                    });
                     proc.on('close', code => {
+                      if (activeRunner) activeRunner.childProc = null;
                       if (code === 0) {
                         const newest = findNewestMp4(mediaDir);
                         if (newest) return resRender({ success: true, mp4Path: newest });
@@ -2017,7 +2039,10 @@ YÊU CẦU BẮT BUỘC KHÔNG ĐƯỢC BỎ QUA:
                       const parsed = parseManimError(stderr, stdout, downloadsDir);
                       resRender({ success: false, error: parsed.summary, detailsForAI: parsed.detailsForAI });
                     });
-                    proc.on('error', err => resRender({ success: false, error: err.message, detailsForAI: err.message }));
+                    proc.on('error', err => {
+                      if (activeRunner) activeRunner.childProc = null;
+                      resRender({ success: false, error: err.message, detailsForAI: err.message });
+                    });
                   });
 
                   if (renderResult.success && renderResult.mp4Path) {
@@ -2075,7 +2100,7 @@ YÊU CẦU BẮT BUỘC ĐỂ SỬA LỖI:
                 // TỔNG HỢP THUYẾT MINH GIỌNG ĐỌC AI
                 let audioPath = null;
                 let finalVideoWithAudio = finalMp4Path;
-                if (renderSuccess && finalMp4Path && options.enableVoice !== false) {
+                if (renderSuccess && finalMp4Path && options.enableVoice === true) {
                   try {
                     const ttsRes = await generateVoiceoverAndMux({
                       pythonCode: currentPython,
@@ -3208,7 +3233,7 @@ YÊU CẦU BẮT BUỘC ĐỂ SỬA LỖI:
               });
 
               const isVertical = options.prompt.includes('9:16') || options.prompt.includes('DỌC');
-              const qualityFlag = '-pqh';
+              const qualityFlag = '-qh';
               const codeFollowupPrompt = `Tuyệt vời! Dựa trên kịch bản sư phạm và khối lời thoại VOICEOVER_SCRIPT vừa thống nhất ở trên, hãy viết TOÀN BỘ file mã nguồn Manim Python (\`scene.py\`) hoàn chỉnh 100% để render video bài giảng này.
 
 YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ 15 NGUYÊN TẮC VÀNG VISUAL ENGINEERING):
@@ -3501,7 +3526,7 @@ YÊU CẦU BẮT BUỘC ĐỂ SỬA LỖI:
                   let audioPath = null;
                   let audioUrl = null;
 
-                  if (options.enableVoice !== false) {
+                  if (options.enableVoice === true) {
                     sendSSE({
                       step: 'RENDERING_VIDEO',
                       progress: 96,
@@ -3627,7 +3652,7 @@ YÊU CẦU CHO TẬP ${ep}:
                     let epAudioPath = null;
                     let epAudioUrl = null;
 
-                    if (options.enableVoice !== false) {
+                    if (options.enableVoice === true) {
                       sendSSE({
                         step: 'RENDERING_VIDEO',
                         progress: Math.floor((ep / seriesCount) * 94),
@@ -3684,6 +3709,14 @@ YÊU CẦU CHO TẬP ${ep}:
                       currentEpisode: ep,
                       contentType: 'manim'
                     });
+                  } else {
+                    const epErr = healResult.error ? healResult.error.slice(0, 100) : 'Lỗi không xác định';
+                    sendSSE({
+                      step: 'RENDERING_VIDEO',
+                      progress: Math.floor((ep / seriesCount) * 94),
+                      message: `⚠️ [${epLabel}] Render chưa hoàn tất: ${epErr}... Bỏ qua tập này.`,
+                      contentType: 'manim',
+                    });
                   }
                 }
 
@@ -3695,7 +3728,7 @@ YÊU CẦU CHO TẬP ${ep}:
                 sendSSE({
                   step: 'COMPLETED',
                   progress: 100,
-                  message: `🎉 Hoàn tất 1-Click! Đã sản xuất trọn bộ playlist ${playlistVideos.length} tập video MP4${options.enableVoice !== false ? ' kèm thuyết minh giọng đọc AI' : ''}!`,
+                  message: `🎉 Hoàn tất 1-Click! Đã sản xuất trọn bộ playlist ${playlistVideos.length} tập video MP4${options.enableVoice === true ? ' kèm thuyết minh giọng đọc AI' : ''}!`,
                   videoUrl: playlistVideos[0] ? playlistVideos[0].videoUrl : undefined,
                   videoPath: playlistVideos[0] ? playlistVideos[0].videoPath : undefined,
                   audioUrl: playlistVideos[0] ? playlistVideos[0].audioUrl : undefined,

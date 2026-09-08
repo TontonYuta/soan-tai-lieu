@@ -396,9 +396,9 @@ const VideoForm: React.FC<VideoFormProps> = ({
                     value={config.renderQuality || '1080p'}
                     onChange={e => handleChange('renderQuality', e.target.value)}
                   >
-                    <option value="1080p">Full HD 1080p (-pqh)</option>
-                    <option value="480p">Xem trước nhanh 480p (-pql)</option>
-                    <option value="4k">Chất lượng siêu nét 4K (-pqk)</option>
+                    <option value="1080p">Full HD 1080p (-qh)</option>
+                    <option value="480p">Xem trước nhanh 480p (-ql)</option>
+                    <option value="4k">Chất lượng siêu nét 4K (-qk)</option>
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black pointer-events-none stroke-[3]" />
                 </div>
@@ -473,7 +473,7 @@ const VideoForm: React.FC<VideoFormProps> = ({
                 <label className="flex items-center gap-2 cursor-pointer select-none">
                   <input
                     type="checkbox"
-                    checked={config.enableVoice !== false}
+                    checked={config.enableVoice === true}
                     onChange={(e) => handleChange('enableVoice', e.target.checked)}
                     className="w-4 h-4 accent-black rounded-none cursor-pointer"
                   />
@@ -482,12 +482,12 @@ const VideoForm: React.FC<VideoFormProps> = ({
                     🎙️ Lồng Tiếng AI (Tự động đọc lời bình & đồng bộ Audio)
                   </span>
                 </label>
-                <span className={`text-[10px] font-black uppercase px-2 py-0.5 border border-black font-mono ${config.enableVoice !== false ? 'bg-[#A3E635] text-black' : 'bg-gray-200 text-gray-700'}`}>
-                  {config.enableVoice !== false ? 'Đang bật' : 'Tắt'}
+                <span className={`text-[10px] font-black uppercase px-2 py-0.5 border border-black font-mono ${config.enableVoice === true ? 'bg-[#A3E635] text-black' : 'bg-gray-200 text-gray-700'}`}>
+                  {config.enableVoice === true ? 'Đang bật' : 'Tắt'}
                 </span>
               </div>
 
-              {config.enableVoice !== false && (
+              {config.enableVoice === true && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                   <div>
                     <label className="block text-[11px] font-black text-black mb-1 uppercase">

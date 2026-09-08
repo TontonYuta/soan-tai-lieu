@@ -2283,7 +2283,7 @@ asyncio.run(synthesize())
           });
 
           const isVertical = options.prompt.includes('9:16') || options.prompt.includes('DỌC');
-          const qualityFlag = '-pqh';
+          const qualityFlag = '-qh';
           const codeFollowupPrompt = `Tuyệt vời! Dựa trên kịch bản sư phạm và khối lời thoại VOICEOVER_SCRIPT vừa thống nhất ở trên, hãy viết TOÀN BỘ file mã nguồn Manim Python (\`scene.py\`) hoàn chỉnh 100% để render video bài giảng này.
 
 YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ 15 NGUYÊN TẮC VÀNG VISUAL ENGINEERING):
@@ -2357,11 +2357,11 @@ Lệnh render cuối file: \`manim ${qualityFlag} scene.py MainScene\`.`;
 
         // Tạo sẵn script render cho Linux (.sh) và Windows (.bat)
         const renderShPath = path.join(outputDirectory, 'render_manim.sh');
-        const renderShContent = `#!/usr/bin/env bash\nset -e\necho "========================================================"\necho "  📐 YUTA MANIM STUDIO - RENDER 1-CLICK"\necho "========================================================"\nif ! command -v manim &> /dev/null; then\n  echo "[ERROR] Chưa cài đặt Manim CE! Vui lòng cài: pip install manim"\n  exit 1\nfi\necho "Đang render scene.py (1080p 60fps)..."\nmanim -pqh scene.py MainScene\nVIDEO="media/videos/scene/1080p60/MainScene.mp4"\nif [ -f "$VIDEO" ]; then\n  xdg-open "$VIDEO" 2>/dev/null || open "$VIDEO" 2>/dev/null || true\nfi\n`;
+        const renderShContent = `#!/usr/bin/env bash\nset -e\necho "========================================================"\necho "  📐 YUTA MANIM STUDIO - RENDER 1-CLICK"\necho "========================================================"\nif ! command -v manim &> /dev/null; then\n  echo "[ERROR] Chưa cài đặt Manim CE! Vui lòng cài: pip install manim"\n  exit 1\nfi\necho "Đang render scene.py (1080p 60fps)..."\nmanim -qh scene.py MainScene\nVIDEO="media/videos/scene/1080p60/MainScene.mp4"\nif [ -f "$VIDEO" ]; then\n  xdg-open "$VIDEO" 2>/dev/null || open "$VIDEO" 2>/dev/null || true\nfi\n`;
         fs.writeFileSync(renderShPath, renderShContent, { encoding: 'utf-8', mode: 0o755 });
 
         const renderBatPath = path.join(outputDirectory, 'render_manim.bat');
-        const renderBatContent = `@echo off\nchcp 65001 >nul\ntitle Yuta Manim Studio - Render 1-Click\necho Dang render scene.py (1080p 60fps)...\nmanim -pqh scene.py MainScene\npause\n`;
+        const renderBatContent = `@echo off\nchcp 65001 >nul\ntitle Yuta Manim Studio - Render 1-Click\necho Dang render scene.py (1080p 60fps)...\nmanim -qh scene.py MainScene\npause\n`;
         fs.writeFileSync(renderBatPath, renderBatContent, 'utf-8');
 
         // Trích xuất tên Scene class từ mã nguồn
@@ -2590,7 +2590,7 @@ YÊU CẦU BẮT BUỘC ĐỂ SỬA LỖI:
               let audioPath: string | null = null;
               let audioUrl: string | null = null;
 
-              if (options.enableVoice !== false) {
+              if (options.enableVoice === true) {
                 onProgress({
                   step: 'RENDERING_VIDEO',
                   progress: 96,
@@ -2716,7 +2716,7 @@ YÊU CẦU CHO TẬP ${ep}:
                 let epAudioPath: string | null = null;
                 let epAudioUrl: string | null = null;
 
-                if (options.enableVoice !== false) {
+                if (options.enableVoice === true) {
                   onProgress({
                     step: 'RENDERING_VIDEO',
                     progress: Math.floor((ep / seriesCount) * 94),
@@ -2783,7 +2783,7 @@ YÊU CẦU CHO TẬP ${ep}:
             onProgress({
               step: 'COMPLETED',
               progress: 100,
-              message: `🎉 Hoàn tất 1-Click! Đã sản xuất trọn bộ playlist ${playlistVideos.length} tập video MP4${options.enableVoice !== false ? ' kèm thuyết minh giọng đọc AI' : ''}!`,
+              message: `🎉 Hoàn tất 1-Click! Đã sản xuất trọn bộ playlist ${playlistVideos.length} tập video MP4${options.enableVoice === true ? ' kèm thuyết minh giọng đọc AI' : ''}!`,
               videoUrl: playlistVideos[0] ? playlistVideos[0].videoUrl : undefined,
               videoPath: playlistVideos[0] ? playlistVideos[0].videoPath : undefined,
               audioUrl: playlistVideos[0] ? playlistVideos[0].audioUrl : undefined,

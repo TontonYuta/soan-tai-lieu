@@ -238,7 +238,7 @@ if %errorlevel% neq 0 (
 )
 
 echo [2/2] Dang render scene.py chat luong cao (1080p 60fps)...
-manim -pqh scene.py MainScene
+manim -qh scene.py MainScene
 if %errorlevel% neq 0 (
     echo [ERROR] Co loi xay ra trong qua trinh render Manim!
 ) else (
@@ -269,7 +269,7 @@ if ! command -v manim &> /dev/null; then
 fi
 
 echo "[1/2] Đang render scene.py chất lượng cao (1080p 60fps)..."
-manim -pqh scene.py MainScene
+manim -qh scene.py MainScene
 
 echo ""
 echo "========================================================"
