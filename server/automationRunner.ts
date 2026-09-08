@@ -75,6 +75,7 @@ export interface AutomationOptions {
   enableVoice?: boolean;
   voiceName?: string;
   voiceSpeed?: string;
+  renderMode?: 'local' | 'overleaf';
 }
 
 
@@ -522,14 +523,12 @@ export class AutomationRunner {
 
   public static prepareManimPythonCode(code: string): string {
     let processed = (code || '').trim();
-    processed = processed.replace(/^```(?:python|py)?\s*/i, '').replace(/\s*```$/i, '').trim();
+    processed = processed.replace(/^\`\`\`(?:python|py)?\s*/i, '').replace(/\s*\`\`\`$/i, '').trim();
 
-    // Loại bỏ các thẻ code block thừa bị chèn bên trong
     if (processed.includes('```')) {
-      processed = processed.replace(/```(?:python|py)?/gi, '').replace(/```/g, '').trim();
+      processed = processed.replace(/\`\`\`(?:python|py)?/gi, '').replace(/\`\`\`/g, '').trim();
     }
 
-    // Loại bỏ các dòng dang dở do bị cắt cụt token ở cuối file
     const lines = processed.split(/\r?\n/);
     while (lines.length > 0) {
       const lastLine = lines[lines.length - 1].trim();
@@ -557,7 +556,6 @@ export class AutomationRunner {
     }
     processed = lines.join('\n');
 
-    // Đóng triple-quote nếu bị mở dở dang
     const tripleDoubleQuotes = (processed.match(/"""/g) || []).length;
     if (tripleDoubleQuotes % 2 !== 0) {
       processed += '\n"""';
@@ -567,28 +565,66 @@ export class AutomationRunner {
       processed += "\n'''";
     }
 
-    // Loại bỏ các lệnh FadeOut toàn bộ màn hình ở cuối video gây màn hình đen trống rỗng
     processed = processed.replace(
       /self\.play\(\s*FadeOut\(\s*(?:Group\(\*self\.mobjects\)|self\.mobjects|\*self\.mobjects|Group\(\))\s*\)[^)]*\)\s*(?:self\.wait\([^)]*\)\s*)?/g,
       '# Outro card held on screen\n'
     );
 
-    const polyfillSnippet = `
-# ==========================================
+    // Tự động triệt tiêu lỗi watermark UL va chạm tiêu đề
+    processed = processed.replace(/\b([a-zA-Z0-9_]*symbol[a-zA-Z0-9_]*)\.animate(?:\.[a-zA-Z0-9_]+\([^)]*\))*\.to_corner\(UL(?:,\s*buff=[^)]*)?\)/g, 'FadeOut($1)');
+    processed = processed.replace(/\\text\{([^}]*?)(\\nearrow|\\searrow)([^}]*?)\}/g, '\\text{$1} $2 \\text{$3}');
+
+    const polyfillSnippet = `# ==========================================
 # YUTA MANIM ENGINE - COMPATIBILITY POLYFILLS
 # ==========================================
 try:
-    # 1. Hỗ trợ tiếng Việt Unicode & Font Toán học Palatino chuẩn cho LaTeX
+    # 0. Color polyfills cho các tên màu thông dụng trong Manim
+    if 'CYAN' not in globals():
+        CYAN = TEAL
+    if 'ORANGE' not in globals():
+        ORANGE = "#FF7F00"
+    if 'MAGENTA' not in globals():
+        MAGENTA = "#FF00FF"
+    if 'LIME' not in globals():
+        LIME = "#00FF00"
+    if 'PURPLE_A' not in globals():
+        PURPLE_A = PURPLE
+    if 'DARK_BLUE' not in globals():
+        DARK_BLUE = BLUE_E
+    if 'LIGHT_BLUE' not in globals():
+        LIGHT_BLUE = BLUE_A
+except Exception:
+    pass
+
+try:
+    # 1. Hỗ trợ tiếng Việt Unicode & Ký tự Toán học chuẩn cho LaTeX (Arrows, Bullet, etc.)
     config.tex_template.add_to_preamble(r"""
 \\usepackage[utf8]{vietnam}
 \\usepackage{amsmath,amssymb}
 \\usepackage{mathpazo}
+\\usepackage{newunicodechar}
+\\newunicodechar{↗}{\\ensuremath{\\nearrow}}
+\\newunicodechar{↘}{\\ensuremath{\\searrow}}
+\\newunicodechar{→}{\\ensuremath{\\rightarrow}}
+\\newunicodechar{←}{\\ensuremath{\\leftarrow}}
+\\newunicodechar{↔}{\\ensuremath{\\leftrightarrow}}
+\\newunicodechar{⇒}{\\ensuremath{\\Rightarrow}}
+\\newunicodechar{⇔}{\\ensuremath{\\Leftrightarrow}}
+\\newunicodechar{•}{\\ensuremath{\\bullet}}
+\\newunicodechar{≈}{\\ensuremath{\\approx}}
+\\newunicodechar{≠}{\\ensuremath{\\neq}}
+\\newunicodechar{≤}{\\ensuremath{\\le}}
+\\newunicodechar{≥}{\\ensuremath{\\ge}}
+\\newunicodechar{±}{\\ensuremath{\\pm}}
+\\newunicodechar{×}{\\ensuremath{\\times}}
+\\newunicodechar{÷}{\\ensuremath{\\div}}
+\\newunicodechar{∞}{\\ensuremath{\\infty}}
 """)
 except Exception:
     pass
 
 try:
-    # 1.1 Tự động hấp thụ mọi tham số không mong muốn truyền vào Mobject (MathTex, Tex, Dot, Line, v.v.)
+    # 1.1 Tự động hấp thụ mọi tham số không mong muốn truyền vào Mobject
     _orig_mobject_init = Mobject.__init__
     def _smart_mobject_init(self, color=WHITE, name=None, dim=3, target=None, z_index=0, *args, **kwargs):
         _orig_mobject_init(self, color=color, name=name, dim=dim, target=target, z_index=z_index)
@@ -597,24 +633,60 @@ except Exception:
     pass
 
 try:
-    # 1.2 Tự động chuẩn hóa font Be Vietnam Pro / Inter đẹp mắt cho toàn bộ Text
+    # 1.2 Tự động chuẩn hóa font Times New Roman / Liberation Serif đẹp mắt cho toàn bộ Text
     _orig_text_init = Text.__init__
     def _smart_text_init(self, text, *args, **kwargs):
+        if 'line_spacing' not in kwargs:
+            kwargs['line_spacing'] = 1.2
         f = kwargs.get('font', None)
         if not f or f in ('sans-serif', 'sans', 'default', ''):
-            kwargs['font'] = 'Be Vietnam Pro'
-        if 'weight' not in kwargs:
-            kwargs['weight'] = 'BOLD'
-        try:
-            _orig_text_init(self, text, *args, **kwargs)
-        except Exception:
-            kwargs['font'] = 'Inter'
+            font_candidates = ['Times New Roman', 'Liberation Serif', 'Be Vietnam Pro', 'Inter', 'DejaVu Serif', 'JetBrains Mono', 'Roboto', 'FreeSerif']
+            success = False
+            for font_name in font_candidates:
+                try:
+                    kwargs['font'] = font_name
+                    if 'weight' not in kwargs:
+                        kwargs['weight'] = 'BOLD'
+                    _orig_text_init(self, text, *args, **kwargs)
+                    success = True
+                    break
+                except Exception:
+                    continue
+            if not success:
+                kwargs['font'] = 'serif'
+                _orig_text_init(self, text, *args, **kwargs)
+        else:
             try:
                 _orig_text_init(self, text, *args, **kwargs)
             except Exception:
-                kwargs['font'] = 'sans-serif'
-                _orig_text_init(self, text, *args, **kwargs)
+                fallbacks = ['Times New Roman', 'Liberation Serif', 'Be Vietnam Pro', 'Inter', 'sans-serif', 'serif']
+                for fb in fallbacks:
+                    try:
+                        kwargs['font'] = fb
+                        _orig_text_init(self, text, *args, **kwargs)
+                        break
+                    except Exception:
+                        continue
     Text.__init__ = _smart_text_init
+
+    def SerifText(text, *args, **kwargs):
+        kwargs.setdefault('font', 'Times New Roman')
+        try:
+            return Text(text, *args, **kwargs)
+        except Exception:
+            kwargs['font'] = 'Liberation Serif'
+            return Text(text, *args, **kwargs)
+
+    def MonoText(text, *args, **kwargs):
+        kwargs.setdefault('font', 'JetBrains Mono')
+        try:
+            return Text(text, *args, **kwargs)
+        except Exception:
+            kwargs['font'] = 'DejaVu Sans Mono'
+            return Text(text, *args, **kwargs)
+
+    def CodeText(text, *args, **kwargs):
+        return MonoText(text, *args, **kwargs)
 except Exception:
     pass
 
@@ -631,9 +703,20 @@ except Exception:
     pass
 
 try:
-    # 3. Tương thích các hàm Axes (get_graph_label, get_riemann_rects, get_secant_line, get_tangent_line)
+    # 3. Tương thích các hàm Axes (get_graph_label, get_lines_to_point, get_secant_line, get_tangent_line)
     if not hasattr(Axes, 'get_riemann_rects'):
         Axes.get_riemann_rects = Axes.get_riemann_rectangles
+
+    if hasattr(Axes, 'get_lines_to_point'):
+        _orig_get_lines = Axes.get_lines_to_point
+        def _smart_get_lines_to_point(self, point, *args, **kwargs):
+            col = kwargs.pop('color', None)
+            lines = _orig_get_lines(self, point, *args, **kwargs)
+            if col is not None:
+                lines.set_color(col)
+            return lines
+        Axes.get_lines_to_point = _smart_get_lines_to_point
+        Axes.get_lines_to_coords = _smart_get_lines_to_point
 
     _orig_get_graph_label = Axes.get_graph_label
     def _smart_get_graph_label(self, graph, label='f(x)', x_val=None, direction=RIGHT, buff=0.25, color=None, dot=False, dot_config=None, *args, **kwargs):
@@ -700,10 +783,18 @@ try:
         group = VGroup(*objects)
         group.arrange(RIGHT, buff=buff)
         return group
+
+    # 6. Helper Khung Thẻ Container Chuyên Nghiệp (Dual-Zone Cards)
+    def create_card(width, height, title=None, color="#334155", fill_color="#0F172A", fill_opacity=0.95, font="Times New Roman", title_color=YELLOW):
+        card = RoundedRectangle(corner_radius=0.18, width=width, height=height, color=color, fill_color=fill_color, fill_opacity=fill_opacity)
+        if title:
+            t = Text(title, font=font, font_size=20, weight=BOLD, color=title_color)
+            t.next_to(card.get_top(), DOWN, buff=0.22)
+            return VGroup(card, t)
+        return card
 except Exception:
     pass
-# ==========================================
-`;
+# ==========================================\n`;
 
     if (processed.includes('from manim import') && !processed.includes('YUTA MANIM ENGINE')) {
       processed = processed.replace(/from\s+manim\s+import\s+\*/, `from manim import *\n${polyfillSnippet.trim()}`);
@@ -1171,7 +1262,7 @@ asyncio.run(synthesize())
   public async runPipeline(
     options: AutomationOptions,
     onProgress: (update: AutomationStepUpdate) => void
-  ): Promise<{ success: boolean; latexCode?: string; pdfPath?: string; pdfUrl?: string; error?: string }> {
+  ): Promise<{ success: boolean; latexCode?: string; pdfPath?: string; pdfUrl?: string; pdfPreviewUrl?: string; error?: string }> {
     this.isCancelled = false;
     const outputDirectory = options.outputDir || path.resolve(process.cwd(), 'downloads');
     if (!fs.existsSync(outputDirectory)) {
@@ -3071,15 +3162,15 @@ YÊU CẦU CHO TẬP ${ep}:
       if (!pdfSavedPath && fs.existsSync(texFilePath)) {
         try {
           execSync(`pdftoppm -v`, { stdio: 'ignore' });
-          const pdflatexCmd = `pdflatex -interaction=nonstopmode -output-directory="${downloadsDir}" "${texFilePath}"`;
-          execSync(pdflatexCmd, { cwd: downloadsDir, stdio: 'ignore' });
+          const pdflatexCmd = `pdflatex -interaction=nonstopmode -output-directory="${outputDirectory}" "${texFilePath}"`;
+          execSync(pdflatexCmd, { cwd: outputDirectory, stdio: 'ignore' });
           if (fs.existsSync(targetPdfPath)) {
             pdfSavedPath = targetPdfPath;
           }
         } catch (cErr) {}
       }
 
-      const pdfPreviewUrl = pdfSavedPath ? generatePdfPreviewImage(pdfSavedPath, downloadsDir) : undefined;
+      const pdfPreviewUrl = pdfSavedPath ? generatePdfPreviewImage(pdfSavedPath, outputDirectory) : undefined;
 
       // 8. Hoàn tất
       onProgress({

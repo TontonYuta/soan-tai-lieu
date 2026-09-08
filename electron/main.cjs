@@ -712,17 +712,34 @@ except Exception:
     pass
 
 try:
-    # 1. Hỗ trợ tiếng Việt Unicode & Font Toán học Palatino chuẩn cho LaTeX
+    # 1. Hỗ trợ tiếng Việt Unicode & Ký tự Toán học chuẩn cho LaTeX (Arrows, Bullet, etc.)
     config.tex_template.add_to_preamble(r"""
 \\usepackage[utf8]{vietnam}
 \\usepackage{amsmath,amssymb}
 \\usepackage{mathpazo}
+\\usepackage{newunicodechar}
+\\newunicodechar{↗}{\\ensuremath{\\nearrow}}
+\\newunicodechar{↘}{\\ensuremath{\\searrow}}
+\\newunicodechar{→}{\\ensuremath{\\rightarrow}}
+\\newunicodechar{←}{\\ensuremath{\\leftarrow}}
+\\newunicodechar{↔}{\\ensuremath{\\leftrightarrow}}
+\\newunicodechar{⇒}{\\ensuremath{\\Rightarrow}}
+\\newunicodechar{⇔}{\\ensuremath{\\Leftrightarrow}}
+\\newunicodechar{•}{\\ensuremath{\\bullet}}
+\\newunicodechar{≈}{\\ensuremath{\\approx}}
+\\newunicodechar{≠}{\\ensuremath{\\neq}}
+\\newunicodechar{≤}{\\ensuremath{\\le}}
+\\newunicodechar{≥}{\\ensuremath{\\ge}}
+\\newunicodechar{±}{\\ensuremath{\\pm}}
+\\newunicodechar{×}{\\ensuremath{\\times}}
+\\newunicodechar{÷}{\\ensuremath{\\div}}
+\\newunicodechar{∞}{\\ensuremath{\\infty}}
 """)
 except Exception:
     pass
 
 try:
-    # 1.1 Tự động hấp thụ mọi tham số không mong muốn truyền vào Mobject (MathTex, Tex, Dot, Line, v.v.)
+    # 1.1 Tự động hấp thụ mọi tham số không mong muốn truyền vào Mobject
     _orig_mobject_init = Mobject.__init__
     def _smart_mobject_init(self, color=WHITE, name=None, dim=3, target=None, z_index=0, *args, **kwargs):
         _orig_mobject_init(self, color=color, name=name, dim=dim, target=target, z_index=z_index)
@@ -731,7 +748,7 @@ except Exception:
     pass
 
 try:
-    # 1.2 Tự động chuẩn hóa font Times New Roman / Liberation Serif / Be Vietnam Pro / Inter đẹp mắt cho toàn bộ Text
+    # 1.2 Tự động chuẩn hóa font Times New Roman / Liberation Serif đẹp mắt cho toàn bộ Text
     _orig_text_init = Text.__init__
     def _smart_text_init(self, text, *args, **kwargs):
         if 'line_spacing' not in kwargs:
@@ -767,7 +784,6 @@ try:
                         continue
     Text.__init__ = _smart_text_init
 
-    # Font Helpers tiện lợi cho Manim Python
     def SerifText(text, *args, **kwargs):
         kwargs.setdefault('font', 'Times New Roman')
         try:
@@ -802,9 +818,20 @@ except Exception:
     pass
 
 try:
-    # 3. Tương thích các hàm Axes (get_graph_label, get_riemann_rects, get_secant_line, get_tangent_line)
+    # 3. Tương thích các hàm Axes (get_graph_label, get_lines_to_point, get_secant_line, get_tangent_line)
     if not hasattr(Axes, 'get_riemann_rects'):
         Axes.get_riemann_rects = Axes.get_riemann_rectangles
+
+    if hasattr(Axes, 'get_lines_to_point'):
+        _orig_get_lines = Axes.get_lines_to_point
+        def _smart_get_lines_to_point(self, point, *args, **kwargs):
+            col = kwargs.pop('color', None)
+            lines = _orig_get_lines(self, point, *args, **kwargs)
+            if col is not None:
+                lines.set_color(col)
+            return lines
+        Axes.get_lines_to_point = _smart_get_lines_to_point
+        Axes.get_lines_to_coords = _smart_get_lines_to_point
 
     _orig_get_graph_label = Axes.get_graph_label
     def _smart_get_graph_label(self, graph, label='f(x)', x_val=None, direction=RIGHT, buff=0.25, color=None, dot=False, dot_config=None, *args, **kwargs):
@@ -871,10 +898,24 @@ try:
         group = VGroup(*objects)
         group.arrange(RIGHT, buff=buff)
         return group
+
+    # 6. Helper Khung Thẻ Container Chuyên Nghiệp (Dual-Zone Cards)
+    def create_card(width, height, title=None, color="#334155", fill_color="#0F172A", fill_opacity=0.95, font="Times New Roman", title_color=YELLOW):
+        card = RoundedRectangle(corner_radius=0.18, width=width, height=height, color=color, fill_color=fill_color, fill_opacity=fill_opacity)
+        if title:
+            t = Text(title, font=font, font_size=20, weight=BOLD, color=title_color)
+            t.next_to(card.get_top(), DOWN, buff=0.22)
+            return VGroup(card, t)
+        return card
 except Exception:
     pass
 # ==========================================
 `;
+
+  // Tự động triệt tiêu lỗi watermark UL va chạm tiêu đề
+  processed = processed.replace(/\b([a-zA-Z0-9_]*symbol[a-zA-Z0-9_]*)\.animate(?:\.[a-zA-Z0-9_]+\([^)]*\))*\.to_corner\(UL(?:,\s*buff=[^)]*)?\)/g, 'FadeOut($1)');
+  // Sửa lỗi LaTeX \\nearrow / \\searrow nằm trong \text{...}
+  processed = processed.replace(/\\text\{([^}]*?)(\\nearrow|\\searrow)([^}]*?)\}/g, '\\text{$1} $2 \\text{$3}');
 
   if (processed.includes('from manim import') && !processed.includes('YUTA MANIM ENGINE')) {
     processed = processed.replace(/from\s+manim\s+import\s+\*/, `from manim import *\n${polyfillSnippet.trim()}`);

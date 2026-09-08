@@ -50,7 +50,7 @@ const VideoForm: React.FC<VideoFormProps> = ({
     isSeries: false,
     seriesCount: 3,
     seriesOutline: '',
-    enableVoice: true,
+    enableVoice: typeof window !== 'undefined' ? localStorage.getItem('yuta_manim_enable_voice') === 'true' : false,
     voiceName: 'vi-VN-HoaiMyNeural',
     voiceSpeed: '+0%'
   });
@@ -109,8 +109,10 @@ const VideoForm: React.FC<VideoFormProps> = ({
 
   const handleChange = (field: keyof VideoConfig, value: any) => {
     setConfig(prev => ({ ...prev, [field]: value }));
+    if (field === 'enableVoice' && typeof window !== 'undefined') {
+      localStorage.setItem('yuta_manim_enable_voice', String(value));
+    }
   };
-
   const inputClass = "w-full pl-10 pr-4 py-2.5 bg-[#ffffff] rounded-none border-[3px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] focus:ring-0 focus:translate-y-1 focus:translate-x-1 focus:shadow-none transition-all text-sm font-bold text-black placeholder:text-gray-500 uppercase";
   const selectClass = "w-full pl-10 pr-8 py-2.5 bg-[#ffffff] rounded-none border-[3px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] focus:ring-0 focus:translate-y-1 focus:translate-x-1 focus:shadow-none transition-all text-sm font-bold text-black uppercase cursor-pointer appearance-none";
   const labelClass = "block text-xs font-black text-black mb-1.5 uppercase tracking-widest";
