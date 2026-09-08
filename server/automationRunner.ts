@@ -633,11 +633,16 @@ except Exception:
     pass
 
 try:
-    # 1.2 Tự động chuẩn hóa font Times New Roman / Liberation Serif đẹp mắt cho toàn bộ Text
+    # 1.2 Tự động chuẩn hóa font Times New Roman / Liberation Serif đẹp mắt và auto-scale cỡ chữ lớn cho Text
     _orig_text_init = Text.__init__
     def _smart_text_init(self, text, *args, **kwargs):
         if 'line_spacing' not in kwargs:
             kwargs['line_spacing'] = 1.2
+        fs = kwargs.get('font_size', None)
+        if fs is not None and fs < 22:
+            kwargs['font_size'] = max(22, int(fs * 1.35))
+        elif fs is None:
+            kwargs['font_size'] = 24
         f = kwargs.get('font', None)
         if not f or f in ('sans-serif', 'sans', 'default', ''):
             font_candidates = ['Times New Roman', 'Liberation Serif', 'Be Vietnam Pro', 'Inter', 'DejaVu Serif', 'JetBrains Mono', 'Roboto', 'FreeSerif']
@@ -668,6 +673,28 @@ try:
                     except Exception:
                         continue
     Text.__init__ = _smart_text_init
+
+    # 1.3 Auto-scale font_size cho MathTex và Tex
+    _orig_mathtex_init = MathTex.__init__
+    def _smart_mathtex_init(self, *tex_strings, **kwargs):
+        fs = kwargs.get('font_size', None)
+        if fs is not None and fs < 24:
+            kwargs['font_size'] = max(24, int(fs * 1.3))
+        elif fs is None:
+            kwargs['font_size'] = 28
+        return _orig_mathtex_init(self, *tex_strings, **kwargs)
+    MathTex.__init__ = _smart_mathtex_init
+
+    if 'Tex' in globals():
+        _orig_tex_init = Tex.__init__
+        def _smart_tex_init(self, *tex_strings, **kwargs):
+            fs = kwargs.get('font_size', None)
+            if fs is not None and fs < 24:
+                kwargs['font_size'] = max(24, int(fs * 1.3))
+            elif fs is None:
+                kwargs['font_size'] = 28
+            return _orig_tex_init(self, *tex_strings, **kwargs)
+        Tex.__init__ = _smart_tex_init
 
     def SerifText(text, *args, **kwargs):
         kwargs.setdefault('font', 'Times New Roman')
@@ -788,13 +815,19 @@ try:
     def create_card(width, height, title=None, color="#334155", fill_color="#0F172A", fill_opacity=0.95, font="Times New Roman", title_color=YELLOW):
         card = RoundedRectangle(corner_radius=0.18, width=width, height=height, color=color, fill_color=fill_color, fill_opacity=fill_opacity)
         if title:
-            t = Text(title, font=font, font_size=20, weight=BOLD, color=title_color)
-            t.next_to(card.get_top(), DOWN, buff=0.22)
+            t = Text(title, font=font, font_size=24, weight=BOLD, color=title_color)
+            t.next_to(card.get_top(), DOWN, buff=0.25)
             return VGroup(card, t)
         return card
 except Exception:
     pass
 # ==========================================\n`;
+
+    // Tự động nâng cấp các font_size nhỏ dưới 22 trong code
+    processed = processed.replace(/\bfont_size\s*=\s*(1[0-9]|20|21)\b/g, (match, p1) => {
+      const val = parseInt(p1, 10);
+      return `font_size=${Math.max(24, Math.round(val * 1.35))}`;
+    });
 
     if (processed.includes('from manim import') && !processed.includes('YUTA MANIM ENGINE')) {
       processed = processed.replace(/from\s+manim\s+import\s+\*/, `from manim import *\n${polyfillSnippet.trim()}`);
@@ -2286,28 +2319,26 @@ asyncio.run(synthesize())
           const qualityFlag = '-qh';
           const codeFollowupPrompt = `Tuyệt vời! Dựa trên kịch bản sư phạm và khối lời thoại VOICEOVER_SCRIPT vừa thống nhất ở trên, hãy viết TOÀN BỘ file mã nguồn Manim Python (\`scene.py\`) hoàn chỉnh 100% để render video bài giảng này.
 
-YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ 15 NGUYÊN TẮC VÀNG VISUAL ENGINEERING):
+YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ BỘ NGUYÊN TẮC VISUAL ENGINEERING & DUAL-ZONE CONTAINER CARDS):
 1. Kế thừa chính xác biến VOICEOVER_SCRIPT (~140-160 từ) và 4 phân cảnh đã duyệt (1. Intro, 2. Lý thuyết, 3. Mô phỏng & Biến đổi LaTeX, 4. Outro).
 2. Cấu hình ${isVertical ? 'Khung hình DỌC 9:16 (config.pixel_width=1080, config.pixel_height=1920, config.frame_width=9.0, config.frame_height=16.0)' : 'Khung hình NGANG 16:9 (1920x1080, config.frame_width=14.22, config.frame_height=8.0)'}.
 3. 100% CÔNG THỨC LATEX HOÀN HẢO (PERFECT LATEX):
    - MỌI công thức, phương trình, biến số bắt buộc dùng MathTex(r"...") với raw string r"...".
    - Phân số \\frac{a}{b}, căn thức \\sqrt{x}, tích phân \\int, đạo hàm \\frac{df}{dx}, vector \\vec{u}.
    - Biến đổi toán học nhiều dòng dùng môi trường aligned: MathTex(r"\\begin{aligned} ... &= ... \\\\ &= ... \\end{aligned}").
-   - Đóng khung nổi bật đáp số / kết quả cuối cùng: SurroundingRectangle(result, color=GREEN, buff=0.15, corner_radius=0.1).
-   - Tuyệt đối KHÔNG viết tiếng Việt có dấu trực tiếp trong MathTex để tránh lỗi LaTeX Unicode; tiếng Việt dùng Text("...", font="Be Vietnam Pro").
+   - Đóng khung nổi bật đáp số / kết quả cuối cùng: SurroundingRectangle(result, color=GREEN, buff=0.2, corner_radius=0.12).
+   - Tuyệt đối KHÔNG viết tiếng Việt có dấu trực tiếp trong MathTex; tiếng Việt dùng Text("...", font="Times New Roman").
 4. MÔ PHỎNG TOÁN HỌC TRỰC QUAN SINH ĐỘNG (VISUAL SIMULATION):
    - Phân cảnh giải toán BẮT BUỘC có mô phỏng hình ảnh động: Hệ trục tọa độ Axes, đồ thị axes.plot(...), điểm Dot di chuyển trên đường cong bằng ValueTracker, tiếp tuyến hoặc hình học/vector. Tuyệt đối không chỉ hiển thị các dòng chữ tĩnh!
-5. BỐ CỤC ZERO-OVERLAP DUAL-ZONE & QUAN HỆ HÌNH HỌC (KHÔNG DÙNG MAGIC COORDINATES):
-   - BẮT BUỘC dùng quan hệ hình học: VGroup + arrange() + next_to() thay cho các tọa độ ước lượng move_to(UP*2).
-   - ${isVertical ? 'Xếp 2 tầng: Tầng trên (scale 0.7, shift UP*2.6) dành riêng cho Mô phỏng Đồ thị/Hình học; Tầng dưới (shift DOWN*2.8) dành riêng cho Công thức LaTeX giải chi tiết' : 'Bố cục 2 Cột: Cột Trái 55% là Mô phỏng Đồ thị/Hình học (.to_edge(LEFT, buff=0.8)), Cột Phải 45% là Biến đổi Công thức LaTeX (.to_edge(RIGHT, buff=0.8))'}.
-   - Kiểm soát kích thước: Dùng fit_width(obj, max_width) hoặc scale_to_fit_width(...) để không bao giờ tràn khung.
-   - Nhãn chữ gần đồ thị: Dùng add_backdrop(label) hoặc label.add_background_rectangle(color="#0F172A", opacity=0.9, buff=0.1).
+5. BỐ CỤC KHUNG THẺ CONTAINER (DUAL-ZONE) LẤP ĐẦY 93% MÀN HÌNH (TRIỆT TIÊU KHOẢNG TRỐNG ĐEN):
+   - ${isVertical ? 'Header Bar (y ~ 7.05, height=1.3, width=8.5, tiêu đề font_size=30-34 BOLD); Top Card (y ~ 3.15, height=6.4, width=8.5, tiêu đề font_size=24, axes x_length=7.2, y_length=4.4); Bottom Card (y ~ -3.75, height=6.6, width=8.5, tiêu đề font_size=24, MathTex font_size=28-34, diễn giải font_size=22-26, bảng biến thiên font_size=24-28). TUYỆT ĐỐI KHÔNG để khoảng trống đen thừa!' : 'Header đỉnh màn hình, Cột Trái Mô phỏng Đồ thị (width=7.2, height=6.2), Cột Phải Lời giải LaTeX (width=5.8, height=6.2).'}.
+   - BẮT BUỘC font_size lớn rõ nét (Tiêu đề 30-34, Thẻ 24, MathTex 28-34, Text tiếng Việt 22-26, CẤM DÙNG FONT_SIZE DƯỚI 22).
 6. NHỊP ĐIỆU THỊ GIÁC & CHUYỂN CẢNH MƯỢT MÀ:
    - Dùng TransformMatchingTex khi biến đổi công thức đại số.
    - Dùng LaggedStart khi xuất hiện danh sách hoặc các phần tử nối tiếp.
    - Có khoảng dừng self.wait(1.5 đến 2.5s) sau các công thức trọng tâm để người xem kịp quan sát.
-7. Màu nền "#0F172A", toàn bộ Text dùng font="Be Vietnam Pro".
-8. Cảnh Outro: Hiệu ứng hào quang, giữ nguyên màn hình (self.wait(2.5)), TUYỆT ĐỐI KHÔNG DÙNG FadeOut(*self.mobjects) làm đen màn hình.
+7. Màu nền "#0F172A", toàn bộ Text dùng font="Times New Roman".
+8. Cảnh Outro: Thẻ Card tổng kết toàn màn hình (height=13.8, width=8.5), giữ nguyên màn hình (self.wait(3.0)), TUYỆT ĐỐI KHÔNG DÙNG FadeOut(*self.mobjects) làm đen màn hình.
 9. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, không viết bất kỳ lời chào hay giải thích ngoài mã.
 Lệnh render cuối file: \`manim ${qualityFlag} scene.py MainScene\`.`;
 
@@ -2537,9 +2568,9 @@ ${detailsForAI}
 
 YÊU CẦU BẮT BUỘC ĐỂ SỬA LỖI:
 1. Đọc kỹ vị trí dòng lỗi và chỉ dẫn sửa lỗi ở trên để khắc phục triệt để.
-2. Viết lại TOÀN BỘ file scene.py hoàn chỉnh, ngắn gọn súc tích (dưới 140 dòng lệnh).
-3. Đảm bảo đóng đầy đủ mọi dấu ngoặc, kết thúc hàm construct(self) bằng self.wait(2).
-4. Giữ nguyên class MainScene(Scene) hoặc tên Scene tương ứng, cấu hình Dual-Zone và LaTeX MathTex(r"...").
+2. Viết lại TOÀN BỘ file scene.py hoàn chỉnh, ngắn gọn súc tích.
+3. Đảm bảo đóng đầy đủ mọi dấu ngoặc, kết thúc hàm construct(self) bằng self.wait(3).
+4. Giữ nguyên class MainScene(Scene) hoặc tên Scene tương ứng, cấu hình Dual-Zone lấp đầy 93% màn hình (height 6.4 và 6.6), cỡ chữ lớn dễ đọc (MathTex font_size=28-34, Text font_size=22-26, Tiêu đề 30-34).
 5. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, KHÔNG viết lời chào hay giải thích ngoài mã.`;
 
                 const healedCode = await sendFollowupPromptAndGetPython(healPrompt, (m) => {

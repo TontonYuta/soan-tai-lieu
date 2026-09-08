@@ -7,11 +7,11 @@ export const MANIM_SKILLS_GUIDE = `
 1. NGUYÊN TẮC BỐ CỤC KHUNG THẺ CONTAINER (DUAL-ZONE CONTAINER CARDS):
    - TUYỆT ĐỐI KHÔNG để các đối tượng toán học trôi nổi cô độc trên nền đen kịt gây cảm giác trống trải, thiếu chuyên nghiệp.
    - VIDEO DỌC 9:16 (TikTok / YouTube Shorts / Reels - 1080x1920):
-     * Màn hình có chiều cao 16.0 đơn vị, rộng 9.0 đơn vị. BẮT BUỘC chia thành 3 khu vực cân đối:
-       1. Top Header Bar (y ~ 7.0, height=1.0, width=8.4): Chứa Badge môn học (pill nhỏ) và Tiêu đề bài giảng. Đặt cố định ở to_edge(UP, buff=0.45).
-       2. Top Card - Visual Simulation Container (y ~ 3.1, height=6.3, width=8.4): Khung thẻ nền tối (#0F172A), viền (#334155). Dành riêng cho Mô phỏng Đồ thị, Hệ trục Axes, Hình học, hoặc Điểm động.
-       3. Bottom Card - Mathematical Analysis Container (y ~ -3.6, height=6.3, width=8.4): Khung thẻ nền (#1E293B), viền (#334155). Dành riêng cho Lời giải chi tiết từng bước, Bảng biến thiên, và Hộp kết quả SurroundingRectangle.
-     * Bố cục 3 khu vực này lấp đầy trọn vẹn khung hình 16.0 đơn vị, TUYỆT ĐỐI KHÔNG để khoảng trống đen ở giữa màn hình!
+     * Màn hình có chiều cao 16.0 đơn vị, rộng 9.0 đơn vị. BẮT BUỘC chia thành 3 khu vực cân đối, lấp đầy 93% khung hình:
+       1. Top Header Bar (y ~ 7.05, height=1.3, width=8.5): Chứa Badge môn học (pill nhỏ) và Tiêu đề bài giảng. Đặt cố định ở to_edge(UP, buff=0.35).
+       2. Top Card - Visual Simulation Container (y ~ 3.15, height=6.4, width=8.5): Khung thẻ nền tối (#0F172A), viền (#334155). Dành riêng cho Mô phỏng Đồ thị, Hệ trục Axes (x_length=7.2, y_length=4.4), Hình học, hoặc Điểm động.
+       3. Bottom Card - Mathematical Analysis Container (y ~ -3.75, height=6.6, width=8.5): Khung thẻ nền (#1E293B), viền (#334155). Dành riêng cho Lời giải chi tiết từng bước, Bảng biến thiên, và Hộp kết quả SurroundingRectangle.
+     * Bố cục 3 khu vực này lấp đầy trọn vẹn khung hình 16.0 đơn vị (tổng chiều cao 14.8 đơn vị), TUYỆT ĐỐI KHÔNG để khoảng trống đen ở giữa màn hình!
    - VIDEO NGANG 16:9 (YouTube / Màn hình ngang - 1920x1080):
      * Cột Trái (Visual Simulation Card - Chiếm 55%): width=7.2, height=6.2, .to_edge(LEFT, buff=0.6).
      * Cột Phải (LaTeX Analysis Card - Chiếm 45%): width=5.8, height=6.2, .to_edge(RIGHT, buff=0.6).
@@ -22,13 +22,15 @@ export const MANIM_SKILLS_GUIDE = `
    - Mọi tiêu đề phân cảnh BẮT BUỘC nằm bên dưới Header Bar: next_to(header_card, DOWN, buff=...) hoặc nằm gọn bên trong tiêu đề Thẻ Container.
    - BẮT BUỘC dùng quan hệ hình học: VGroup + arrange(DOWN, buff=...) + next_to() thay cho các tọa độ ước lượng magic coordinates.
 
-3. QUY CHUẨN TYPOGRAPHY & FONT CHỮ SERIF (NÓI KHÔNG VỚI FONT NHỎ & FONT KHÔNG CHÂN):
+3. QUY CHUẨN TYPOGRAPHY & CỠ CHỮ LỚN RÕ RÀNG (NÓI KHÔNG VỚI CHỮ NHỎ & KHOẢNG TRỐNG):
    - 100% sử dụng Font Có Chân (Serif): BẮT BUỘC "Times New Roman" (hoặc "Liberation Serif", "DejaVu Serif"). Mã nguồn và đếm dùng "JetBrains Mono".
-   - AN TOÀN KÍCH THƯỚC CHỮ (CẤM DÙNG FONT_SIZE DƯỚI 20 TRÊN VIDEO DỌC):
-     * Tiêu đề Header / Intro: font_size=24 đến 28 (weight=BOLD).
-     * Tiêu đề Thẻ Card: font_size=18 đến 22 (weight=BOLD, màu TEAL_A hoặc YELLOW).
-     * Công thức MathTex chính: font_size=24 đến 28.
-     * Chú thích / Kết luận: font_size=20 đến 24.
+   - KÍCH THƯỚC CHỮ LỚN RÕ RÀNG TRÊN VIDEO DỌC (BẮT BUỘC font_size >= 22 CHO MỌI CHỮ):
+     * Tiêu đề Video / Intro / Outro: font_size=30 đến 36 (weight=BOLD, màu YELLOW hoặc GOLD).
+     * Tiêu đề Thẻ Card Container: font_size=24 (weight=BOLD, màu TEAL_A hoặc YELLOW).
+     * Công thức MathTex chính / Phương trình: font_size=28 đến 34 (rõ nét, nổi bật).
+     * Văn bản tiếng Việt diễn giải / Chú thích: font_size=22 đến 26 (weight=MEDIUM/BOLD).
+     * Bảng biến thiên / Ma trận: font_size=24 đến 28.
+     * Nhãn trục tọa độ Oxy (x, y), Tọa độ điểm cực trị: font_size=22 đến 26.
    - Mọi Text nhiều dòng BẮT BUỘC set line_spacing=1.2 để khoảng cách giữa các hàng chữ thoáng đẹp.
 
 4. MÔ PHỎNG ĐỒ THỊ & HÌNH HỌC CHUYÊN NGHIỆP:
@@ -103,17 +105,18 @@ export const generateManimStoryboardPrompt = (config: VideoConfig): string => {
     pdfTextChunk = `\n[TÀI LIỆU RAG NGUỒN ĐÍNH KÈM / GHIM]:
 Tên file: ${config.attachedPdf.fileName} (${config.attachedPdf.numPages} trang)
 """
-${config.attachedPdf.text.slice(0, 12000)}
+${config.attachedPdf.text.slice(0, 15000)}
 """
-CHỈ THỊ SƯ PHẠM RAG CHO KỊCH BẢN VIDEO:
-- Trích xuất chính xác bài toán, định nghĩa, định lý hoặc đồ thị từ tài liệu trên để xây dựng kịch bản.
-- Bám sát các bước giải và dẫn dắt sư phạm từ giả thiết đến kết luận của tài liệu.
+CHỈ THỊ SƯ PHẠM RAG BẮT BUỘC CHO KỊCH BẢN VIDEO:
+1. BẮT BUỘC trích xuất chính xác bài toán, câu hỏi, định nghĩa, định lý, hàm số hoặc đồ thị từ tài liệu trên để xây dựng kịch bản. Nếu tài liệu gồm nhiều bài/câu hỏi, chọn bài toán tiêu biểu nhất (ví dụ Dạng 1 / Câu 1) và giải chi tiết từng bước.
+2. Bám sát 100% câu từ, số liệu, giả thiết và kết luận trong tài liệu gốc. TUYỆT ĐỐI KHÔNG tự bịa đề bài khác!
+3. Trình bày lời giải sư phạm mạch lạc, đúng và đủ ý chính, phân tích bản chất toán học sâu sắc.
 \n`;
   }
 
   return `Đóng vai Chuyên gia Sư phạm & Đạo diễn Diễn hoạt Khoa học Manim CE.
 Nhiệm vụ của bạn là xây dựng KỊCH BẢN SƯ PHẠM VÀ LỜI THOẠI THUYẾT MINH TRÔI CHẢY, PHONG PHÚ cho video bài giảng về: "${config.topic}" (Môn: ${config.subject}, Khán giả: ${config.audience || 'Học sinh / Người học'}).
-Định dạng: ${isVertical ? 'DỌC 9:16 (TikTok / Shorts / Reels - Bố cục Khung Thẻ Dual-Zone)' : 'NGANG 16:9 (YouTube / Bài giảng)'}.
+Định dạng: ${isVertical ? 'DỌC 9:16 (TikTok / Shorts / Reels - Bố cục Khung Thẻ Dual-Zone lấp đầy 93% màn hình)' : 'NGANG 16:9 (YouTube / Bài giảng)'}.
 THỜI LƯỢNG MỤC TIÊU: ${targetDurationStr}.
 ${simDesc}
 ${pdfTextChunk}
@@ -130,7 +133,7 @@ YÊU CẦU LẬP DÀN Ý PHÂN CẢNH VÀ SOẠN LỜI THOẠI TRÔI CHẢY, TRU
    - Lời thoại Lý thuyết: Diễn giải chi tiết bản chất trực quan với câu từ phong phú.
 
 3. PHÂN CẢNH 3 & CÁC PHÂN CẢNH TIẾP THEO - DUAL-ZONE MÔ PHỎNG & BIẾN ĐỔI CÔNG THỨC LATEX:
-   - ${isVertical ? 'Thẻ Tầng Trên (Top Card): Mô phỏng đồ thị, hình học, tiếp tuyến động, đường gióng nét đứt. Thẻ Tầng Dưới (Bottom Card): Biến đổi đại số từng bước, Bảng biến thiên (nếu là hàm số), đóng khung kết quả.' : 'Cột Trái: Mô phỏng trực quan. Cột Phải: Biến đổi công thức LaTeX chi tiết.'}
+   - ${isVertical ? 'Thẻ Tầng Trên (Top Card - height=6.4, width=8.5): Mô phỏng đồ thị, hình học, tiếp tuyến động, đường gióng nét đứt. Thẻ Tầng Dưới (Bottom Card - height=6.6, width=8.5): Biến đổi đại số từng bước, Bảng biến thiên (nếu là hàm số), đóng khung kết quả.' : 'Cột Trái: Mô phỏng trực quan. Cột Phải: Biến đổi công thức LaTeX chi tiết.'}
    - Lời thoại Ví dụ: Thuyết minh theo từng bước trực quan và công thức, giải thích lý do tại sao biến đổi như vậy.
 
 4. PHÂN CẢNH KẾT LUẬN (OUTRO):
@@ -161,24 +164,24 @@ export const generateManimCodePrompt = (config: VideoConfig): string => {
 YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ BỘ NGUYÊN TẮC VISUAL ENGINEERING & DUAL-ZONE CONTAINER CARDS):
 1. Kế thừa chính xác biến VOICEOVER_SCRIPT và các phân cảnh đã duyệt (Intro, Lý thuyết, Dual-Zone Mô phỏng & Biến đổi LaTeX, Outro). BẮT BUỘC khớp đúng thời lượng mục tiêu: ${targetDurationStr}.
 2. Cấu hình ${isVertical ? 'Khung hình DỌC 9:16 (config.pixel_width=1080, config.pixel_height=1920, config.frame_width=9.0, config.frame_height=16.0)' : 'Khung hình NGANG 16:9 (1920x1080, config.frame_width=14.22, config.frame_height=8.0)'}.
-3. BỐ CỤC KHUNG THẺ CONTAINER (DUAL-ZONE) CHỐNG TRỐNG MÀN HÌNH:
-   - ${isVertical ? 'Chia làm 3 khối chính: 1. Top Header Bar (y ~ 7.0, height=1.0, width=8.4) chứa Badge môn học + Tiêu đề; 2. Top Card (y ~ 3.1, height=6.3, width=8.4) chứa Mô phỏng đồ thị/hình học; 3. Bottom Card (y ~ -3.6, height=6.3, width=8.4) chứa Lời giải LaTeX & Bảng biến thiên. Lấp đầy trọn vẹn khung hình 16 đơn vị, KHÔNG ĐỂ KHOẢNG TRỐNG ĐEN Ở GIỮA!' : 'Header ở đỉnh màn hình, Cột Trái (width=7.2, height=6.2) là Mô phỏng Đồ thị/Hình học, Cột Phải (width=5.8, height=6.2) là Biến đổi Công thức LaTeX.'}
+3. BỐ CỤC KHUNG THẺ CONTAINER (DUAL-ZONE) LẤP ĐẦY 93% MÀN HÌNH - TRIỆT TIÊU KHOẢNG TRỐNG ĐEN:
+   - ${isVertical ? 'Chia làm 3 khối chính: 1. Top Header Bar (y ~ 7.05, height=1.3, width=8.5) chứa Badge môn học (font_size=20) + Tiêu đề (font_size=30-34, BOLD); 2. Top Card (y ~ 3.15, height=6.4, width=8.5) chứa Mô phỏng đồ thị/hình học (tiêu đề font_size=24, axes x_length=7.2, y_length=4.4, nét vẽ stroke_width=4.5); 3. Bottom Card (y ~ -3.75, height=6.6, width=8.5) chứa Lời giải LaTeX (công thức MathTex font_size=28-34, diễn giải font_size=22-26, bảng biến thiên font_size=24-28). Tổng chiều cao 14.8 đơn vị lấp đầy hoàn hảo khung 16.0 đơn vị, TUYỆT ĐỐI KHÔNG ĐỂ KHOẢNG TRỐNG ĐEN THỪA!' : 'Header ở đỉnh màn hình, Cột Trái (width=7.2, height=6.2) là Mô phỏng Đồ thị/Hình học, Cột Phải (width=5.8, height=6.2) là Biến đổi Công thức LaTeX.'}
 4. ZERO-OVERLAP & WATERMARK SAFETY:
    - TUYỆT ĐỐI KHÔNG để biểu tượng Intro co nhỏ rồi to_corner(UL) làm watermark trôi nổi (tránh va chạm đè chữ tiêu đề)! Tiêu đề bài giảng luôn nằm gọn trong Top Header Bar.
-5. QUY CHUẨN FONT CHỮ SERIF & TYPOGRAPHY:
+5. QUY CHUẨN TYPOGRAPHY CỠ CHỮ LỚN RÕ RÀNG:
    - Sử dụng font="${chosenFont}" (weight=BOLD) cho mọi đối tượng Text.
-   - Cỡ chữ an toàn trên 9:16: Tiêu đề 24-28, Tiêu đề Thẻ 18-22 (BOLD), Công thức 24-28, Chú thích 20-24. TUYỆT ĐỐI KHÔNG dùng font_size nhỏ dưới 20!
+   - BẮT BUỘC font_size lớn dễ đọc trên điện thoại: Tiêu đề 30-34, Tiêu đề Thẻ 24 (BOLD), Công thức MathTex 28-34, Chú thích tiếng Việt 22-26. TUYỆT ĐỐI KHÔNG dùng font_size nhỏ dưới 22!
    - line_spacing=1.2 cho các đoạn Text nhiều dòng.
 6. ĐỒ THỊ & BẢNG BIẾN THIÊN TOÁN HỌC SGK VIỆT NAM:
    - Điểm cực trị / tọa độ đặc biệt: Dùng axes.get_lines_to_point(pt).set_color(...) gióng đường nét đứt về trục toạ độ thay vì dán nhãn đè lên đồ thị.
    - TUYỆT ĐỐI KHÔNG dùng add_backdrop tạo khối chữ nhật đen cắt ngang đường cong.
-   - Nếu là bài toán Giải tích / Khảo sát hàm số, BẮT BUỘC có Bảng Biến Thiên bằng LaTeX array: MathTex(r"\\begin{array}{|c|cccccc|} ... \\end{array}").
+   - Nếu là bài toán Giải tích / Khảo sát hàm số, BẮT BUỘC có Bảng Biến Thiên bằng LaTeX array: MathTex(r"\\begin{array}{|c|cccccc|} ... \\end{array}", font_size=26).
 7. 100% CÔNG THỨC LATEX HOÀN HẢO (PERFECT LATEX):
    - MỌI công thức, phương trình, biến số bắt buộc dùng MathTex(r"...") với raw string r"...".
-   - Đóng khung nổi bật đáp số / kết quả cuối cùng: SurroundingRectangle(result, color=GREEN, buff=0.18, corner_radius=0.12).
+   - Đóng khung nổi bật đáp số / kết quả cuối cùng: SurroundingRectangle(result, color=GREEN, buff=0.2, corner_radius=0.12).
    - Tuyệt đối KHÔNG viết tiếng Việt có dấu trực tiếp trong MathTex để tránh lỗi LaTeX Unicode; tiếng Việt dùng Text("...", font="${chosenFont}").
 8. Màu nền "#0B1120" hoặc "#0F172A".
-9. Cảnh Outro: Thẻ Card tổng kết toàn màn hình với viền bo góc, biểu tượng phát sáng, các gạch đầu dòng đúc kết bài học và thương hiệu "Học toán cùng Yuta". Giữ nguyên màn hình (self.wait(3.0)), TUYỆT ĐỐI KHÔNG DÙNG FadeOut(*self.mobjects) làm đen màn hình.
+9. Cảnh Outro: Thẻ Card tổng kết toàn màn hình (height=13.8, width=8.5) với viền bo góc, biểu tượng phát sáng, các gạch đầu dòng đúc kết bài học (font_size=24-28) và thương hiệu "Học toán cùng Yuta" (font_size=28). Giữ nguyên màn hình (self.wait(3.0)), TUYỆT ĐỐI KHÔNG DÙNG FadeOut(*self.mobjects) làm đen màn hình.
 10. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, không viết bất kỳ lời chào hay giải thích ngoài mã.
 11. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file). (Hệ thống máy chủ sẽ tự biên dịch mã bằng lệnh: \`manim ${qualityFlag} scene.py MainScene\`, AI không được tự chạy lệnh này).`;
 };
@@ -200,12 +203,12 @@ export const generateVideoManimPrompt = (config: VideoConfig): string => {
 Tên file: ${config.attachedPdf.fileName} (${config.attachedPdf.numPages} trang)
 Nội dung trích xuất:
 """
-${config.attachedPdf.text.slice(0, 12000)}
+${config.attachedPdf.text.slice(0, 15000)}
 """
 CHỈ THỊ BẮT BUỘC KHI CÓ TÀI LIỆU RAG ĐÍNH KÈM:
-1. TRỰC QUAN HÓA BÀI TOÁN GỐC: Mô phỏng chính xác đối tượng hình học, hàm số, đồ thị hoặc phương trình từ tài liệu.
-2. BÁM SÁT BƯỚC GIẢI: Nếu tài liệu có bài tập và lời giải, dựng chuyển động diễn giải từng bước logic ăn khớp với nội dung tài liệu.
-3. DÙNG ĐÚNG KÝ HIỆU & SỐ LIỆU: Giữ nguyên các tham số, tọa độ, ẩn số trong tài liệu, không tự ý bịa số liệu khác nếu tài liệu đã có.
+1. TRỰC QUAN HÓA BÀI TOÁN GỐC TỪ TÀI LIỆU: BẮT BUỘC trích xuất chính xác bài toán, câu hỏi, định nghĩa, định lý, hàm số hoặc đồ thị từ tài liệu RAG. Nếu là đề trắc nghiệm hoặc bài tập, hãy chọn bài toán tiêu biểu nhất (ví dụ Câu 1 hoặc Dạng 1) và giải chi tiết từng bước.
+2. BÁM SÁT BƯỚC GIẢI & CÂU TỪ: Diễn giải từng bước logic ăn khớp 100% với nội dung tài liệu, câu từ chuẩn xác, đúng và đủ ý chính.
+3. DÙNG ĐÚNG KÝ HIỆU & SỐ LIỆU: Giữ nguyên các tham số, tọa độ, ẩn số trong tài liệu, TUYỆT ĐỐI KHÔNG tự ý bịa số liệu khác!
 `;
   }
 
@@ -216,7 +219,7 @@ CHỈ THỊ BẮT BUỘC KHI CÓ TÀI LIỆU RAG ĐÍNH KÈM:
     episodeChunk = `
 [CHUỖI PLAYLIST - TẬP ${epIdx}/${sCount}]:
 - Sản xuất TẬP ${epIdx}/${sCount} cho chuyên đề "${config.topic}".
-- Góc trên phải màn hình hiển thị: Text("Tập ${epIdx}/${sCount}", font_size=20, color=GRAY_B, font="${chosenFont}")
+- Góc trên phải màn hình hiển thị: Text("Tập ${epIdx}/${sCount}", font_size=22, color=GRAY_B, font="${chosenFont}")
 `;
   }
 
@@ -285,14 +288,14 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         # ==========================================
         # PHẦN 1: MỞ ĐẦU (INTRO, ~6.5s)
         # ==========================================
-        session_text = Text("${config.subject} • ${config.audience || 'Bài Giảng Trọng Tâm'}", font_size=${isVertical ? '22' : '28'}, color=LIGHT_GRAY, font=MAIN_FONT)
-        title = Text("${config.topic.toUpperCase()}", font_size=${isVertical ? '28' : '38'}, weight=BOLD, color=YELLOW, line_spacing=1.2, font=MAIN_FONT)
+        session_text = Text("${config.subject} • ${config.audience || 'Bài Giảng Trọng Tâm'}", font_size=${isVertical ? '24' : '28'}, color=LIGHT_GRAY, font=MAIN_FONT)
+        title = Text("${config.topic.toUpperCase()}", font_size=${isVertical ? '32' : '38'}, weight=BOLD, color=YELLOW, line_spacing=1.2, font=MAIN_FONT)
         title_box = SurroundingRectangle(title, buff=0.35, color=BLUE_D, corner_radius=0.2)
         title_group = VGroup(title, title_box)
-        symbol_main = MathTex(r"f'(x) \gtrless 0", font_size=${isVertical ? '65' : '90'}, color=BLUE_B)
+        symbol_main = MathTex(r"f'(x) \gtrless 0", font_size=${isVertical ? '70' : '90'}, color=BLUE_B)
 
         intro_group = VGroup(session_text, title_group, symbol_main).arrange(DOWN, buff=0.5).move_to(ORIGIN)
-        fit_width(intro_group, ${isVertical ? '7.8' : '12.0'})
+        fit_width(intro_group, ${isVertical ? '8.0' : '12.0'})
 
         self.play(FadeIn(session_text, shift=DOWN * 0.4), run_time=0.8)
         self.play(Write(title), Create(title_box), run_time=1.5)
@@ -306,24 +309,24 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         # ==========================================
         # PHẦN 2: LÝ THUYẾT CỐT LÕI (THEORY, ~9.5s)
         # ==========================================
-        th_title = Text("ĐỊNH LÝ: DẤU ĐẠO HÀM & ĐƠN ĐIỆU", font_size=${isVertical ? '22' : '30'}, font=MAIN_FONT, weight=BOLD, color=YELLOW).to_edge(UP, buff=0.7)
-        th_sub = Text("Mối liên hệ giữa f'(x) và đồ thị hàm số", font_size=${isVertical ? '17' : '22'}, font=MAIN_FONT, color=GRAY_B).next_to(th_title, DOWN, buff=0.18)
+        th_title = Text("ĐỊNH LÝ: DẤU ĐẠO HÀM & ĐƠN ĐIỆU", font_size=${isVertical ? '26' : '30'}, font=MAIN_FONT, weight=BOLD, color=YELLOW).to_edge(UP, buff=0.7)
+        th_sub = Text("Mối liên hệ giữa f'(x) và đồ thị hàm số", font_size=${isVertical ? '22' : '24'}, font=MAIN_FONT, color=GRAY_B).next_to(th_title, DOWN, buff=0.18)
         self.play(FadeIn(th_title), FadeIn(th_sub), run_time=0.8)
 
-        t_inc = Text("1. Đồng biến:", font_size=${isVertical ? '20' : '26'}, font=MAIN_FONT, color=GREEN_B, weight=BOLD)
-        m_inc = MathTex(r"f'(x) > 0, \;\forall x \in (a; b)", font_size=${isVertical ? '22' : '28'}, color=WHITE)
-        note_inc = Text("(Đồ thị đi lên ↗)", font_size=${isVertical ? '19' : '24'}, font=MAIN_FONT, color=GREEN_B)
+        t_inc = Text("1. Đồng biến:", font_size=${isVertical ? '24' : '26'}, font=MAIN_FONT, color=GREEN_B, weight=BOLD)
+        m_inc = MathTex(r"f'(x) > 0, \;\forall x \in (a; b)", font_size=${isVertical ? '26' : '28'}, color=WHITE)
+        note_inc = Text("(Đồ thị đi lên ↗)", font_size=${isVertical ? '22' : '24'}, font=MAIN_FONT, color=GREEN_B)
         row_inc = VGroup(t_inc, m_inc, note_inc).arrange(RIGHT, buff=0.25)
 
-        t_dec = Text("2. Nghịch biến:", font_size=${isVertical ? '20' : '26'}, font=MAIN_FONT, color=RED_B, weight=BOLD)
-        m_dec = MathTex(r"f'(x) < 0, \;\forall x \in (a; b)", font_size=${isVertical ? '22' : '28'}, color=WHITE)
-        note_dec = Text("(Đồ thị đi xuống ↘)", font_size=${isVertical ? '19' : '24'}, font=MAIN_FONT, color=RED_B)
+        t_dec = Text("2. Nghịch biến:", font_size=${isVertical ? '24' : '26'}, font=MAIN_FONT, color=RED_B, weight=BOLD)
+        m_dec = MathTex(r"f'(x) < 0, \;\forall x \in (a; b)", font_size=${isVertical ? '26' : '28'}, color=WHITE)
+        note_dec = Text("(Đồ thị đi xuống ↘)", font_size=${isVertical ? '22' : '24'}, font=MAIN_FONT, color=RED_B)
         row_dec = VGroup(t_dec, m_dec, note_dec).arrange(RIGHT, buff=0.25)
 
-        rule_card = RoundedRectangle(corner_radius=0.18, width=${isVertical ? '8.4' : '12.0'}, height=${isVertical ? '2.8' : '3.2'}, color=BLUE_E, fill_color="#1E293B", fill_opacity=0.7)
+        rule_card = RoundedRectangle(corner_radius=0.18, width=${isVertical ? '8.5' : '12.0'}, height=${isVertical ? '3.2' : '3.2'}, color=BLUE_E, fill_color="#1E293B", fill_opacity=0.7)
         rules_content = VGroup(row_inc, row_dec).arrange(DOWN, buff=0.45).move_to(rule_card.get_center())
         theory_box = VGroup(rule_card, rules_content).move_to(ORIGIN)
-        fit_width(theory_box, ${isVertical ? '8.2' : '11.5'})
+        fit_width(theory_box, ${isVertical ? '8.3' : '11.5'})
 
         self.play(Create(rule_card), LaggedStart(FadeIn(row_inc, shift=UP * 0.2), FadeIn(row_dec, shift=UP * 0.2), lag_ratio=0.3), run_time=1.6)
         self.wait(2.5)
@@ -332,61 +335,61 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         # ==========================================
         # PHẦN 3: DUAL-ZONE CONTAINER CARDS MÔ PHỎNG & LỜI GIẢI (~34s)
         # ==========================================
-        # 1. TOP HEADER BAR CỐ ĐỊNH (y ~ 7.0)
-        header_card = RoundedRectangle(corner_radius=0.15, width=${isVertical ? '8.4' : '13.0'}, height=${isVertical ? '1.0' : '1.0'}, color=BLUE_D, fill_color="#1E293B", fill_opacity=0.92)
-        header_card.to_edge(UP, buff=${isVertical ? '0.45' : '0.35'})
+        # 1. TOP HEADER BAR CỐ ĐỊNH (y ~ 7.05, buff=0.35)
+        header_card = RoundedRectangle(corner_radius=0.15, width=${isVertical ? '8.5' : '13.0'}, height=${isVertical ? '1.3' : '1.1'}, color=BLUE_D, fill_color="#1E293B", fill_opacity=0.92)
+        header_card.to_edge(UP, buff=${isVertical ? '0.35' : '0.35'})
 
-        badge = RoundedRectangle(corner_radius=0.1, width=1.8, height=0.55, color=TEAL, fill_color=TEAL_E, fill_opacity=0.8)
-        badge_txt = Text("${config.subject.toUpperCase()}", font=MAIN_FONT, font_size=15, weight=BOLD, color=WHITE).move_to(badge)
+        badge = RoundedRectangle(corner_radius=0.1, width=2.2, height=0.6, color=TEAL, fill_color=TEAL_E, fill_opacity=0.8)
+        badge_txt = Text("${config.subject.toUpperCase()}", font=MAIN_FONT, font_size=18, weight=BOLD, color=WHITE).move_to(badge)
         badge_group = VGroup(badge, badge_txt)
 
-        title_txt = Text("${config.topic.toUpperCase()}", font=MAIN_FONT, font_size=${isVertical ? '21' : '26'}, weight=BOLD, color=YELLOW)
+        title_txt = Text("${config.topic.toUpperCase()}", font=MAIN_FONT, font_size=${isVertical ? '28' : '30'}, weight=BOLD, color=YELLOW)
         header_content = VGroup(badge_group, title_txt).arrange(RIGHT, buff=0.25).move_to(header_card)
         self.play(FadeIn(header_card), FadeIn(header_content), run_time=0.8)
 
-        # 2. KHU VỰC 1: TOP SIMULATION CONTAINER CARD (y ~ 3.1)
-        sim_card = RoundedRectangle(corner_radius=0.2, width=${isVertical ? '8.4' : '7.2'}, height=${isVertical ? '6.3' : '6.2'}, color="#334155", fill_color="#0F172A", fill_opacity=0.95)
-        ${isVertical ? 'sim_card.next_to(header_card, DOWN, buff=0.35)' : 'sim_card.to_edge(LEFT, buff=0.6).shift(DOWN * 0.4)'}
+        # 2. KHU VỰC 1: TOP SIMULATION CONTAINER CARD (y ~ 3.15, height=6.4, lấp đầy không gian)
+        sim_card = RoundedRectangle(corner_radius=0.2, width=${isVertical ? '8.5' : '7.2'}, height=${isVertical ? '6.4' : '6.2'}, color="#334155", fill_color="#0F172A", fill_opacity=0.95)
+        ${isVertical ? 'sim_card.next_to(header_card, DOWN, buff=0.25)' : 'sim_card.to_edge(LEFT, buff=0.6).shift(DOWN * 0.4)'}
 
-        sim_title = Text("📈 MÔ PHỎNG ĐỒ THỊ & TIẾP TUYẾN", font=MAIN_FONT, font_size=${isVertical ? '18' : '20'}, weight=BOLD, color=TEAL_A)
+        sim_title = Text("📈 MÔ PHỎNG ĐỒ THỊ & TIẾP TUYẾN", font=MAIN_FONT, font_size=${isVertical ? '24' : '22'}, weight=BOLD, color=TEAL_A)
         sim_title.next_to(sim_card.get_top(), DOWN, buff=0.22)
 
         axes = Axes(
             x_range=[-2.5, 2.5, 1],
             y_range=[-3.0, 3.0, 1],
-            x_length=${isVertical ? '6.8' : '6.0'},
-            y_length=${isVertical ? '4.2' : '4.2'},
-            axis_config={"include_tip": True, "color": GRAY_B, "stroke_width": 2, "tip_width": 0.15, "tip_height": 0.15}
-        ).move_to(sim_card.get_center()).shift(DOWN * 0.25)
-        axes_labels = axes.get_axis_labels(x_label=MathTex("x", font_size=20), y_label=MathTex("y", font_size=20))
+            x_length=${isVertical ? '7.2' : '6.0'},
+            y_length=${isVertical ? '4.4' : '4.2'},
+            axis_config={"include_tip": True, "color": GRAY_B, "stroke_width": 2.5, "tip_width": 0.18, "tip_height": 0.18}
+        ).move_to(sim_card.get_center()).shift(DOWN * 0.22)
+        axes_labels = axes.get_axis_labels(x_label=MathTex("x", font_size=24), y_label=MathTex("y", font_size=24))
 
         f_func = lambda x: x**3 - 3*x
-        graph = axes.plot(f_func, x_range=[-2.15, 2.15], color=TEAL_C, stroke_width=3.8)
-        graph_label = MathTex(r"y = x^3 - 3x", font_size=22, color=TEAL_B).next_to(axes.c2p(1.2, f_func(1.2)), RIGHT, buff=0.2)
+        graph = axes.plot(f_func, x_range=[-2.15, 2.15], color=TEAL_C, stroke_width=4.5)
+        graph_label = MathTex(r"y = x^3 - 3x", font_size=26, color=TEAL_B).next_to(axes.c2p(1.2, f_func(1.2)), RIGHT, buff=0.2)
 
         # Điểm cực trị và đường gióng nét đứt chuẩn mực
         pt_A = axes.c2p(-1, 2)
         pt_B = axes.c2p(1, -2)
         lines_A = axes.get_lines_to_point(pt_A).set_color(YELLOW_B)
         lines_B = axes.get_lines_to_point(pt_B).set_color(YELLOW_B)
-        dot_A = Dot(pt_A, color=YELLOW, radius=0.08)
-        dot_B = Dot(pt_B, color=YELLOW, radius=0.08)
-        lbl_A = MathTex(r"A(-1; 2)", font_size=18, color=YELLOW).next_to(dot_A, UP, buff=0.12)
-        lbl_B = MathTex(r"B(1; -2)", font_size=18, color=YELLOW).next_to(dot_B, DOWN, buff=0.12)
+        dot_A = Dot(pt_A, color=YELLOW, radius=0.09)
+        dot_B = Dot(pt_B, color=YELLOW, radius=0.09)
+        lbl_A = MathTex(r"A(-1; 2)", font_size=22, color=YELLOW).next_to(dot_A, UP, buff=0.12)
+        lbl_B = MathTex(r"B(1; -2)", font_size=22, color=YELLOW).next_to(dot_B, DOWN, buff=0.12)
 
         # Điểm chuyển động và tiếp tuyến
         t_param = ValueTracker(-2.0)
-        moving_dot = always_redraw(lambda: Dot(axes.c2p(t_param.get_value(), f_func(t_param.get_value())), color=YELLOW, radius=0.09))
+        moving_dot = always_redraw(lambda: Dot(axes.c2p(t_param.get_value(), f_func(t_param.get_value())), color=YELLOW, radius=0.1))
         
         def get_tangent():
             t = t_param.get_value()
             y = f_func(t)
             m = 3 * (t**2) - 3
-            dx = 0.45
+            dx = 0.5
             p1 = axes.c2p(t - dx, y - m * dx)
             p2 = axes.c2p(t + dx, y + m * dx)
             col = GREEN if m > 0.1 else (RED if m < -0.1 else YELLOW)
-            return Line(p1, p2, color=col, stroke_width=3.5)
+            return Line(p1, p2, color=col, stroke_width=4.0)
         
         tangent_line = always_redraw(get_tangent)
 
@@ -396,28 +399,28 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         self.play(FadeIn(lines_A), FadeIn(dot_A), FadeIn(lbl_A), FadeIn(lines_B), FadeIn(dot_B), FadeIn(lbl_B), run_time=1.0)
         self.play(FadeIn(moving_dot), Create(tangent_line), run_time=0.8)
 
-        # 3. KHU VỰC 2: BOTTOM LATEX ANALYSIS CONTAINER CARD (y ~ -3.6)
-        step_card = RoundedRectangle(corner_radius=0.2, width=${isVertical ? '8.4' : '5.8'}, height=${isVertical ? '6.3' : '6.2'}, color="#334155", fill_color="#1E293B", fill_opacity=0.95)
-        ${isVertical ? 'step_card.next_to(sim_card, DOWN, buff=0.35)' : 'step_card.to_edge(RIGHT, buff=0.6).shift(DOWN * 0.4)'}
+        # 3. KHU VỰC 2: BOTTOM LATEX ANALYSIS CONTAINER CARD (y ~ -3.75, height=6.6)
+        step_card = RoundedRectangle(corner_radius=0.2, width=${isVertical ? '8.5' : '5.8'}, height=${isVertical ? '6.6' : '6.2'}, color="#334155", fill_color="#1E293B", fill_opacity=0.95)
+        ${isVertical ? 'step_card.next_to(sim_card, DOWN, buff=0.25)' : 'step_card.to_edge(RIGHT, buff=0.6).shift(DOWN * 0.4)'}
 
-        step_title = Text("📝 CÁC BƯỚC XÉT BIẾN THIÊN", font=MAIN_FONT, font_size=${isVertical ? '18' : '20'}, weight=BOLD, color=YELLOW)
+        step_title = Text("📝 CÁC BƯỚC XÉT BIẾN THIÊN", font=MAIN_FONT, font_size=${isVertical ? '24' : '22'}, weight=BOLD, color=YELLOW)
         step_title.next_to(step_card.get_top(), DOWN, buff=0.22)
 
-        step1 = MathTex(r"1); y' = 3x^2 - 3 = 3(x^2 - 1)", font_size=${isVertical ? '24' : '26'}, color=WHITE)
-        step2 = MathTex(r"2); y' = 0 iff x = -1 quad 	ext{hoặc} quad x = 1", font_size=${isVertical ? '24' : '26'}, color=WHITE)
+        step1 = MathTex(r"1); y' = 3x^2 - 3 = 3(x^2 - 1)", font_size=${isVertical ? '28' : '28'}, color=WHITE)
+        step2 = MathTex(r"2); y' = 0 \iff x = -1 \quad \text{hoặc} \quad x = 1", font_size=${isVertical ? '28' : '28'}, color=WHITE)
 
         res_inc = VGroup(
-            MathTex(r"ullet; y' > 0 iff x in (-infty; -1) cup (1; +infty)", font_size=${isVertical ? '20' : '22'}, color=WHITE),
-            Text("→ Đồng biến ↗", font=MAIN_FONT, font_size=${isVertical ? '18' : '20'}, color=GREEN_B, weight=BOLD)
+            MathTex(r"\bullet \; y' > 0 \iff x \in (-\infty; -1) \cup (1; +\infty)", font_size=${isVertical ? '24' : '24'}, color=WHITE),
+            Text("→ Đồng biến ↗", font=MAIN_FONT, font_size=${isVertical ? '22' : '22'}, color=GREEN_B, weight=BOLD)
         ).arrange(RIGHT, buff=0.2)
 
         res_dec = VGroup(
-            MathTex(r"ullet; y' < 0 iff x in (-1; 1)", font_size=${isVertical ? '20' : '22'}, color=WHITE),
-            Text("→ Nghịch biến ↘", font=MAIN_FONT, font_size=${isVertical ? '18' : '20'}, color=RED_B, weight=BOLD)
+            MathTex(r"\bullet \; y' < 0 \iff x \in (-1; 1)", font_size=${isVertical ? '24' : '24'}, color=WHITE),
+            Text("→ Nghịch biến ↘", font=MAIN_FONT, font_size=${isVertical ? '22' : '22'}, color=RED_B, weight=BOLD)
         ).arrange(RIGHT, buff=0.2)
 
-        res_group = VGroup(res_inc, res_dec).arrange(DOWN, aligned_edge=LEFT, buff=0.22)
-        res_box = SurroundingRectangle(res_group, color=GREEN, buff=0.18, corner_radius=0.12)
+        res_group = VGroup(res_inc, res_dec).arrange(DOWN, aligned_edge=LEFT, buff=0.25)
+        res_box = SurroundingRectangle(res_group, color=GREEN, buff=0.22, corner_radius=0.12, stroke_width=3.5)
 
         calc_content = VGroup(step1, step2, VGroup(res_group, res_box)).arrange(DOWN, aligned_edge=LEFT, buff=0.35)
         calc_content.move_to(step_card.get_center()).shift(DOWN * 0.2)
@@ -438,22 +441,22 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         # ==========================================
         # PHẦN 4: KẾT LUẬN & OUTRO THƯƠNG HIỆU (~8.5s)
         # ==========================================
-        outro_card = RoundedRectangle(corner_radius=0.25, width=${isVertical ? '8.4' : '12.5'}, height=${isVertical ? '13.0' : '6.6'}, color=GOLD_E, fill_color="#0F172A", fill_opacity=0.95)
+        outro_card = RoundedRectangle(corner_radius=0.25, width=${isVertical ? '8.5' : '12.5'}, height=${isVertical ? '13.8' : '6.6'}, color=GOLD_E, fill_color="#0F172A", fill_opacity=0.95)
         outro_card.move_to(ORIGIN)
 
-        outro_header = Text("TỔNG KẾT BÀI HỌC", font_size=${isVertical ? '26' : '32'}, weight=BOLD, color=YELLOW, font=MAIN_FONT)
+        outro_header = Text("TỔNG KẾT BÀI HỌC", font_size=${isVertical ? '34' : '36'}, weight=BOLD, color=YELLOW, font=MAIN_FONT)
         
-        point1 = Text("✓ Dấu f'(x) > 0 : Đồ thị đi lên ↗ (Đồng biến)", font_size=${isVertical ? '20' : '24'}, font=MAIN_FONT, color=GREEN_B)
-        point2 = Text("✓ Dấu f'(x) < 0 : Đồ thị đi xuống ↘ (Nghịch biến)", font_size=${isVertical ? '20' : '24'}, font=MAIN_FONT, color=RED_B)
-        point3 = Text("✓ Luôn lập Bảng biến thiên để không bỏ sót cực trị", font_size=${isVertical ? '20' : '24'}, font=MAIN_FONT, color=WHITE)
-        points_group = VGroup(point1, point2, point3).arrange(DOWN, aligned_edge=LEFT, buff=0.35)
+        point1 = Text("✓ Dấu f'(x) > 0 : Đồ thị đi lên ↗ (Đồng biến)", font_size=${isVertical ? '24' : '26'}, font=MAIN_FONT, color=GREEN_B)
+        point2 = Text("✓ Dấu f'(x) < 0 : Đồ thị đi xuống ↘ (Nghịch biến)", font_size=${isVertical ? '24' : '26'}, font=MAIN_FONT, color=RED_B)
+        point3 = Text("✓ Luôn lập Bảng biến thiên để không bỏ sót cực trị", font_size=${isVertical ? '24' : '26'}, font=MAIN_FONT, color=WHITE)
+        points_group = VGroup(point1, point2, point3).arrange(DOWN, aligned_edge=LEFT, buff=0.4)
 
-        brand_badge = RoundedRectangle(corner_radius=0.15, width=4.5, height=0.9, color=RED, fill_color=RED_E, fill_opacity=0.85)
-        brand_txt = Text("Học toán cùng Yuta", font_size=${isVertical ? '22' : '26'}, weight=BOLD, color=WHITE, font=MAIN_FONT).move_to(brand_badge)
+        brand_badge = RoundedRectangle(corner_radius=0.15, width=5.2, height=1.0, color=RED, fill_color=RED_E, fill_opacity=0.85)
+        brand_txt = Text("Học toán cùng Yuta", font_size=${isVertical ? '26' : '28'}, weight=BOLD, color=WHITE, font=MAIN_FONT).move_to(brand_badge)
         brand_group = VGroup(brand_badge, brand_txt)
 
         outro_content = VGroup(outro_header, points_group, brand_group).arrange(DOWN, buff=0.6).move_to(outro_card)
-        fit_width(outro_content, ${isVertical ? '7.8' : '11.5'})
+        fit_width(outro_content, ${isVertical ? '8.0' : '11.5'})
 
         self.play(Create(outro_card), run_time=1.0)
         self.play(FadeIn(outro_header, shift=DOWN * 0.3), run_time=0.8)
@@ -544,7 +547,7 @@ ${existingCode.trim()}
 IV. YÊU CẦU THỰC THI BẮT BUỘC:
 1. Đọc kỹ từng góp ý, câu từ cần sửa, hoặc lỗi bố cục được ghi trong mục II.
 2. Viết lại TOÀN BỘ file mã nguồn Manim Python (\`scene.py\`) từ đầu, khắc phục 100% các vấn đề người dùng đã nêu.
-3. Giữ vững quy chuẩn CHỐNG ĐÈ CHỮ (ZERO OVERLAP), áp dụng Khung Thẻ Container Dual-Zone, dãn dòng \`line_spacing=1.2\`, căn chỉnh khoảng cách chữ chuẩn xác, font_size an toàn >= 20.
+3. Giữ vững quy chuẩn CHỐNG ĐÈ CHỮ (ZERO OVERLAP), áp dụng Khung Thẻ Container Dual-Zone lấp đầy 93% màn hình (height=6.4 và 6.6), dãn dòng \`line_spacing=1.2\`, căn chỉnh khoảng cách chữ chuẩn xác, BẮT BUỘC font_size lớn rõ nét (Tiêu đề 30-34, Thẻ 24, MathTex 28-34, Text tiếng Việt 22-26, TUYỆT ĐỐI KHÔNG DÙNG FONT_SIZE DƯỚI 22).
 4. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, không viết lời chào hay giải thích ngoài mã.
 5. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file). (Hệ thống máy chủ sẽ tự biên dịch mã bằng lệnh: \`manim ${qualityFlag} scene.py MainScene\`, AI không được tự chạy lệnh này).`;
 };

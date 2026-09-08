@@ -504,6 +504,38 @@ async function runAgyPrompt(promptText, cwdDir, modelName, onProgress, timeoutMs
   });
 }
 
+async function extractPdfTextSafe(filePath) {
+  if (!filePath || !fs.existsSync(filePath)) return { text: '', numPages: 0 };
+  try {
+    const buffer = fs.readFileSync(filePath);
+    const pdfModule = require('pdf-parse');
+    let extractedText = '';
+    let pageCount = 1;
+    if (typeof pdfModule === 'function') {
+      const parsed = await pdfModule(buffer);
+      extractedText = parsed.text || '';
+      pageCount = parsed.numpages || 1;
+    } else if (pdfModule && pdfModule.PDFParse) {
+      const parser = new pdfModule.PDFParse({ data: buffer });
+      const resText = await parser.getText();
+      extractedText = resText.text || '';
+      pageCount = resText.total || (resText.pages && resText.pages.length) || 1;
+      if (parser.destroy) {
+        await parser.destroy().catch(() => {});
+      }
+    } else if (pdfModule && pdfModule.default) {
+      const parser = new pdfModule.default.PDFParse({ data: buffer });
+      const resText = await parser.getText();
+      extractedText = resText.text || '';
+      pageCount = resText.total || (resText.pages && resText.pages.length) || 1;
+    }
+    return { text: extractedText.trim(), numPages: pageCount };
+  } catch (err) {
+    console.warn('extractPdfTextSafe error:', err.message);
+    return { text: '', numPages: 0 };
+  }
+}
+
 function extractPythonManimCode(text, cwdDir) {
   if (text) {
     const pythonBlocks = Array.from(text.matchAll(/```(?:python|py)?\s*([\s\S]*?)```/gi));
@@ -748,11 +780,16 @@ except Exception:
     pass
 
 try:
-    # 1.2 Tự động chuẩn hóa font Times New Roman / Liberation Serif đẹp mắt cho toàn bộ Text
+    # 1.2 Tự động chuẩn hóa font Times New Roman / Liberation Serif đẹp mắt và auto-scale cỡ chữ lớn cho Text
     _orig_text_init = Text.__init__
     def _smart_text_init(self, text, *args, **kwargs):
         if 'line_spacing' not in kwargs:
             kwargs['line_spacing'] = 1.2
+        fs = kwargs.get('font_size', None)
+        if fs is not None and fs < 22:
+            kwargs['font_size'] = max(22, int(fs * 1.35))
+        elif fs is None:
+            kwargs['font_size'] = 24
         f = kwargs.get('font', None)
         if not f or f in ('sans-serif', 'sans', 'default', ''):
             font_candidates = ['Times New Roman', 'Liberation Serif', 'Be Vietnam Pro', 'Inter', 'DejaVu Serif', 'JetBrains Mono', 'Roboto', 'FreeSerif']
@@ -783,6 +820,28 @@ try:
                     except Exception:
                         continue
     Text.__init__ = _smart_text_init
+
+    # 1.3 Auto-scale font_size cho MathTex và Tex
+    _orig_mathtex_init = MathTex.__init__
+    def _smart_mathtex_init(self, *tex_strings, **kwargs):
+        fs = kwargs.get('font_size', None)
+        if fs is not None and fs < 24:
+            kwargs['font_size'] = max(24, int(fs * 1.3))
+        elif fs is None:
+            kwargs['font_size'] = 28
+        return _orig_mathtex_init(self, *tex_strings, **kwargs)
+    MathTex.__init__ = _smart_mathtex_init
+
+    if 'Tex' in globals():
+        _orig_tex_init = Tex.__init__
+        def _smart_tex_init(self, *tex_strings, **kwargs):
+            fs = kwargs.get('font_size', None)
+            if fs is not None and fs < 24:
+                kwargs['font_size'] = max(24, int(fs * 1.3))
+            elif fs is None:
+                kwargs['font_size'] = 28
+            return _orig_tex_init(self, *tex_strings, **kwargs)
+        Tex.__init__ = _smart_tex_init
 
     def SerifText(text, *args, **kwargs):
         kwargs.setdefault('font', 'Times New Roman')
@@ -903,14 +962,20 @@ try:
     def create_card(width, height, title=None, color="#334155", fill_color="#0F172A", fill_opacity=0.95, font="Times New Roman", title_color=YELLOW):
         card = RoundedRectangle(corner_radius=0.18, width=width, height=height, color=color, fill_color=fill_color, fill_opacity=fill_opacity)
         if title:
-            t = Text(title, font=font, font_size=20, weight=BOLD, color=title_color)
-            t.next_to(card.get_top(), DOWN, buff=0.22)
+            t = Text(title, font=font, font_size=24, weight=BOLD, color=title_color)
+            t.next_to(card.get_top(), DOWN, buff=0.25)
             return VGroup(card, t)
         return card
 except Exception:
     pass
 # ==========================================
 `;
+
+  // Tự động nâng cấp các font_size nhỏ dưới 22 trong code
+  processed = processed.replace(/\bfont_size\s*=\s*(1[0-9]|20|21)\b/g, (match, p1) => {
+    const val = parseInt(p1, 10);
+    return `font_size=${Math.max(24, Math.round(val * 1.35))}`;
+  });
 
   // Tự động triệt tiêu lỗi watermark UL va chạm tiêu đề
   processed = processed.replace(/\b([a-zA-Z0-9_]*symbol[a-zA-Z0-9_]*)\.animate(?:\.[a-zA-Z0-9_]+\([^)]*\))*\.to_corner\(UL(?:,\s*buff=[^)]*)?\)/g, 'FadeOut($1)');
@@ -1840,21 +1905,40 @@ function startInternalServer(callback) {
                                   promptToSend.includes('KỊCH BẢN SƯ PHẠM');
 
               // Bổ sung thông tin tài liệu RAG nếu có
+              let ragText = '';
+              let ragFileName = '';
+              let ragDirectiveBlock = '';
+
               if (options.attachedPdfPath && fs.existsSync(options.attachedPdfPath)) {
-                const pdfName = path.basename(options.attachedPdfPath);
+                ragFileName = path.basename(options.attachedPdfPath);
                 sendSSE({
                   step: 'SENDING_PROMPT',
-                  progress: 28,
-                  message: `Đã kết nối tài liệu RAG: ${pdfName}`,
+                  progress: 26,
+                  message: `Đang bóc tách nội dung tài liệu RAG (${ragFileName})...`,
                 });
-                if (!promptToSend.includes('[TÀI LIỆU RAG NGUỒN ĐÍNH KÈM / GHIM]')) {
-                  promptToSend = `[TÀI LIỆU RAG NGUỒN]: File "${pdfName}" tại "${options.attachedPdfPath}". Bám sát toàn bộ dữ kiện toán học trong tài liệu này.\n\n` + promptToSend;
+                const pdfRes = await extractPdfTextSafe(options.attachedPdfPath);
+                ragText = (pdfRes && pdfRes.text) ? pdfRes.text.trim() : '';
+                if (ragText) {
+                  sendSSE({
+                    step: 'SENDING_PROMPT',
+                    progress: 29,
+                    message: `✓ Đã kết nối tài liệu RAG: ${ragFileName} (${pdfRes.numPages} trang, ${ragText.length} ký tự).`,
+                  });
+                  const trimmedRag = ragText.slice(0, 15000);
+                  ragDirectiveBlock = `\n\n[TÀI LIỆU RAG NGUỒN BẮT BUỘC BÁM SÁT (${ragFileName})]:\n"""\n${trimmedRag}\n"""\n\nCHỈ THỊ SƯ PHẠM RAG BẮT BUỘC KHÔNG ĐƯỢC BỎ QUA:\n1. BẮT BUỘC TRÍCH XUẤT CHÍNH XÁC BÀI TOÁN / CÂU HỎI / ĐỊNH LÝ TỪ TÀI LIỆU TRÊN để dựng video bài giảng. Nếu là đề ôn tập gồm nhiều câu, chọn bài toán tiêu biểu nhất (ví dụ Dạng 1 / Câu 1) và giải chi tiết từng bước.\n2. BÁM SÁT 100% CÂU TỪ, DỮ KIỆN, HÀM SỐ, HÌNH VẼ, PHƯƠNG TRÌNH, BƯỚC GIẢI TRONG TÀI LIỆU. TUYỆT ĐỐI KHÔNG BỊA BÀI TOÁN KHÁC!\n3. DIỄN ĐẠT ĐÚNG VÀ ĐỦ Ý CHÍNH: Lời giải, biến đổi đại số, và bảng biến thiên/đồ thị phải phản ánh trung thực bài toán trong tài liệu.`;
+                  if (!promptToSend.includes('[TÀI LIỆU RAG NGUỒN ĐÍNH KÈM / GHIM]')) {
+                    promptToSend = ragDirectiveBlock + '\n\n' + promptToSend;
+                  }
+                } else {
+                  if (!promptToSend.includes('[TÀI LIỆU RAG NGUỒN ĐÍNH KÈM / GHIM]')) {
+                    promptToSend = `[TÀI LIỆU RAG NGUỒN]: File "${ragFileName}" tại "${options.attachedPdfPath}". Bám sát toàn bộ dữ kiện toán học trong tài liệu này.\n\n` + promptToSend;
+                  }
                 }
               }
 
               // Bổ sung chỉ thị cho Antigravity Agent nếu là bài giảng Video
               if (isManimTask && !promptToSend.includes('MainScene')) {
-                promptToSend += `\n\nYÊU CẦU BẮT BUỘC CHO VIDEO MANIM CE:\n- Xuất Kịch bản Sư phạm VÀ Khối mã Python Manim CE duy nhất trong \`\`\`python ... \`\`\` có \`class MainScene(Scene)\` và \`def construct(self):\` để có thể render ngay.\n- TUYỆT ĐỐI KHÔNG SỬ DỤNG BẤT KỲ TOOL NÀO (KHÔNG run_command, KHÔNG write_to_file, KHÔNG view_file). KHÔNG TỰ CHẠY LỆNH RENDER. CHỈ XUẤT TEXT TRỰC TIẾP.`;
+                promptToSend += `\n\nYÊU CẦU BẮT BUỘC CHO VIDEO MANIM CE:\n- Xuất Kịch bản Sư phạm VÀ Khối mã Python Manim CE duy nhất trong \`\`\`python ... \`\`\` có \`class MainScene(Scene)\` và \`def construct(self):\` để có thể render ngay.\n- BỐ CỤC DUAL-ZONE CONTAINER LẤP ĐẦY 93% MÀN HÌNH (height thẻ 6.4 và 6.6), FONT_SIZE LỚN RÕ RÀNG (Tiêu đề 30-34, Thẻ 24, MathTex 28-34, Diễn giải 22-26, CẤM DÙNG FONT_SIZE DƯỚI 22).\n- TUYỆT ĐỐI KHÔNG SỬ DỤNG BẤT KỲ TOOL NÀO (KHÔNG run_command, KHÔNG write_to_file, KHÔNG view_file). KHÔNG TỰ CHẠY LỆNH RENDER. CHỈ XUẤT TEXT TRỰC TIẾP.`;
               }
 
               let lastProgressReport = Date.now();
@@ -1893,20 +1977,24 @@ function startInternalServer(callback) {
                   const codeFollowupPrompt = `Dựa trên kịch bản sư phạm và nội dung bài học toán sau:
 Topic: ${options.topic || options.subject || 'Toán học'}
 Thời lượng mục tiêu: ${targetDuration}
-Nội dung kịch bản:
-${responseText.slice(0, 2000)}
+Nội dung kịch bản đã thống nhất:
+${responseText.slice(0, 4500)}
+${ragDirectiveBlock ? `\n${ragDirectiveBlock}\n` : ''}
 
 Hãy viết TOÀN BỘ file mã nguồn Manim Python (\`scene.py\`) hoàn chỉnh 100% để render video bài giảng này.
 
-YÊU CẦU BẮT BUỘC KHÔNG ĐƯỢC BỎ QUA:
+YÊU CẦU BẮT BUỘC KHÔNG ĐƯỢC BỎ QUA (TUÂN THỦ DUAL-ZONE CONTAINER CARDS & CHỐNG TRỐNG MÀN HÌNH):
 1. BẮT BUỘC bắt đầu bằng khối mã \`\`\`python ... \`\`\`
 2. BẮT BUỘC có dòng đầu: from manim import *
 3. BẮT BUỘC có class MainScene(Scene) hoặc class MainScene(ThreeDScene) chứa def construct(self):
 4. ${isVertical ? 'Cấu hình khung hình DỌC 9:16 (config.pixel_width=1080, config.pixel_height=1920, config.frame_width=9.0, config.frame_height=16.0).' : 'Cấu hình khung hình NGANG 16:9 (1920x1080).'}
-5. BẮT BUỘC khớp đúng thời lượng mục tiêu: ${targetDuration} (điều chỉnh số phân cảnh, khối kịch bản lời thoại VOICEOVER_SCRIPT và các khoảng self.wait(2.0-4.0) giữa các bước).
-6. 100% công thức MathTex(r"...") dùng raw string r"...".
-7. TUYỆT ĐỐI CHỈ XUẤT MÃ PYTHON TRONG KHỐI \`\`\`python ... \`\`\`, KHÔNG VIẾT LỜI CHÀO HAY GIẢI THÍCH NGOÀI MÃ!
-8. TUYỆT ĐỐI KHÔNG GỌI BẤT KỲ TOOL NÀO (KHÔNG run_command, KHÔNG write_to_file, KHÔNG view_file). KHÔNG TỰ CHẠY LỆNH RENDER. Hệ thống sẽ tự biên dịch mã bằng lệnh: \`manim ${qualityFlag} scene.py MainScene\`.`;
+5. BỐ CỤC DUAL-ZONE LẤP ĐẦY 93% MÀN HÌNH (TRIỆT TIÊU KHOẢNG TRỐNG ĐEN):
+   - ${isVertical ? 'Header Bar (y ~ 7.05, height=1.3, width=8.5, tiêu đề font_size=30-34 BOLD); Top Card (y ~ 3.15, height=6.4, width=8.5, tiêu đề font_size=24, axes x_length=7.2, y_length=4.4, nét vẽ stroke_width=4.5); Bottom Card (y ~ -3.75, height=6.6, width=8.5, tiêu đề font_size=24, công thức MathTex font_size=28-34, diễn giải font_size=22-26, bảng biến thiên font_size=24-28). TUYỆT ĐỐI KHÔNG để khoảng trống đen thừa!' : 'Header đỉnh màn hình, Cột Trái Mô phỏng Đồ thị (width=7.2, height=6.2), Cột Phải Lời giải LaTeX (width=5.8, height=6.2).'}
+6. BẮT BUỘC FONT_SIZE LỚN DỄ ĐỌC TRÊN ĐIỆN THOẠI: TUYỆT ĐỐI KHÔNG dùng font_size nhỏ dưới 22! Mọi chữ tiếng Việt font_size=22-26, công thức MathTex font_size=28-34, tiêu đề 30-34.
+7. BẮT BUỘC khớp đúng thời lượng mục tiêu: ${targetDuration} (điều chỉnh số phân cảnh, khối kịch bản lời thoại VOICEOVER_SCRIPT và các khoảng self.wait(2.0-4.0) giữa các bước).
+8. 100% công thức MathTex(r"...") dùng raw string r"...".
+9. TUYỆT ĐỐI CHỈ XUẤT MÃ PYTHON TRONG KHỐI \`\`\`python ... \`\`\`, KHÔNG VIẾT LỜI CHÀO HAY GIẢI THÍCH NGOÀI MÃ!
+10. TUYỆT ĐỐI KHÔNG GỌI BẤT KỲ TOOL NÀO (KHÔNG run_command, KHÔNG write_to_file, KHÔNG view_file). KHÔNG TỰ CHẠY LỆNH RENDER. Hệ thống sẽ tự biên dịch mã bằng lệnh: \`manim ${qualityFlag} scene.py MainScene\`.`;
 
                   let turn2Report = Date.now();
                   const turn2Text = await runAgyPrompt(codeFollowupPrompt, downloadsDir, selectedModel, (delta, fullText) => {
@@ -1931,7 +2019,9 @@ YÊU CẦU BẮT BUỘC KHÔNG ĐƯỢC BỎ QUA:
                     message: '⚡ Antigravity đang khởi tạo lại mã Python Manim CE trực tiếp...',
                   });
 
-                  const directPrompt = `Viết duy nhất 1 khối mã Python Manim CE (\`scene.py\`) hoàn chỉnh 100% để tạo video minh họa cho bài toán toán học chủ đề: "${options.topic || options.subject || 'Toán học'}". BẮT BUỘC bắt đầu bằng \`\`\`python from manim import * ... \`\`\` với class MainScene(Scene) và def construct(self):. TUYỆT ĐỐI KHÔNG SỬ DỤNG TOOL/COMMAND (KHÔNG run_command, KHÔNG write_to_file). CHỈ XUẤT DUY NHẤT KHỐI MÃ PYTHON RA TEXT OUTPUT! KHÔNG VIẾT LỜI CHÀO!`;
+                  const isVertical = options.prompt.includes('9:16') || options.prompt.includes('DỌC');
+                  const directPrompt = `Viết duy nhất 1 khối mã Python Manim CE (\`scene.py\`) hoàn chỉnh 100% để tạo video minh họa cho bài toán toán học chủ đề: "${options.topic || options.subject || 'Toán học'}".${ragDirectiveBlock ? `\n${ragDirectiveBlock}\n` : ''}
+BẮT BUỘC bắt đầu bằng \`\`\`python from manim import * ... \`\`\` với class MainScene(Scene) và def construct(self):. Cấu hình ${isVertical ? 'Dọc 9:16 Dual-Zone, lấp đầy 93% màn hình (height 6.4 và 6.6), cỡ chữ lớn >= 22 (MathTex >= 28, Tiêu đề >= 30)' : 'Ngang 16:9'}. TUYỆT ĐỐI KHÔNG SỬ DỤNG TOOL/COMMAND (KHÔNG run_command, KHÔNG write_to_file). CHỈ XUẤT DUY NHẤT KHỐI MÃ PYTHON RA TEXT OUTPUT! KHÔNG VIẾT LỜI CHÀO!`;
                   const directText = await runAgyPrompt(directPrompt, downloadsDir, selectedModel);
                   extractedPython = extractPythonManimCode(directText, downloadsDir);
                 }
@@ -2080,12 +2170,13 @@ YÊU CẦU BẮT BUỘC KHÔNG ĐƯỢC BỎ QUA:
 --------------------------------------------------
 ${renderResult.detailsForAI || lastErrorMsg}
 --------------------------------------------------
+${ragFileName ? `[LƯU Ý]: Giữ nguyên bài toán và dữ liệu gốc từ tài liệu RAG "${ragFileName}".` : ''}
 
 YÊU CẦU BẮT BUỘC ĐỂ SỬA LỖI:
 1. Đọc kỹ vị trí dòng lỗi và chỉ dẫn sửa lỗi ở trên để khắc phục triệt để.
-2. Viết lại TOÀN BỘ file scene.py hoàn chỉnh, ngắn gọn súc tích (dưới 140 dòng lệnh).
-3. Đảm bảo đóng đầy đủ mọi dấu ngoặc, kết thúc hàm construct(self) bằng self.wait(2).
-4. Giữ nguyên class MainScene(Scene) hoặc tên Scene tương ứng, cấu hình Dual-Zone và MathTex(r"...").
+2. Viết lại TOÀN BỘ file scene.py hoàn chỉnh, ngắn gọn súc tích.
+3. Đảm bảo đóng đầy đủ mọi dấu ngoặc, kết thúc hàm construct(self) bằng self.wait(3).
+4. Giữ nguyên class MainScene(Scene) hoặc tên Scene tương ứng, cấu hình Dual-Zone lấp đầy 93% màn hình (height 6.4 và 6.6), cỡ chữ lớn dễ đọc (MathTex font_size=28-34, Text font_size=22-26, Tiêu đề 30-34).
 5. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, KHÔNG viết lời chào hay giải thích ngoài mã.
 6. TUYỆT ĐỐI KHÔNG SỬ DỤNG TOOL/COMMAND (KHÔNG run_command, KHÔNG write_to_file). CHỈ XUẤT DUY NHẤT MÃ PYTHON RA OUTPUT.`;
 
@@ -3236,28 +3327,26 @@ YÊU CẦU BẮT BUỘC ĐỂ SỬA LỖI:
               const qualityFlag = '-qh';
               const codeFollowupPrompt = `Tuyệt vời! Dựa trên kịch bản sư phạm và khối lời thoại VOICEOVER_SCRIPT vừa thống nhất ở trên, hãy viết TOÀN BỘ file mã nguồn Manim Python (\`scene.py\`) hoàn chỉnh 100% để render video bài giảng này.
 
-YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ 15 NGUYÊN TẮC VÀNG VISUAL ENGINEERING):
+YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ BỘ NGUYÊN TẮC VISUAL ENGINEERING & DUAL-ZONE CONTAINER CARDS):
 1. Kế thừa chính xác biến VOICEOVER_SCRIPT (~140-160 từ) và 4 phân cảnh đã duyệt (1. Intro, 2. Lý thuyết, 3. Mô phỏng & Biến đổi LaTeX, 4. Outro).
 2. Cấu hình ${isVertical ? 'Khung hình DỌC 9:16 (config.pixel_width=1080, config.pixel_height=1920, config.frame_width=9.0, config.frame_height=16.0)' : 'Khung hình NGANG 16:9 (1920x1080, config.frame_width=14.22, config.frame_height=8.0)'}.
 3. 100% CÔNG THỨC LATEX HOÀN HẢO (PERFECT LATEX):
    - MỌI công thức, phương trình, biến số bắt buộc dùng MathTex(r"...") với raw string r"...".
    - Phân số \\frac{a}{b}, căn thức \\sqrt{x}, tích phân \\int, đạo hàm \\frac{df}{dx}, vector \\vec{u}.
    - Biến đổi toán học nhiều dòng dùng môi trường aligned: MathTex(r"\\begin{aligned} ... &= ... \\\\ &= ... \\end{aligned}").
-   - Đóng khung nổi bật đáp số / kết quả cuối cùng: SurroundingRectangle(result, color=GREEN, buff=0.15, corner_radius=0.1).
-   - Tuyệt đối KHÔNG viết tiếng Việt có dấu trực tiếp trong MathTex để tránh lỗi LaTeX Unicode; tiếng Việt dùng Text("...", font="Be Vietnam Pro").
+   - Đóng khung nổi bật đáp số / kết quả cuối cùng: SurroundingRectangle(result, color=GREEN, buff=0.2, corner_radius=0.12).
+   - Tuyệt đối KHÔNG viết tiếng Việt có dấu trực tiếp trong MathTex; tiếng Việt dùng Text("...", font="Times New Roman").
 4. MÔ PHỎNG TOÁN HỌC TRỰC QUAN SINH ĐỘNG (VISUAL SIMULATION):
    - Phân cảnh giải toán BẮT BUỘC có mô phỏng hình ảnh động: Hệ trục tọa độ Axes, đồ thị axes.plot(...), điểm Dot di chuyển trên đường cong bằng ValueTracker, tiếp tuyến hoặc hình học/vector. Tuyệt đối không chỉ hiển thị các dòng chữ tĩnh!
-5. BỐ CỤC ZERO-OVERLAP DUAL-ZONE & QUAN HỆ HÌNH HỌC (KHÔNG DÙNG MAGIC COORDINATES):
-   - BẮT BUỘC dùng quan hệ hình học: VGroup + arrange() + next_to() thay cho các tọa độ ước lượng move_to(UP*2).
-   - ${isVertical ? 'Xếp 2 tầng: Tầng trên (scale 0.7, shift UP*2.6) dành riêng cho Mô phỏng Đồ thị/Hình học; Tầng dưới (shift DOWN*2.8) dành riêng cho Công thức LaTeX giải chi tiết' : 'Bố cục 2 Cột: Cột Trái 55% là Mô phỏng Đồ thị/Hình học (.to_edge(LEFT, buff=0.8)), Cột Phải 45% là Biến đổi Công thức LaTeX (.to_edge(RIGHT, buff=0.8))'}.
-   - Kiểm soát kích thước: Dùng fit_width(obj, max_width) hoặc scale_to_fit_width(...) để không bao giờ tràn khung.
-   - Nhãn chữ gần đồ thị: Dùng add_backdrop(label) hoặc label.add_background_rectangle(color="#0F172A", opacity=0.9, buff=0.1).
+5. BỐ CỤC KHUNG THẺ CONTAINER (DUAL-ZONE) LẤP ĐẦY 93% MÀN HÌNH (TRIỆT TIÊU KHOẢNG TRỐNG ĐEN):
+   - ${isVertical ? 'Header Bar (y ~ 7.05, height=1.3, width=8.5, tiêu đề font_size=30-34 BOLD); Top Card (y ~ 3.15, height=6.4, width=8.5, tiêu đề font_size=24, axes x_length=7.2, y_length=4.4); Bottom Card (y ~ -3.75, height=6.6, width=8.5, tiêu đề font_size=24, MathTex font_size=28-34, diễn giải font_size=22-26, bảng biến thiên font_size=24-28). TUYỆT ĐỐI KHÔNG để khoảng trống đen thừa!' : 'Header đỉnh màn hình, Cột Trái Mô phỏng Đồ thị (width=7.2, height=6.2), Cột Phải Lời giải LaTeX (width=5.8, height=6.2).'}.
+   - BẮT BUỘC font_size lớn rõ nét (Tiêu đề 30-34, Thẻ 24, MathTex 28-34, Text tiếng Việt 22-26, CẤM DÙNG FONT_SIZE DƯỚI 22).
 6. NHỊP ĐIỆU THỊ GIÁC & CHUYỂN CẢNH MƯỢT MÀ:
    - Dùng TransformMatchingTex khi biến đổi công thức đại số.
    - Dùng LaggedStart khi xuất hiện danh sách hoặc các phần tử nối tiếp.
    - Có khoảng dừng self.wait(1.5 đến 2.5s) sau các công thức trọng tâm để người xem kịp quan sát.
-7. Màu nền "#0F172A", toàn bộ Text dùng font="Be Vietnam Pro".
-8. Cảnh Outro: Hiệu ứng hào quang, giữ nguyên màn hình (self.wait(2.5)), TUYỆT ĐỐI KHÔNG DÙNG FadeOut(*self.mobjects) làm đen màn hình.
+7. Màu nền "#0F172A", toàn bộ Text dùng font="Times New Roman".
+8. Cảnh Outro: Thẻ Card tổng kết toàn màn hình (height=13.8, width=8.5), giữ nguyên màn hình (self.wait(3.0)), TUYỆT ĐỐI KHÔNG DÙNG FadeOut(*self.mobjects) làm đen màn hình.
 9. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, không viết bất kỳ lời chào hay giải thích ngoài mã.
 Lệnh render cuối file: \`manim ${qualityFlag} scene.py MainScene\`.`;
 
@@ -3472,9 +3561,9 @@ ${detailsForAI}
 
 YÊU CẦU BẮT BUỘC ĐỂ SỬA LỖI:
 1. Đọc kỹ vị trí dòng lỗi và chỉ dẫn sửa lỗi ở trên để khắc phục triệt để.
-2. Viết lại TOÀN BỘ file scene.py hoàn chỉnh, ngắn gọn súc tích (dưới 140 dòng lệnh).
-3. Đảm bảo đóng đầy đủ mọi dấu ngoặc, kết thúc hàm construct(self) bằng self.wait(2).
-4. Giữ nguyên class MainScene(Scene) hoặc tên Scene tương ứng, cấu hình Dual-Zone và LaTeX MathTex(r"...").
+2. Viết lại TOÀN BỘ file scene.py hoàn chỉnh, ngắn gọn súc tích.
+3. Đảm bảo đóng đầy đủ mọi dấu ngoặc, kết thúc hàm construct(self) bằng self.wait(3).
+4. Giữ nguyên class MainScene(Scene) hoặc tên Scene tương ứng, cấu hình Dual-Zone lấp đầy 93% màn hình (height 6.4 và 6.6), cỡ chữ lớn dễ đọc (MathTex font_size=28-34, Text font_size=22-26, Tiêu đề 30-34).
 5. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, KHÔNG viết lời chào hay giải thích ngoài mã.`;
 
                     const healedCode = await sendFollowupPromptAndGetPython(healPrompt, (m) => {
