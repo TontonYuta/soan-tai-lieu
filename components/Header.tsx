@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { FileEdit, Sparkles, HelpCircle, Smartphone } from 'lucide-react';
+import { FileEdit, Sparkles, HelpCircle, Smartphone, Pin } from 'lucide-react';
 import MobileAccessModal from './MobileAccessModal';
 import { AutomationClient, NetworkInfo } from '../services/automationClient';
 
 interface HeaderProps {
   onOpenReadme?: () => void;
   onSwitchToMobile?: () => void;
+  globalPinnedPdf?: { fileName: string; numPages?: number } | null;
+  isGlobalRagActive?: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ onOpenReadme, onSwitchToMobile }) => {
+const Header: React.FC<HeaderProps> = ({ onOpenReadme, onSwitchToMobile, globalPinnedPdf, isGlobalRagActive = true }) => {
   const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);
   const [networkInfo, setNetworkInfo] = useState<NetworkInfo | null>(null);
 
@@ -46,6 +48,16 @@ const Header: React.FC<HeaderProps> = ({ onOpenReadme, onSwitchToMobile }) => {
             </div>
 
             <div className="flex items-center gap-3">
+               {globalPinnedPdf && isGlobalRagActive && (
+                 <div 
+                   className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-[#A3E635] text-black font-black uppercase text-xs border-4 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)]"
+                   title={`Đang ghim tài liệu RAG: ${globalPinnedPdf.fileName}`}
+                 >
+                   <Pin className="w-3.5 h-3.5 stroke-[3] rotate-45 text-black" />
+                   <span className="truncate max-w-[160px]">{globalPinnedPdf.fileName}</span>
+                 </div>
+               )}
+
                {onSwitchToMobile && (
                  <button 
                    onClick={onSwitchToMobile}

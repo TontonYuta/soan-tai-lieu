@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Book, User, Layout, Wand2, Info, GraduationCap, ChevronDown, Zap, FileText } from "lucide-react";
-import { WorksheetConfig, GenerationStatus } from '../types';
+import { WorksheetConfig, GenerationStatus, AttachedPdfData } from '../types';
 import PdfUploadZone from './PdfUploadZone';
 
 
@@ -12,6 +12,9 @@ interface WorksheetFormProps {
   contextTopic?: string;
   contextSubject?: string;
   contextGrade?: string;
+  globalPinnedPdf?: AttachedPdfData | null;
+  isGlobalRagActive?: boolean;
+  onSetGlobalPin?: (pdf: AttachedPdfData) => void;
 }
 
 const WorksheetForm: React.FC<WorksheetFormProps> = ({ 
@@ -20,7 +23,10 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
   status, 
   contextTopic, 
   contextSubject, 
-  contextGrade 
+  contextGrade,
+  globalPinnedPdf,
+  isGlobalRagActive = true,
+  onSetGlobalPin
 }) => {
 
   const [config, setConfig] = useState<WorksheetConfig>({
@@ -44,11 +50,15 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
   }, [contextTopic, contextSubject, contextGrade]);
 
   const isLoading = status === GenerationStatus.LOADING;
+  const effectivePdf = config.attachedPdf || (isGlobalRagActive ? globalPinnedPdf : null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (config.subject && config.topic && config.teacherName) {
-      onSubmit(config);
+      onSubmit({
+        ...config,
+        attachedPdf: effectivePdf || undefined
+      });
     }
   };
 
@@ -170,7 +180,12 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
                 <div className="group relative mt-4">
                     <PdfUploadZone 
                       attachedPdf={config.attachedPdf || null} 
+                      globalPinnedPdf={globalPinnedPdf}
+                      isGlobalRagActive={isGlobalRagActive}
                       onPdfChange={(pdfData) => handleChange('attachedPdf', pdfData || undefined)} 
+                      onSetGlobalPin={onSetGlobalPin}
+                      title="Đính Kèm File Đề Cương / Bài Tập Mẫu PDF (RAG):"
+                      description="AI sẽ trích xuất bài toán, câu hỏi và dạng bài từ file PDF này để biên soạn phiếu bài tập chất lượng cao."
                     />
                 </div>
 
@@ -193,7 +208,11 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
           <button
             type="button"
-            onClick={() => onDirectAutomate ? onDirectAutomate(config) : onSubmit(config)}
+            onClick={() => {
+              const finalConfig = { ...config, attachedPdf: effectivePdf || undefined };
+              if (onDirectAutomate) onDirectAutomate(finalConfig);
+              else onSubmit(finalConfig);
+            }}
             disabled={isLoading || !config.subject || !config.topic || !config.teacherName}
             className={`relative flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-none text-black font-black uppercase tracking-wider text-xs sm:text-sm border-4 border-black shadow-[5px_5px_0_0_rgba(0,0,0,1)] transition-all duration-75 active:translate-y-[3px] active:translate-x-[3px] active:shadow-none cursor-pointer
               ${(isLoading || !config.subject || !config.topic || !config.teacherName)

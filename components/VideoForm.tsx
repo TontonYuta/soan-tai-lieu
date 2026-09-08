@@ -4,8 +4,9 @@ import {
   Code, ChevronDown, BookOpen, Film, Smartphone, 
   Monitor, Sparkles, Sliders, Layers, Zap, ListVideo, Cpu, Mic
 } from "lucide-react";
-import { VideoConfig, GenerationStatus } from '../types';
+import { VideoConfig, GenerationStatus, AttachedPdfData } from '../types';
 import { AI_PROVIDERS, getProviderUrl } from './AutomationModal';
+import PdfUploadZone from './PdfUploadZone';
 
 interface VideoFormProps {
   onSubmitScript?: (data: VideoConfig) => void;
@@ -15,6 +16,9 @@ interface VideoFormProps {
   status: GenerationStatus;
   contextTopic?: string;
   contextSubject?: string;
+  globalPinnedPdf?: AttachedPdfData | null;
+  isGlobalRagActive?: boolean;
+  onSetGlobalPin?: (pdf: AttachedPdfData) => void;
 }
 
 const VideoForm: React.FC<VideoFormProps> = ({ 
@@ -24,7 +28,10 @@ const VideoForm: React.FC<VideoFormProps> = ({
   onDirectAutomateManim, 
   status, 
   contextTopic, 
-  contextSubject 
+  contextSubject,
+  globalPinnedPdf,
+  isGlobalRagActive = true,
+  onSetGlobalPin
 }) => {
   const [config, setConfig] = useState<VideoConfig>({
     subject: contextSubject || 'Toán học',
@@ -518,6 +525,19 @@ const VideoForm: React.FC<VideoFormProps> = ({
               )}
             </div>
 
+            {/* PDF Upload RAG Zone for Video */}
+            <div className="pt-2">
+              <PdfUploadZone
+                attachedPdf={config.attachedPdf || null}
+                globalPinnedPdf={globalPinnedPdf}
+                isGlobalRagActive={isGlobalRagActive}
+                onPdfChange={(pdfData) => handleChange('attachedPdf', pdfData || undefined)}
+                onSetGlobalPin={onSetGlobalPin}
+                title="Đính Kèm File PDF Tham Khảo Cho Video (RAG / Bài Toán / Đồ Thị):"
+                description="AI sẽ trích xuất bài toán, hình vẽ, định lý hoặc đồ thị từ file PDF đính kèm để lập trình hoạt cảnh Manim CE bám sát nội dung."
+              />
+            </div>
+
             {/* Chi tiết yêu cầu bài toán / Dàn ý */}
             <div className="group relative mt-2">
               <label className={labelClass}>
@@ -566,7 +586,15 @@ const VideoForm: React.FC<VideoFormProps> = ({
           {/* Nút 1: Tạo Video (1-Click) hoặc Tạo Playlist (1-Click) */}
           <button
             type="button"
-            onClick={() => onDirectAutomateManim ? onDirectAutomateManim(config) : onSubmitManim(config)}
+            onClick={() => {
+              const effectivePdf = config.attachedPdf || (isGlobalRagActive ? globalPinnedPdf : null);
+              const cfgToSubmit = { ...config, attachedPdf: effectivePdf || undefined };
+              if (onDirectAutomateManim) {
+                onDirectAutomateManim(cfgToSubmit);
+              } else {
+                onSubmitManim(cfgToSubmit);
+              }
+            }}
             disabled={isLoading || !config.subject || !config.topic}
             className={`relative flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-none text-black font-black uppercase tracking-wider text-xs sm:text-sm border-4 border-black shadow-[5px_5px_0_0_rgba(0,0,0,1)] transition-all duration-75 active:translate-y-[3px] active:translate-x-[3px] active:shadow-none cursor-pointer
               ${(isLoading || !config.subject || !config.topic)
@@ -581,7 +609,11 @@ const VideoForm: React.FC<VideoFormProps> = ({
           {/* Nút 2: Code Manim */}
           <button
             type="button"
-            onClick={() => onSubmitManim(config)}
+            onClick={() => {
+              const effectivePdf = config.attachedPdf || (isGlobalRagActive ? globalPinnedPdf : null);
+              const cfgToSubmit = { ...config, attachedPdf: effectivePdf || undefined };
+              onSubmitManim(cfgToSubmit);
+            }}
             disabled={isLoading || !config.subject || !config.topic}
             className={`relative flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-none text-black font-black uppercase tracking-wider text-xs sm:text-sm border-4 border-black shadow-[5px_5px_0_0_rgba(0,0,0,1)] transition-all duration-75 active:translate-y-[3px] active:translate-x-[3px] active:shadow-none cursor-pointer
               ${(isLoading || !config.subject || !config.topic)

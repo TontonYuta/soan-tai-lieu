@@ -334,6 +334,34 @@ function getAgyExecutable() {
   }
   return 'agy';
 }
+function findRecentlyGeneratedPython(searchDir, maxAgeMs = 600000) {
+  const dirsToInspect = [
+    searchDir,
+    path.join(searchDir || '', 'scratch'),
+    path.join(os.homedir(), 'Downloads'),
+    path.join(os.homedir(), '.gemini', 'antigravity-cli', 'scratch')
+  ].filter(Boolean);
+
+  const now = Date.now();
+  for (const d of dirsToInspect) {
+    if (!fs.existsSync(d)) continue;
+    try {
+      const files = fs.readdirSync(d);
+      for (const f of files) {
+        if (!f.endsWith('.py') || f === 'test_monotone.py') continue;
+        const p = path.join(d, f);
+        const stat = fs.statSync(p);
+        if (now - stat.mtimeMs < maxAgeMs) {
+          const content = fs.readFileSync(p, 'utf-8');
+          if ((content.includes('class ') || content.includes('from manim')) && content.includes('def construct')) {
+            return content;
+          }
+        }
+      }
+    } catch {}
+  }
+  return null;
+}
 
 async function runAgyPrompt(promptText, cwdDir, modelName, onProgress, timeoutMs = 300000) {
   if (typeof modelName === 'function') {
@@ -345,9 +373,13 @@ async function runAgyPrompt(promptText, cwdDir, modelName, onProgress, timeoutMs
   const agyExec = getAgyExecutable();
   const { spawn } = require('child_process');
 
+  // Bắt buộc chỉ thị cấm tool để Antigravity Agent không chạy bash ngầm hay tự render video gây timeout
+  const strictPrompt = `${promptText}\n\n[CHỈ THỊ KỸ THUẬT BẮT BUỘC]:\n- TUYỆT ĐỐI KHÔNG GỌI BẤT KỲ TOOL NÀO (KHÔNG run_command, KHÔNG write_to_file, KHÔNG view_file, KHÔNG schedule).\n- TUYỆT ĐỐI KHÔNG tự chạy lệnh render manim/pdflatex.\n- CHỈ xuất duy nhất nội dung văn bản/khối mã trực tiếp ra output.`;
+
   const args = [
-    '-p', promptText,
+    '-p', strictPrompt,
     '--output-format', 'stream-json',
+    '--disable-slash-commands',
     '--dangerously-skip-permissions'
   ];
 
@@ -386,10 +418,16 @@ async function runAgyPrompt(promptText, cwdDir, modelName, onProgress, timeoutMs
       if (!isSettled) {
         isSettled = true;
         try { agyProcess.kill('SIGKILL'); } catch {}
-        if (responseText.length > 0) {
-          resolve(responseText);
+        const cleanedText = responseText.replace(/An asynchronous task finished![\s\S]*?(?=\n\n|$)/g, '').trim();
+        if (cleanedText.length > 50) {
+          resolve(cleanedText);
         } else {
-          reject(new Error('Antigravity CLI bị quá thời gian xử lý (Timeout 5 phút).'));
+          const fallbackPython = findRecentlyGeneratedPython(cwdDir);
+          if (fallbackPython) {
+            resolve('```python\n' + fallbackPython + '\n```');
+          } else {
+            reject(new Error('Antigravity CLI bị quá thời gian xử lý (Timeout 5 phút).'));
+          }
         }
       }
     }, timeoutMs);
@@ -404,15 +442,24 @@ async function runAgyPrompt(promptText, cwdDir, modelName, onProgress, timeoutMs
         if (!trimmed) continue;
         try {
           const json = JSON.parse(trimmed);
-          if (json.event === 'step_update' && json.step_update && json.step_update.text_delta) {
-            const delta = json.step_update.text_delta;
-            responseText += delta;
-            if (onProgress) onProgress(delta, responseText);
+          if (json.event === 'step_update' && json.step_update) {
+            const stepType = json.step_update.step_type;
+            if (stepType === 'agent_response' && json.step_update.text_delta) {
+              const delta = json.step_update.text_delta;
+              responseText += delta;
+              if (onProgress) onProgress(delta, responseText);
+            }
           } else if (json.event === 'result' && json.result && json.result.response) {
-            if (!responseText) responseText = json.result.response;
+            const finalRes = json.result.response.trim();
+            if (finalRes) {
+              responseText = finalRes;
+              if (onProgress) onProgress('', responseText);
+            }
           }
         } catch (e) {
-          responseText += trimmed + '\n';
+          if (!trimmed.startsWith('{') && !trimmed.startsWith('An asynchronous task')) {
+            responseText += trimmed + '\n';
+          }
         }
       }
     });
@@ -429,15 +476,21 @@ async function runAgyPrompt(promptText, cwdDir, modelName, onProgress, timeoutMs
       if (lineBuffer.trim()) {
         try {
           const json = JSON.parse(lineBuffer.trim());
-          if (json.result && json.result.response && !responseText) {
-            responseText = json.result.response;
+          if (json.result && json.result.response) {
+            responseText = json.result.response.trim();
           }
         } catch {}
       }
-      if (code === 0 || responseText.length > 0) {
-        resolve(responseText);
+      const cleaned = responseText.replace(/An asynchronous task finished![\s\S]*?(?=\n\n|$)/g, '').trim();
+      if (code === 0 || cleaned.length > 0) {
+        resolve(cleaned.length > 0 ? cleaned : responseText);
       } else {
-        reject(new Error(`Antigravity CLI thoát với mã lỗi ${code}`));
+        const fallbackPython = findRecentlyGeneratedPython(cwdDir);
+        if (fallbackPython) {
+          resolve('```python\n' + fallbackPython + '\n```');
+        } else {
+          reject(new Error(`Antigravity CLI thoát với mã lỗi ${code}`));
+        }
       }
     });
 
@@ -451,26 +504,33 @@ async function runAgyPrompt(promptText, cwdDir, modelName, onProgress, timeoutMs
   });
 }
 
-function extractPythonManimCode(text) {
-  if (!text) return null;
-  const pythonBlocks = Array.from(text.matchAll(/```(?:python|py)?\s*([\s\S]*?)```/gi));
-  for (const match of pythonBlocks) {
-    const code = match[1].trim();
-    if (code.includes('from manim') || code.includes('class ') || code.includes('def construct')) {
-      return code;
+function extractPythonManimCode(text, cwdDir) {
+  if (text) {
+    const pythonBlocks = Array.from(text.matchAll(/```(?:python|py)?\s*([\s\S]*?)```/gi));
+    for (const match of pythonBlocks) {
+      const code = match[1].trim();
+      if (code.includes('from manim') || code.includes('class ') || code.includes('def construct')) {
+        return code;
+      }
+    }
+    const startIdx = text.indexOf('from manim import');
+    if (startIdx >= 0) {
+      const slice = text.slice(startIdx);
+      const endIdx = slice.indexOf('```');
+      return (endIdx > 0 ? slice.slice(0, endIdx) : slice).trim();
+    }
+    const classMatch = text.match(/class\s+[A-Za-z0-9_]+\s*\(\s*(?:ThreeDScene|MovingCameraScene|LinearTransformationScene|VectorScene|ZoomedScene|Scene)\s*\)[\s\S]+/);
+    if (classMatch) {
+      const slice = classMatch[0];
+      const endIdx = slice.indexOf('```');
+      return (endIdx > 0 ? slice.slice(0, endIdx) : slice).trim();
     }
   }
-  const startIdx = text.indexOf('from manim import');
-  if (startIdx >= 0) {
-    const slice = text.slice(startIdx);
-    const endIdx = slice.indexOf('```');
-    return (endIdx > 0 ? slice.slice(0, endIdx) : slice).trim();
-  }
-  const classMatch = text.match(/class\s+[A-Za-z0-9_]+\s*\(\s*(?:ThreeDScene|MovingCameraScene|LinearTransformationScene|VectorScene|ZoomedScene|Scene)\s*\)[\s\S]+/);
-  if (classMatch) {
-    const slice = classMatch[0];
-    const endIdx = slice.indexOf('```');
-    return (endIdx > 0 ? slice.slice(0, endIdx) : slice).trim();
+
+  // Fallback: Kiểm tra xem Antigravity có lưu file .py trên đĩa không
+  if (cwdDir) {
+    const fromDisk = findRecentlyGeneratedPython(cwdDir);
+    if (fromDisk) return fromDisk;
   }
   return null;
 }
@@ -1460,8 +1520,32 @@ function startInternalServer(callback) {
           const tempPath = path.join(os.tmpdir(), `yuta_rag_${Date.now()}_${safeName}`);
           fs.writeFileSync(tempPath, buffer);
 
-          const pdfParse = require('pdf-parse');
-          const parsed = await pdfParse(buffer);
+          let extractedText = '';
+          let pageCount = 1;
+
+          try {
+            const pdfModule = require('pdf-parse');
+            if (typeof pdfModule === 'function') {
+              const parsed = await pdfModule(buffer);
+              extractedText = parsed.text || '';
+              pageCount = parsed.numpages || 1;
+            } else if (pdfModule && pdfModule.PDFParse) {
+              const parser = new pdfModule.PDFParse({ data: buffer });
+              const resText = await parser.getText();
+              extractedText = resText.text || '';
+              pageCount = resText.total || (resText.pages && resText.pages.length) || 1;
+              if (parser.destroy) {
+                await parser.destroy().catch(() => {});
+              }
+            } else if (pdfModule && pdfModule.default) {
+              const parser = new pdfModule.default.PDFParse({ data: buffer });
+              const resText = await parser.getText();
+              extractedText = resText.text || '';
+              pageCount = resText.total || (resText.pages && resText.pages.length) || 1;
+            }
+          } catch (parseErr) {
+            console.warn('Lỗi thư viện pdf-parse:', parseErr.message);
+          }
 
           const fileSizeStr = buffer.length > 1024 * 1024
             ? (buffer.length / (1024 * 1024)).toFixed(1) + ' MB'
@@ -1471,8 +1555,8 @@ function startInternalServer(callback) {
           res.end(JSON.stringify({
             success: true,
             fileName: safeName,
-            numPages: parsed.numpages || 1,
-            text: parsed.text || '',
+            numPages: pageCount,
+            text: extractedText,
             tempPath: tempPath,
             fileSize: fileSizeStr,
           }));
@@ -1708,9 +1792,22 @@ function startInternalServer(callback) {
                                   promptToSend.includes('VOICEOVER_SCRIPT') ||
                                   promptToSend.includes('KỊCH BẢN SƯ PHẠM');
 
+              // Bổ sung thông tin tài liệu RAG nếu có
+              if (options.attachedPdfPath && fs.existsSync(options.attachedPdfPath)) {
+                const pdfName = path.basename(options.attachedPdfPath);
+                sendSSE({
+                  step: 'SENDING_PROMPT',
+                  progress: 28,
+                  message: `Đã kết nối tài liệu RAG: ${pdfName}`,
+                });
+                if (!promptToSend.includes('[TÀI LIỆU RAG NGUỒN ĐÍNH KÈM / GHIM]')) {
+                  promptToSend = `[TÀI LIỆU RAG NGUỒN]: File "${pdfName}" tại "${options.attachedPdfPath}". Bám sát toàn bộ dữ kiện toán học trong tài liệu này.\n\n` + promptToSend;
+                }
+              }
+
               // Bổ sung chỉ thị cho Antigravity Agent nếu là bài giảng Video
               if (isManimTask && !promptToSend.includes('MainScene')) {
-                promptToSend += `\n\nYÊU CẦU BẮT BUỘC CHO VIDEO MANIM CE:\n- Xuất Kịch bản Sư phạm VÀ Khối mã Python Manim CE duy nhất trong \`\`\`python ... \`\`\` có \`class MainScene(Scene)\` và \`def construct(self):\` để có thể render ngay.`;
+                promptToSend += `\n\nYÊU CẦU BẮT BUỘC CHO VIDEO MANIM CE:\n- Xuất Kịch bản Sư phạm VÀ Khối mã Python Manim CE duy nhất trong \`\`\`python ... \`\`\` có \`class MainScene(Scene)\` và \`def construct(self):\` để có thể render ngay.\n- TUYỆT ĐỐI KHÔNG SỬ DỤNG BẤT KỲ TOOL NÀO (KHÔNG run_command, KHÔNG write_to_file, KHÔNG view_file). KHÔNG TỰ CHẠY LỆNH RENDER. CHỈ XUẤT TEXT TRỰC TIẾP.`;
               }
 
               let lastProgressReport = Date.now();
@@ -1733,7 +1830,7 @@ function startInternalServer(callback) {
                 });
 
                 // Bóc tách code Python từ Lượt 1
-                let extractedPython = extractPythonManimCode(responseText);
+                let extractedPython = extractPythonManimCode(responseText, downloadsDir);
 
                 // NẾU LƯỢT 1 LÀ KỊCH BẢN / CHƯA CÓ CODE PYTHON -> TỰ ĐỘNG GỬI LƯỢT 2 CHO ANTIGRAVITY!
                 if (!extractedPython || (!extractedPython.includes('class ') && !extractedPython.includes('def construct'))) {
@@ -1762,7 +1859,7 @@ YÊU CẦU BẮT BUỘC KHÔNG ĐƯỢC BỎ QUA:
 5. BẮT BUỘC khớp đúng thời lượng mục tiêu: ${targetDuration} (điều chỉnh số phân cảnh, khối kịch bản lời thoại VOICEOVER_SCRIPT và các khoảng self.wait(2.0-4.0) giữa các bước).
 6. 100% công thức MathTex(r"...") dùng raw string r"...".
 7. TUYỆT ĐỐI CHỈ XUẤT MÃ PYTHON TRONG KHỐI \`\`\`python ... \`\`\`, KHÔNG VIẾT LỜI CHÀO HAY GIẢI THÍCH NGOÀI MÃ!
-Lệnh render: \`manim ${qualityFlag} scene.py MainScene\`.`;
+8. TUYỆT ĐỐI KHÔNG GỌI BẤT KỲ TOOL NÀO (KHÔNG run_command, KHÔNG write_to_file, KHÔNG view_file). KHÔNG TỰ CHẠY LỆNH RENDER. Hệ thống sẽ tự biên dịch mã bằng lệnh: \`manim ${qualityFlag} scene.py MainScene\`.`;
 
                   let turn2Report = Date.now();
                   const turn2Text = await runAgyPrompt(codeFollowupPrompt, downloadsDir, selectedModel, (delta, fullText) => {
@@ -1776,7 +1873,7 @@ Lệnh render: \`manim ${qualityFlag} scene.py MainScene\`.`;
                     }
                   });
 
-                  extractedPython = extractPythonManimCode(turn2Text);
+                  extractedPython = extractPythonManimCode(turn2Text, downloadsDir);
                 }
 
                 // FALLBACK TRỰC TIẾP NẾU CẢ 2 LƯỢT CHƯA NẠP ĐƯỢC CODE PYTHON
@@ -1787,9 +1884,9 @@ Lệnh render: \`manim ${qualityFlag} scene.py MainScene\`.`;
                     message: '⚡ Antigravity đang khởi tạo lại mã Python Manim CE trực tiếp...',
                   });
 
-                  const directPrompt = `Viết duy nhất 1 khối mã Python Manim CE (\`scene.py\`) hoàn chỉnh 100% để tạo video minh họa cho bài toán toán học chủ đề: "${options.topic || options.subject || 'Toán học'}". BẮT BUỘC bắt đầu bằng \`\`\`python from manim import * ... \`\`\` với class MainScene(Scene) và def construct(self):. KHÔNG VIẾT LỜI CHÀO!`;
+                  const directPrompt = `Viết duy nhất 1 khối mã Python Manim CE (\`scene.py\`) hoàn chỉnh 100% để tạo video minh họa cho bài toán toán học chủ đề: "${options.topic || options.subject || 'Toán học'}". BẮT BUỘC bắt đầu bằng \`\`\`python from manim import * ... \`\`\` với class MainScene(Scene) và def construct(self):. TUYỆT ĐỐI KHÔNG SỬ DỤNG TOOL/COMMAND (KHÔNG run_command, KHÔNG write_to_file). CHỈ XUẤT DUY NHẤT KHỐI MÃ PYTHON RA TEXT OUTPUT! KHÔNG VIẾT LỜI CHÀO!`;
                   const directText = await runAgyPrompt(directPrompt, downloadsDir, selectedModel);
-                  extractedPython = extractPythonManimCode(directText);
+                  extractedPython = extractPythonManimCode(directText, downloadsDir);
                 }
 
                 if (!extractedPython || (!extractedPython.includes('class ') && !extractedPython.includes('def construct'))) {
@@ -1923,12 +2020,13 @@ YÊU CẦU BẮT BUỘC ĐỂ SỬA LỖI:
 2. Viết lại TOÀN BỘ file scene.py hoàn chỉnh, ngắn gọn súc tích (dưới 140 dòng lệnh).
 3. Đảm bảo đóng đầy đủ mọi dấu ngoặc, kết thúc hàm construct(self) bằng self.wait(2).
 4. Giữ nguyên class MainScene(Scene) hoặc tên Scene tương ứng, cấu hình Dual-Zone và MathTex(r"...").
-5. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, KHÔNG viết lời chào hay giải thích ngoài mã.`;
+5. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, KHÔNG viết lời chào hay giải thích ngoài mã.
+6. TUYỆT ĐỐI KHÔNG SỬ DỤNG TOOL/COMMAND (KHÔNG run_command, KHÔNG write_to_file). CHỈ XUẤT DUY NHẤT MÃ PYTHON RA OUTPUT.`;
 
                     const healedText = await runAgyPrompt(healPrompt, downloadsDir, selectedModel);
-                    const healedMatch = healedText.match(/```(?:python|py)?\s*([\s\S]*?)```/i);
-                    if (healedMatch && healedMatch[1].length > 50) {
-                      currentPython = healedMatch[1];
+                    const healedCode = extractPythonManimCode(healedText, downloadsDir);
+                    if (healedCode && healedCode.length > 50) {
+                      currentPython = healedCode;
                     }
                   }
                 }

@@ -31,7 +31,8 @@ export const MANIM_SKILLS_GUIDE = `
    - NGUYÊN TẮC 10 (ƯU TIÊN TRANSFORM CHO BIẾN ĐỔI TOÁN HỌC):
      * Khi giải toán biến đổi đại số, dùng TransformMatchingTex(old_tex, new_tex) để các ký hiệu toán học bay mượt mà vào vị trí mới thay vì FadeOut/FadeIn giật cục.
    - NGUYÊN TẮC 11 (DÙNG always_redraw() CHO OBJECT THỰC SỰ ĐỘNG):
-     * Khi điểm Dot di chuyển trên đồ thị, dùng always_redraw() cho Dot, đường gióng nét đứt DashedLine, hoặc tiếp tuyến theo ValueTracker.
+     * Khi điểm Dot di chuyển trên đồ thị, dùng always_redraw() cho Dot, đường gióng nét đứt DashedLine, hoặc tiếp tuyến Line theo ValueTracker.
+     * CỰC KỲ QUAN TRỌNG: TUYỆT ĐỐI KHÔNG bọc MathTex hoặc Tex bên trong always_redraw() (vì sẽ ép hệ thống gọi compiler LaTeX lại trên từng frame 60fps, khiến thời gian render kéo dài hàng chục phút). Chỉ dùng always_redraw() cho đối tượng hình học (Dot, Line, DashedLine) hoặc dùng DecimalNumber/Text cố định.
    - NGUYÊN TẮC 12 (CẤU TRÚC CONTAINER THEO BỘ FORM MÔ PHỎNG):
      * Tuân thủ cấu trúc của Bộ Form đã chọn (Hình học, Đối thoại 2 người Thầy-Trò, Giải tích hàm số, Mẹo giải nhanh 30s, STEM).
    - NGUYÊN TẮC 13 (KHOẢNG NGHỈ CÓ CHỦ ĐÍCH - DELIBERATE PAUSE):
@@ -136,7 +137,15 @@ export const generateManimStoryboardPrompt = (config: VideoConfig): string => {
 
   let pdfTextChunk = "";
   if (config.attachedPdf?.text) {
-    pdfTextChunk = `\n[TÀI LIỆU PDF ĐÍNH KÈM]:\n"""\n${config.attachedPdf.text.slice(0, 4000)}\n"""\n`;
+    pdfTextChunk = `\n[TÀI LIỆU RAG NGUỒN ĐÍNH KÈM / GHIM]:
+Tên file: ${config.attachedPdf.fileName} (${config.attachedPdf.numPages} trang)
+"""
+${config.attachedPdf.text.slice(0, 12000)}
+"""
+CHỈ THỊ SƯ PHẠM RAG CHO KỊCH BẢN VIDEO:
+- Trích xuất chính xác bài toán, định nghĩa, định lý hoặc đồ thị từ tài liệu trên để xây dựng kịch bản.
+- Bám sát các bước giải và dẫn dắt sư phạm từ giả thiết đến kết luận của tài liệu.
+\n`;
   }
 
   return `Đóng vai Chuyên gia Sư phạm & Đạo diễn Diễn hoạt Khoa học Manim CE.
@@ -213,7 +222,7 @@ YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ 15 NGUYÊN TẮC VÀNG VISUAL 
 8. Màu nền "#0F172A".
 9. Cảnh Outro: Hiệu ứng hào quang, giữ nguyên màn hình (self.wait(3.0)), TUYỆT ĐỐI KHÔNG DÙNG FadeOut(*self.mobjects) làm đen màn hình.
 10. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, không viết bất kỳ lời chào hay giải thích ngoài mã.
-Lệnh render cuối file: \`manim ${qualityFlag} scene.py MainScene\`.`;
+11. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file). (Hệ thống máy chủ sẽ tự biên dịch mã bằng lệnh: \`manim ${qualityFlag} scene.py MainScene\`, AI không được tự chạy lệnh này).`;
 };
 
 // =========================================================================
@@ -229,12 +238,16 @@ export const generateVideoManimPrompt = (config: VideoConfig): string => {
   let pdfPromptChunk = "";
   if (config.attachedPdf?.text) {
     pdfPromptChunk = `
-[TÀI LIỆU PDF ĐÍNH KÈM]:
-Tên file: ${config.attachedPdf.fileName}
+[TÀI LIỆU RAG NGUỒN ĐÍNH KÈM / GHIM]:
+Tên file: ${config.attachedPdf.fileName} (${config.attachedPdf.numPages} trang)
 Nội dung trích xuất:
 """
-${config.attachedPdf.text.slice(0, 4000)}
+${config.attachedPdf.text.slice(0, 12000)}
 """
+CHỈ THỊ BẮT BUỘC KHI CÓ TÀI LIỆU RAG ĐÍNH KÈM:
+1. TRỰC QUAN HÓA BÀI TOÁN GỐC: Mô phỏng chính xác đối tượng hình học, hàm số, đồ thị hoặc phương trình từ tài liệu.
+2. BÁM SÁT BƯỚC GIẢI: Nếu tài liệu có bài tập và lời giải, dựng chuyển động diễn giải từng bước logic ăn khớp với nội dung tài liệu.
+3. DÙNG ĐÚNG KÝ HIỆU & SỐ LIỆU: Giữ nguyên các tham số, tọa độ, ẩn số trong tài liệu, không tự ý bịa số liệu khác nếu tài liệu đã có.
 `;
   }
 
@@ -412,7 +425,8 @@ IV. HƯỚNG DẪN RENDER VÀ QUY TẮC BẮT BUỘC:
 2. TUYỆT ĐỐI KHÔNG viết lời chào, lời dẫn hay giải thích ngoài mã để không làm tràn token hệ thống.
 3. TUYỆT ĐỐI KHÔNG FadeOut toàn bộ màn hình ở cuối video. Giữ nguyên thẻ Outro "Học toán cùng Yuta".
 4. TUÂN THỦ NGUYÊN TẮC CHỐNG ĐÈ CHỮ (ZERO OVERLAP): Bố cục khoảng cách giữa các chữ chuẩn xác, dãn hàng line_spacing=1.2; nhãn chữ gần hình vẽ dùng add_background_rectangle.
-5. Đóng đầy đủ ngoặc và lệnh construct(self). Lệnh render cuối: \`manim ${qualityFlag} scene.py MainScene\`.`;
+5. Đóng đầy đủ ngoặc và lệnh construct(self). (Hệ thống máy chủ sẽ tự biên dịch mã bằng lệnh: \`manim ${qualityFlag} scene.py MainScene\`, AI tuyệt đối không tự chạy lệnh render này).
+6. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file, không view_file). CHỈ xuất mã nguồn văn bản trực tiếp.`;
 };
 
 export const generatePlaylistSeriesOutlinePrompt = (config: VideoConfig): string => {
@@ -491,5 +505,5 @@ IV. YÊU CẦU THỰC THI BẮT BUỘC:
 2. Viết lại TOÀN BỘ file mã nguồn Manim Python (\`scene.py\`) từ đầu, khắc phục 100% các vấn đề người dùng đã nêu.
 3. Giữ vững quy chuẩn CHỐNG ĐÈ CHỮ (ZERO OVERLAP), dãn dòng \`line_spacing=1.2\`, căn chỉnh khoảng cách chữ chuẩn xác.
 4. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, không viết lời chào hay giải thích ngoài mã.
-Lệnh render cuối file: \`manim ${qualityFlag} scene.py MainScene\`.`;
+5. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file). (Hệ thống máy chủ sẽ tự biên dịch mã bằng lệnh: \`manim ${qualityFlag} scene.py MainScene\`, AI không được tự chạy lệnh này).`;
 };

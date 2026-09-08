@@ -4,7 +4,7 @@ import {
   CheckCircle2, AlertCircle, Sparkles, Info, CheckSquare, Square, 
   Sliders, Layers, Zap, FileText
 } from "lucide-react";
-import { ExamConfig, GenerationStatus } from '../types';
+import { ExamConfig, GenerationStatus, AttachedPdfData } from '../types';
 import PdfUploadZone from './PdfUploadZone';
 
 
@@ -17,6 +17,9 @@ interface ExamFormProps {
   contextTopic?: string;
   contextSubject?: string;
   contextGrade?: string;
+  globalPinnedPdf?: AttachedPdfData | null;
+  isGlobalRagActive?: boolean;
+  onSetGlobalPin?: (pdf: AttachedPdfData) => void;
 }
 
 
@@ -49,7 +52,10 @@ const ExamForm: React.FC<ExamFormProps> = ({
   initialContext, 
   contextTopic, 
   contextSubject, 
-  contextGrade 
+  contextGrade,
+  globalPinnedPdf,
+  isGlobalRagActive = true,
+  onSetGlobalPin
 }) => {
   const currentYear = new Date().getFullYear();
   const [useContext, setUseContext] = useState(!!initialContext);
@@ -137,11 +143,14 @@ const ExamForm: React.FC<ExamFormProps> = ({
     }
   };
 
+  const effectivePdf = config.attachedPdf || (isGlobalRagActive ? globalPinnedPdf : null);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isMatrixValid && config.subject && config.topic) {
       onSubmit({
         ...config,
+        attachedPdf: effectivePdf || undefined,
         referenceContent: useContext ? config.referenceContent : undefined
       });
     }
@@ -381,7 +390,10 @@ const ExamForm: React.FC<ExamFormProps> = ({
 
               <PdfUploadZone
                 attachedPdf={config.attachedPdf || null}
+                globalPinnedPdf={globalPinnedPdf}
+                isGlobalRagActive={isGlobalRagActive}
                 onPdfChange={(pdfData) => setConfig(prev => ({ ...prev, attachedPdf: pdfData || undefined }))}
+                onSetGlobalPin={onSetGlobalPin}
                 title="Đính Kèm File Đề Thi Mẫu / Đề Cương PDF (RAG):"
                 description="AI sẽ đọc ma trận, câu hỏi và hình vẽ trong file đề thi PDF này để thiết kế đề thi tương đương."
               />
@@ -489,7 +501,18 @@ const ExamForm: React.FC<ExamFormProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
           <button
             type="button"
-            onClick={() => onDirectAutomate ? onDirectAutomate(config) : onSubmit(config)}
+            onClick={() => {
+              const finalConfig: ExamConfig = {
+                ...config,
+                attachedPdf: effectivePdf || undefined,
+                referenceContent: useContext ? config.referenceContent : undefined
+              };
+              if (onDirectAutomate) {
+                onDirectAutomate(finalConfig);
+              } else {
+                onSubmit(finalConfig);
+              }
+            }}
             disabled={isLoading || !config.subject || !config.topic || !isMatrixValid}
             className={`relative flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-none text-black font-black uppercase tracking-wider text-xs sm:text-sm border-4 border-black shadow-[5px_5px_0_0_rgba(0,0,0,1)] transition-all duration-75 active:translate-y-[3px] active:translate-x-[3px] active:shadow-none cursor-pointer
               ${(isLoading || !isMatrixValid || !config.subject || !config.topic)

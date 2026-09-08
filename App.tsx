@@ -12,6 +12,7 @@ import ReadmeModal from './components/ReadmeModal';
 import AutomationModal from './components/AutomationModal';
 import MobileRemoteHub from './components/MobileRemoteHub';
 import ErrorBoundary from './components/ErrorBoundary';
+import GlobalPinnedPdfBar from './components/GlobalPinnedPdfBar';
 import { AutomationClient } from './services/automationClient';
 import { 
   generateExamPrompt, 
@@ -33,7 +34,8 @@ import {
   SimilarExerciseConfig,
   VideoConfig, 
   BatConfig, 
-  GenerationStatus 
+  GenerationStatus,
+  AttachedPdfData
 } from './types';
 import { 
   Sparkles, 
@@ -76,6 +78,48 @@ const App: React.FC = () => {
     localStorage.getItem('yuta_headless') === 'true'
   );
   const [activeAttachedPdf, setActiveAttachedPdf] = useState<{ path?: string; name?: string } | null>(null);
+
+  const [globalPinnedPdf, setGlobalPinnedPdf] = useState<AttachedPdfData | null>(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const saved = localStorage.getItem('yuta_global_pinned_pdf');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [isGlobalRagActive, setIsGlobalRagActive] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    return localStorage.getItem('yuta_global_rag_active') !== 'false';
+  });
+
+  const handleSetGlobalPinnedPdf = (pdf: AttachedPdfData | null) => {
+    setGlobalPinnedPdf(pdf);
+    if (pdf) {
+      localStorage.setItem('yuta_global_pinned_pdf', JSON.stringify(pdf));
+      setActiveAttachedPdf({ path: pdf.tempPath, name: pdf.fileName });
+    } else {
+      localStorage.removeItem('yuta_global_pinned_pdf');
+      setActiveAttachedPdf(null);
+    }
+  };
+
+  const handleToggleGlobalRag = (active: boolean) => {
+    setIsGlobalRagActive(active);
+    localStorage.setItem('yuta_global_rag_active', String(active));
+    if (!active) {
+      setActiveAttachedPdf(null);
+    } else if (globalPinnedPdf) {
+      setActiveAttachedPdf({ path: globalPinnedPdf.tempPath, name: globalPinnedPdf.fileName });
+    }
+  };
+
+  useEffect(() => {
+    if (globalPinnedPdf && isGlobalRagActive && !activeAttachedPdf) {
+      setActiveAttachedPdf({ path: globalPinnedPdf.tempPath, name: globalPinnedPdf.fileName });
+    }
+  }, [globalPinnedPdf, isGlobalRagActive]);
   const [videoExtraConfig, setVideoExtraConfig] = useState<{
     isSeries?: boolean;
     seriesCount?: number;
@@ -150,16 +194,18 @@ const App: React.FC = () => {
   const handleExamGenerate = (config: ExamConfig) => {
     setStatus(GenerationStatus.LOADING);
     setError(null);
-    if (config.attachedPdf) {
-      setActiveAttachedPdf({ path: config.attachedPdf.tempPath, name: config.attachedPdf.fileName });
+    const effectivePdf = config.attachedPdf || (isGlobalRagActive ? globalPinnedPdf || undefined : undefined);
+    const finalConfig = { ...config, attachedPdf: effectivePdf };
+    if (effectivePdf) {
+      setActiveAttachedPdf({ path: effectivePdf.tempPath, name: effectivePdf.fileName });
     } else {
       setActiveAttachedPdf(null);
     }
     setTimeout(() => {
         try {
-            setPromptContent(generateExamPrompt(config));
-            setContextMetadata({ topic: config.topic, subject: config.subject, grade: config.grade });
-            setLearningContext(`Đề thi: ${config.topic}`);
+            setPromptContent(generateExamPrompt(finalConfig));
+            setContextMetadata({ topic: finalConfig.topic, subject: finalConfig.subject, grade: finalConfig.grade });
+            setLearningContext(`Đề thi: ${finalConfig.topic}`);
             setStatus(GenerationStatus.SUCCESS);
         } catch (err) {
             setStatus(GenerationStatus.ERROR);
@@ -171,16 +217,18 @@ const App: React.FC = () => {
   const handleLearningGenerate = (config: LearningConfig) => {
     setStatus(GenerationStatus.LOADING);
     setError(null);
-    if (config.attachedPdf) {
-      setActiveAttachedPdf({ path: config.attachedPdf.tempPath, name: config.attachedPdf.fileName });
+    const effectivePdf = config.attachedPdf || (isGlobalRagActive ? globalPinnedPdf || undefined : undefined);
+    const finalConfig = { ...config, attachedPdf: effectivePdf };
+    if (effectivePdf) {
+      setActiveAttachedPdf({ path: effectivePdf.tempPath, name: effectivePdf.fileName });
     } else {
       setActiveAttachedPdf(null);
     }
     setTimeout(() => {
         try {
-            setPromptContent(generateLearningPrompt(config));
-            setContextMetadata({ topic: config.topic, subject: config.subject, grade: config.grade });
-            setLearningContext(`Bài học: ${config.topic}`);
+            setPromptContent(generateLearningPrompt(finalConfig));
+            setContextMetadata({ topic: finalConfig.topic, subject: finalConfig.subject, grade: finalConfig.grade });
+            setLearningContext(`Bài học: ${finalConfig.topic}`);
             setStatus(GenerationStatus.SUCCESS);
         } catch (err) {
             setStatus(GenerationStatus.ERROR);
@@ -192,16 +240,18 @@ const App: React.FC = () => {
   const handleRoadmapGenerate = (config: RoadmapConfig) => {
     setStatus(GenerationStatus.LOADING);
     setError(null);
-    if (config.attachedPdf) {
-      setActiveAttachedPdf({ path: config.attachedPdf.tempPath, name: config.attachedPdf.fileName });
+    const effectivePdf = config.attachedPdf || (isGlobalRagActive ? globalPinnedPdf || undefined : undefined);
+    const finalConfig = { ...config, attachedPdf: effectivePdf };
+    if (effectivePdf) {
+      setActiveAttachedPdf({ path: effectivePdf.tempPath, name: effectivePdf.fileName });
     } else {
       setActiveAttachedPdf(null);
     }
     setTimeout(() => {
         try {
-            setPromptContent(generateRoadmapPrompt(config));
-            setContextMetadata({ topic: config.topic, subject: config.subject, grade: 'Hệ thống' });
-            setLearningContext(`Lộ trình: ${config.topic}`);
+            setPromptContent(generateRoadmapPrompt(finalConfig));
+            setContextMetadata({ topic: finalConfig.topic, subject: finalConfig.subject, grade: 'Hệ thống' });
+            setLearningContext(`Lộ trình: ${finalConfig.topic}`);
             setStatus(GenerationStatus.SUCCESS);
         } catch (err) {
             setStatus(GenerationStatus.ERROR);
@@ -213,16 +263,18 @@ const App: React.FC = () => {
   const handleWorksheetGenerate = (config: WorksheetConfig) => {
     setStatus(GenerationStatus.LOADING);
     setError(null);
-    if (config.attachedPdf) {
-      setActiveAttachedPdf({ path: config.attachedPdf.tempPath, name: config.attachedPdf.fileName });
+    const effectivePdf = config.attachedPdf || (isGlobalRagActive ? globalPinnedPdf || undefined : undefined);
+    const finalConfig = { ...config, attachedPdf: effectivePdf };
+    if (effectivePdf) {
+      setActiveAttachedPdf({ path: effectivePdf.tempPath, name: effectivePdf.fileName });
     } else {
       setActiveAttachedPdf(null);
     }
     setTimeout(() => {
         try {
-            setPromptContent(generateWorksheetPrompt(config));
-            setContextMetadata({ topic: config.topic, subject: config.subject, grade: config.grade });
-            setLearningContext(`Bài tập: ${config.topic}`);
+            setPromptContent(generateWorksheetPrompt(finalConfig));
+            setContextMetadata({ topic: finalConfig.topic, subject: finalConfig.subject, grade: finalConfig.grade });
+            setLearningContext(`Bài tập: ${finalConfig.topic}`);
             setStatus(GenerationStatus.SUCCESS);
         } catch (err) {
             setStatus(GenerationStatus.ERROR);
@@ -234,16 +286,18 @@ const App: React.FC = () => {
   const handleSimilarGenerate = (config: SimilarExerciseConfig) => {
     setStatus(GenerationStatus.LOADING);
     setError(null);
-    if (config.attachedPdf) {
-      setActiveAttachedPdf({ path: config.attachedPdf.tempPath, name: config.attachedPdf.fileName });
+    const effectivePdf = config.attachedPdf || (isGlobalRagActive ? globalPinnedPdf || undefined : undefined);
+    const finalConfig = { ...config, attachedPdf: effectivePdf };
+    if (effectivePdf) {
+      setActiveAttachedPdf({ path: effectivePdf.tempPath, name: effectivePdf.fileName });
     } else {
       setActiveAttachedPdf(null);
     }
     setTimeout(() => {
         try {
-            setPromptContent(generateSimilarPrompt(config));
-            setContextMetadata({ topic: config.topic, subject: config.subject, grade: config.grade || '12' });
-            setLearningContext(`Bài tập tương tự: ${config.topic}`);
+            setPromptContent(generateSimilarPrompt(finalConfig));
+            setContextMetadata({ topic: finalConfig.topic, subject: finalConfig.subject, grade: finalConfig.grade || '12' });
+            setLearningContext(`Bài tập tương tự: ${finalConfig.topic}`);
             setStatus(GenerationStatus.SUCCESS);
         } catch (err) {
             setStatus(GenerationStatus.ERROR);
@@ -267,8 +321,10 @@ const App: React.FC = () => {
   };
 
   const handleVideoScriptGenerate = (config: VideoConfig) => {
-    if (config.attachedPdf) {
-      setActiveAttachedPdf({ path: config.attachedPdf.tempPath, name: config.attachedPdf.fileName });
+    const effectivePdf = config.attachedPdf || (isGlobalRagActive ? globalPinnedPdf || undefined : undefined);
+    const finalConfig = { ...config, attachedPdf: effectivePdf };
+    if (effectivePdf) {
+      setActiveAttachedPdf({ path: effectivePdf.tempPath, name: effectivePdf.fileName });
     } else {
       setActiveAttachedPdf(null);
     }
@@ -276,9 +332,9 @@ const App: React.FC = () => {
     setError(null);
     setTimeout(() => {
         try {
-            setPromptContent(generateVideoScriptPrompt(config));
-            setContextMetadata({ topic: config.topic, subject: config.subject, grade: config.audience });
-            setLearningContext(`Video Script: ${config.topic}`);
+            setPromptContent(generateVideoScriptPrompt(finalConfig));
+            setContextMetadata({ topic: finalConfig.topic, subject: finalConfig.subject, grade: finalConfig.audience });
+            setLearningContext(`Video Script: ${finalConfig.topic}`);
             setStatus(GenerationStatus.SUCCESS);
         } catch (err) {
             setStatus(GenerationStatus.ERROR);
@@ -288,27 +344,29 @@ const App: React.FC = () => {
   };
 
   const handleVideoManimGenerate = (config: VideoConfig) => {
-    setCurrentVideoConfig(config);
-    if (config.attachedPdf) {
-      setActiveAttachedPdf({ path: config.attachedPdf.tempPath, name: config.attachedPdf.fileName });
+    const effectivePdf = config.attachedPdf || (isGlobalRagActive ? globalPinnedPdf || undefined : undefined);
+    const finalConfig = { ...config, attachedPdf: effectivePdf };
+    setCurrentVideoConfig(finalConfig);
+    if (effectivePdf) {
+      setActiveAttachedPdf({ path: effectivePdf.tempPath, name: effectivePdf.fileName });
     } else {
       setActiveAttachedPdf(null);
     }
     setVideoExtraConfig({
-      isSeries: config.isSeries,
-      seriesCount: config.seriesCount,
-      seriesOutline: config.seriesOutline || config.details,
-      enableVoice: config.enableVoice,
-      voiceName: config.voiceName,
-      voiceSpeed: config.voiceSpeed,
+      isSeries: finalConfig.isSeries,
+      seriesCount: finalConfig.seriesCount,
+      seriesOutline: finalConfig.seriesOutline || finalConfig.details,
+      enableVoice: finalConfig.enableVoice,
+      voiceName: finalConfig.voiceName,
+      voiceSpeed: finalConfig.voiceSpeed,
     });
     setStatus(GenerationStatus.LOADING);
     setError(null);
     setTimeout(() => {
         try {
-            setPromptContent(generateManimStoryboardPrompt(config));
-            setContextMetadata({ topic: config.topic, subject: config.subject, grade: config.audience });
-            setLearningContext(config.isSeries ? `Chuỗi Playlist (${config.seriesCount || 3} Tập): ${config.topic}` : `Video Manim: ${config.topic}`);
+            setPromptContent(generateManimStoryboardPrompt(finalConfig));
+            setContextMetadata({ topic: finalConfig.topic, subject: finalConfig.subject, grade: finalConfig.audience });
+            setLearningContext(finalConfig.isSeries ? `Chuỗi Playlist (${finalConfig.seriesCount || 3} Tập): ${finalConfig.topic}` : `Video Manim: ${finalConfig.topic}`);
             setStatus(GenerationStatus.SUCCESS);
         } catch (err) {
             setStatus(GenerationStatus.ERROR);
@@ -347,6 +405,8 @@ const App: React.FC = () => {
         <Header 
           onOpenReadme={() => setIsReadmeOpen(true)} 
           onSwitchToMobile={isMobileUserAgent && !isElectron ? handleSwitchToMobile : undefined}
+          globalPinnedPdf={globalPinnedPdf}
+          isGlobalRagActive={isGlobalRagActive}
         />
       
       <ReadmeModal isOpen={isReadmeOpen} onClose={() => setIsReadmeOpen(false)} />
@@ -415,6 +475,14 @@ const App: React.FC = () => {
                 Dán link này để AI ghi nhớ bài học cũ, tránh trùng lặp kiến thức và duy trì ngữ cảnh.
             </p>
         </div>
+
+        {/* Global Pinned RAG Document Bar */}
+        <GlobalPinnedPdfBar
+          pinnedPdf={globalPinnedPdf}
+          isActive={isGlobalRagActive}
+          onSetPinnedPdf={handleSetGlobalPinnedPdf}
+          onToggleActive={handleToggleGlobalRag}
+        />
 
         <div className="flex flex-col items-center mb-8">
             <div className="flex items-center gap-3 mb-6 bg-[#ffffff] px-4 py-2 border-4 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] flex-wrap justify-center">
@@ -558,6 +626,9 @@ const App: React.FC = () => {
                 onSubmit={handleRoadmapGenerate} 
                 onDirectAutomate={(cfg) => handleDirectAutomate(generateRoadmapPrompt(cfg), { topic: cfg.topic, subject: cfg.subject }, 'Lộ trình')}
                 status={status} 
+                globalPinnedPdf={globalPinnedPdf}
+                isGlobalRagActive={isGlobalRagActive}
+                onSetGlobalPin={handleSetGlobalPinnedPdf}
               />
             )}
 
@@ -570,6 +641,9 @@ const App: React.FC = () => {
                 contextTopic={contextMetadata?.topic}
                 contextSubject={contextMetadata?.subject}
                 contextGrade={contextMetadata?.grade}
+                globalPinnedPdf={globalPinnedPdf}
+                isGlobalRagActive={isGlobalRagActive}
+                onSetGlobalPin={handleSetGlobalPinnedPdf}
               />
             )}
 
@@ -581,6 +655,9 @@ const App: React.FC = () => {
                 contextTopic={contextMetadata?.topic}
                 contextSubject={contextMetadata?.subject}
                 contextGrade={contextMetadata?.grade}
+                globalPinnedPdf={globalPinnedPdf}
+                isGlobalRagActive={isGlobalRagActive}
+                onSetGlobalPin={handleSetGlobalPinnedPdf}
               />
             )}
 
@@ -592,6 +669,9 @@ const App: React.FC = () => {
                 contextTopic={contextMetadata?.topic}
                 contextSubject={contextMetadata?.subject}
                 contextGrade={contextMetadata?.grade}
+                globalPinnedPdf={globalPinnedPdf}
+                isGlobalRagActive={isGlobalRagActive}
+                onSetGlobalPin={handleSetGlobalPinnedPdf}
               />
             )}
 
@@ -604,6 +684,9 @@ const App: React.FC = () => {
                 contextTopic={contextMetadata?.topic}
                 contextSubject={contextMetadata?.subject}
                 contextGrade={contextMetadata?.grade}
+                globalPinnedPdf={globalPinnedPdf}
+                isGlobalRagActive={isGlobalRagActive}
+                onSetGlobalPin={handleSetGlobalPinnedPdf}
               />
             )}
 
@@ -612,25 +695,34 @@ const App: React.FC = () => {
               <VideoForm 
                 onSubmitManim={handleVideoManimGenerate}
                 onDirectAutomateManim={(cfg) => {
-                  setCurrentVideoConfig(cfg);
-                  setActiveAttachedPdf(null);
+                  const effectivePdf = cfg.attachedPdf || (isGlobalRagActive ? globalPinnedPdf || undefined : undefined);
+                  const finalCfg = { ...cfg, attachedPdf: effectivePdf };
+                  setCurrentVideoConfig(finalCfg);
+                  if (effectivePdf) {
+                    setActiveAttachedPdf({ path: effectivePdf.tempPath, name: effectivePdf.fileName });
+                  } else {
+                    setActiveAttachedPdf(null);
+                  }
                   setVideoExtraConfig({
-                    isSeries: cfg.isSeries,
-                    seriesCount: cfg.seriesCount,
-                    seriesOutline: cfg.seriesOutline || cfg.details,
-                    enableVoice: cfg.enableVoice,
-                    voiceName: cfg.voiceName,
-                    voiceSpeed: cfg.voiceSpeed,
+                    isSeries: finalCfg.isSeries,
+                    seriesCount: finalCfg.seriesCount,
+                    seriesOutline: finalCfg.seriesOutline || finalCfg.details,
+                    enableVoice: finalCfg.enableVoice,
+                    voiceName: finalCfg.voiceName,
+                    voiceSpeed: finalCfg.voiceSpeed,
                   });
                   handleDirectAutomate(
-                    generateVideoManimPrompt(cfg), 
-                    { topic: cfg.topic, subject: cfg.subject, grade: cfg.audience }, 
-                    cfg.isSeries ? `Chuỗi Playlist (${cfg.seriesCount || 3} Tập)` : 'Video Manim'
+                    generateVideoManimPrompt(finalCfg), 
+                    { topic: finalCfg.topic, subject: finalCfg.subject, grade: finalCfg.audience }, 
+                    finalCfg.isSeries ? `Chuỗi Playlist (${finalCfg.seriesCount || 3} Tập)` : 'Video Manim'
                   );
                 }}
                 status={status} 
                 contextTopic={contextMetadata?.topic}
                 contextSubject={contextMetadata?.subject}
+                globalPinnedPdf={globalPinnedPdf}
+                isGlobalRagActive={isGlobalRagActive}
+                onSetGlobalPin={handleSetGlobalPinnedPdf}
               />
             )}
 

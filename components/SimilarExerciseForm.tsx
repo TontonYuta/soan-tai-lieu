@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Wand2, Sparkles, BookOpen, Layout, HelpCircle, Info, PlusCircle, CheckSquare, Square, FileText, Zap } from "lucide-react";
-import { SimilarExerciseConfig, GenerationStatus } from '../types';
+import { SimilarExerciseConfig, GenerationStatus, AttachedPdfData } from '../types';
 import PdfUploadZone from './PdfUploadZone';
 
 
@@ -11,6 +11,9 @@ interface SimilarExerciseFormProps {
   contextTopic?: string;
   contextSubject?: string;
   contextGrade?: string;
+  globalPinnedPdf?: AttachedPdfData | null;
+  isGlobalRagActive?: boolean;
+  onSetGlobalPin?: (pdf: AttachedPdfData) => void;
 }
 
 const SimilarExerciseForm: React.FC<SimilarExerciseFormProps> = ({ 
@@ -19,7 +22,10 @@ const SimilarExerciseForm: React.FC<SimilarExerciseFormProps> = ({
   status, 
   contextTopic, 
   contextSubject, 
-  contextGrade 
+  contextGrade,
+  globalPinnedPdf,
+  isGlobalRagActive = true,
+  onSetGlobalPin
 }) => {
 
   const [config, setConfig] = useState<SimilarExerciseConfig>({
@@ -46,11 +52,16 @@ const SimilarExerciseForm: React.FC<SimilarExerciseFormProps> = ({
   }, [contextTopic, contextSubject, contextGrade]);
 
   const isLoading = status === GenerationStatus.LOADING;
+  const effectivePdf = config.attachedPdf || (isGlobalRagActive ? globalPinnedPdf : null);
+  const hasSource = Boolean(config.sourceExercises.trim() || effectivePdf);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (config.subject && config.topic && (config.sourceExercises.trim() || config.attachedPdf)) {
-      onSubmit(config);
+    if (config.subject && config.topic && hasSource) {
+      onSubmit({
+        ...config,
+        attachedPdf: effectivePdf || undefined
+      });
     }
   };
 
@@ -154,7 +165,10 @@ const SimilarExerciseForm: React.FC<SimilarExerciseFormProps> = ({
 
           <PdfUploadZone
             attachedPdf={config.attachedPdf || null}
+            globalPinnedPdf={globalPinnedPdf}
+            isGlobalRagActive={isGlobalRagActive}
             onPdfChange={(pdfData) => handleChange('attachedPdf', pdfData || undefined)}
+            onSetGlobalPin={onSetGlobalPin}
             title="Cách 1: Đính Kèm File PDF Chứa Bài Toán Mẫu (RAG):"
             description="AI sẽ tự động đọc bài toán từ file PDF đính kèm để sinh các bài tập tương tự."
           />
@@ -228,10 +242,14 @@ const SimilarExerciseForm: React.FC<SimilarExerciseFormProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
           <button
             type="button"
-            onClick={() => onDirectAutomate ? onDirectAutomate(config) : onSubmit(config)}
-            disabled={isLoading || !config.subject || !config.topic || (!config.sourceExercises.trim() && !config.attachedPdf)}
+            onClick={() => {
+              const finalConfig = { ...config, attachedPdf: effectivePdf || undefined };
+              if (onDirectAutomate) onDirectAutomate(finalConfig);
+              else onSubmit(finalConfig);
+            }}
+            disabled={isLoading || !config.subject || !config.topic || !hasSource}
             className={`relative flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-none text-black font-black uppercase tracking-wider text-xs sm:text-sm border-4 border-black shadow-[5px_5px_0_0_rgba(0,0,0,1)] transition-all duration-75 active:translate-y-[3px] active:translate-x-[3px] active:shadow-none cursor-pointer
-              ${(isLoading || !config.subject || !config.topic || (!config.sourceExercises.trim() && !config.attachedPdf))
+              ${(isLoading || !config.subject || !config.topic || !hasSource)
                 ? 'bg-[#E2E8F0] cursor-not-allowed text-gray-500 shadow-none border-gray-400' 
                 : 'bg-[#FB7185] hover:bg-[#F43F5E]'}`}
             title="Kích hoạt tự động hóa 1-Click: Biên dịch LaTeX trên Overleaf & Xuất PDF"
@@ -242,9 +260,9 @@ const SimilarExerciseForm: React.FC<SimilarExerciseFormProps> = ({
 
           <button
             type="submit"
-            disabled={isLoading || !config.subject || !config.topic || (!config.sourceExercises.trim() && !config.attachedPdf)}
+            disabled={isLoading || !config.subject || !config.topic || !hasSource}
             className={`relative flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-none text-black font-black uppercase tracking-wider text-xs sm:text-sm border-4 border-black shadow-[5px_5px_0_0_rgba(0,0,0,1)] transition-all duration-75 active:translate-y-[3px] active:translate-x-[3px] active:shadow-none cursor-pointer
-              ${(isLoading || !config.subject || !config.topic || (!config.sourceExercises.trim() && !config.attachedPdf))
+              ${(isLoading || !config.subject || !config.topic || !hasSource)
                 ? 'bg-[#E2E8F0] cursor-not-allowed text-gray-500 shadow-none border-gray-400' 
                 : 'bg-[#FFED66] hover:bg-[#FFECA1]'}`}
             title="Sinh Prompt LaTeX và hiển thị bên cột xem trước"
