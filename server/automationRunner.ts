@@ -2388,11 +2388,41 @@ Lệnh render cuối file: \`manim ${qualityFlag} scene.py MainScene\`.`;
 
         // Tạo sẵn script render cho Linux (.sh) và Windows (.bat)
         const renderShPath = path.join(outputDirectory, 'render_manim.sh');
-        const renderShContent = `#!/usr/bin/env bash\nset -e\necho "========================================================"\necho "  📐 YUTA MANIM STUDIO - RENDER 1-CLICK"\necho "========================================================"\nif ! command -v manim &> /dev/null; then\n  echo "[ERROR] Chưa cài đặt Manim CE! Vui lòng cài: pip install manim"\n  exit 1\nfi\necho "Đang render scene.py (1080p 60fps)..."\nmanim -qh scene.py MainScene\nVIDEO="media/videos/scene/1080p60/MainScene.mp4"\nif [ -f "$VIDEO" ]; then\n  xdg-open "$VIDEO" 2>/dev/null || open "$VIDEO" 2>/dev/null || true\nfi\n`;
+        const renderShContent = `#!/usr/bin/env bash
+set -e
+echo "========================================================"
+echo "  📐 YUTA MANIM STUDIO - RENDER 1-CLICK"
+echo "========================================================"
+if ! command -v manim &> /dev/null; then
+  echo "[ERROR] Chưa cài đặt Manim CE! Vui lòng cài: pip install manim"
+  exit 1
+fi
+echo "Đang render scene.py (1080p 60fps)..."
+manim -qh scene.py MainScene
+TARGET=$(find media/videos/scene -name "MainScene.mp4" 2>/dev/null | sort -r | head -n 1)
+if [ -n "$TARGET" ]; then
+  xdg-open "$TARGET" 2>/dev/null || open "$TARGET" 2>/dev/null || true
+else
+  xdg-open media/videos/scene/1080p60/MainScene.mp4 2>/dev/null || open media/videos/scene/1080p60/MainScene.mp4 2>/dev/null || true
+fi
+`;
         fs.writeFileSync(renderShPath, renderShContent, { encoding: 'utf-8', mode: 0o755 });
 
         const renderBatPath = path.join(outputDirectory, 'render_manim.bat');
-        const renderBatContent = `@echo off\nchcp 65001 >nul\ntitle Yuta Manim Studio - Render 1-Click\necho Dang render scene.py (1080p 60fps)...\nmanim -qh scene.py MainScene\npause\n`;
+        const renderBatContent = `@echo off
+chcp 65001 >nul
+title Yuta Manim Studio - Render 1-Click
+echo Dang render scene.py (1080p 60fps)...
+manim -qh scene.py MainScene
+if exist "media\\videos\\scene\\1920p60\\MainScene.mp4" (
+  start "" "media\\videos\\scene\\1920p60\\MainScene.mp4"
+) else if exist "media\\videos\\scene\\1080p60\\MainScene.mp4" (
+  start "" "media\\videos\\scene\\1080p60\\MainScene.mp4"
+) else (
+  start "" "media\\videos\\scene\\1920p15\\MainScene.mp4"
+)
+pause
+`;
         fs.writeFileSync(renderBatPath, renderBatContent, 'utf-8');
 
         // Trích xuất tên Scene class từ mã nguồn

@@ -99,9 +99,16 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
         }
         if (state.isRunning !== undefined) {
           setIsRunning(state.isRunning);
+          if (!state.isRunning) {
+            stopTimer();
+          }
         }
         if (state.progress) {
           setProgress(state.progress);
+          if (state.progress.step === 'COMPLETED' || state.progress.step === 'ERROR') {
+            setIsRunning(false);
+            stopTimer();
+          }
         }
       }).catch(() => {});
     };

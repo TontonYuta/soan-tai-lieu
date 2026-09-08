@@ -1422,6 +1422,10 @@ let server = null;
 let activeRunner = null;
 
 function getDownloadsDir() {
+  const userDownloads = path.join(os.homedir(), 'Downloads');
+  if (fs.existsSync(userDownloads)) {
+    return userDownloads;
+  }
   const dir = path.join(app.getPath('userData'), 'downloads');
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
@@ -2041,8 +2045,26 @@ BẮT BUỘC bắt đầu bằng \`\`\`python from manim import * ... \`\`\` v�
                 fs.writeFileSync(sceneFilePath, finalPython, 'utf-8');
 
                 // Script runner files
-                const renderSh = `#!/bin/bash\nmanim -qh scene.py MainScene\nxdg-open media/videos/scene/1080p60/MainScene.mp4 2>/dev/null || open media/videos/scene/1080p60/MainScene.mp4 2>/dev/null || true\n`;
-                const renderBat = `@echo off\nchcp 65001 >nul\nmanim -qh scene.py MainScene\nstart media\\videos\\scene\\1080p60\\MainScene.mp4\n`;
+                const renderSh = `#!/bin/bash
+manim -qh scene.py MainScene
+TARGET=$(find media/videos/scene -name "MainScene.mp4" 2>/dev/null | sort -r | head -n 1)
+if [ -n "$TARGET" ]; then
+  xdg-open "$TARGET" 2>/dev/null || open "$TARGET" 2>/dev/null || true
+else
+  xdg-open media/videos/scene/1080p60/MainScene.mp4 2>/dev/null || open media/videos/scene/1080p60/MainScene.mp4 2>/dev/null || true
+fi
+`;
+                const renderBat = `@echo off
+chcp 65001 >nul
+manim -qh scene.py MainScene
+if exist "media\\videos\\scene\\1920p60\\MainScene.mp4" (
+  start "" "media\\videos\\scene\\1920p60\\MainScene.mp4"
+) else if exist "media\\videos\\scene\\1080p60\\MainScene.mp4" (
+  start "" "media\\videos\\scene\\1080p60\\MainScene.mp4"
+) else (
+  start "" "media\\videos\\scene\\1920p15\\MainScene.mp4"
+)
+`;
                 fs.writeFileSync(path.join(downloadsDir, 'render_manim.sh'), renderSh, 'utf-8');
                 fs.writeFileSync(path.join(downloadsDir, 'render_manim.bat'), renderBat, 'utf-8');
 
@@ -4165,7 +4187,18 @@ YÊU CẦU CHO TẬP ${ep}:
     // 4. Serve Downloads (hỗ trợ cả thư mục con như Playlist_xxx/Tap_01.mp4 kèm Range Streaming)
     if (pathname.startsWith('/downloads/')) {
       const relPath = decodeURIComponent(pathname.replace(/^\/downloads\//, ''));
-      const filePath = path.join(downloadsDir, relPath);
+      let filePath = path.join(downloadsDir, relPath);
+      if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+        const userDownloads = path.join(os.homedir(), 'Downloads', relPath);
+        if (fs.existsSync(userDownloads) && fs.statSync(userDownloads).isFile()) {
+          filePath = userDownloads;
+        } else {
+          const appDownloads = path.join(app.getPath('userData'), 'downloads', relPath);
+          if (fs.existsSync(appDownloads) && fs.statSync(appDownloads).isFile()) {
+            filePath = appDownloads;
+          }
+        }
+      }
       if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
         const ext = path.extname(filePath).toLowerCase();
         const stat = fs.statSync(filePath);
