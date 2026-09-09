@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BookOpen, GraduationCap, Wand2, School, Calendar, Layout, Info, ChevronDown, Target, Users, Zap, FileText } from "lucide-react";
 import { LearningConfig, GenerationStatus, AttachedPdfData } from '../types';
 import PdfUploadZone from './PdfUploadZone';
+import SubjectBadgePicker from './SubjectBadgePicker';
 
 
 interface LearningFormProps {
@@ -112,6 +113,19 @@ const LearningForm: React.FC<LearningFormProps> = ({
             </div>
 
             <div className="space-y-4">
+                <div className="pt-1">
+                  <SubjectBadgePicker
+                    selectedSubject={config.subject}
+                    onSelectSubject={(subj, defTopic) => {
+                      setConfig(prev => ({
+                        ...prev,
+                        subject: subj,
+                        topic: (!prev.topic || prev.topic === 'Khảo sát hàm số & Tích phân') && defTopic ? defTopic : prev.topic
+                      }));
+                    }}
+                  />
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="group relative">
                       <label className={labelClass}>Môn học</label>
@@ -120,7 +134,7 @@ const LearningForm: React.FC<LearningFormProps> = ({
                           <input
                               type="text"
                               className={inputClass}
-                              placeholder="Toán học"
+                              placeholder="Toán học, Vật lý, Lịch sử..."
                               value={config.subject}
                               onChange={e => handleChange('subject', e.target.value)}
                               required

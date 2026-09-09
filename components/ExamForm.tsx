@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { ExamConfig, GenerationStatus, AttachedPdfData } from '../types';
 import PdfUploadZone from './PdfUploadZone';
+import SubjectBadgePicker from './SubjectBadgePicker';
 
 
 
@@ -300,12 +301,25 @@ const ExamForm: React.FC<ExamFormProps> = ({
               </div>
             </div>
 
+            <div className="pt-1">
+              <SubjectBadgePicker
+                selectedSubject={config.subject}
+                onSelectSubject={(subj, defTopic) => {
+                  setConfig(prev => ({
+                    ...prev,
+                    subject: subj,
+                    topic: (!prev.topic || prev.topic === 'Khảo sát hàm số & Tích phân') && defTopic ? defTopic : prev.topic
+                  }));
+                }}
+              />
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="group relative">
                 <label className={labelClass}>Môn học</label>
                 <div className="relative">
                   <BookOpen className={iconClass} />
-                  <input type="text" className={inputClass} placeholder="Toán học" value={config.subject} onChange={e => setConfig({...config, subject: e.target.value})} required />
+                  <input type="text" className={inputClass} placeholder="Toán học, Vật lý, Tiếng Anh..." value={config.subject} onChange={e => setConfig({...config, subject: e.target.value})} required />
                 </div>
               </div>
 

@@ -1,8 +1,40 @@
 import { ExamConfig } from "../../types";
 import { LATEX_TECHNICAL_RULES, EXAM_TEMPLATE_2025, EXAM_TEMPLATE_CLASSIC } from "./latex-rules";
 
+
+const sanitizeAndExtractRag = (attachedPdf?: { fileName: string; numPages: number; text: string }): string => {
+  if (!attachedPdf?.text) return "";
+  const rawText = attachedPdf.text.replace(/\r/g, "");
+  // Lọc sạch watermark, số điện thoại rác và số trang lặp
+  const cleaned = rawText
+    .replace(/(?:Trang\s+\d+\/\d+|SĐT:?\s*\d{8,12}|Hotline:?\s*\d{8,12}|Website:?\s*\S+)/gi, "")
+    .trim();
+
+  let chunk = "";
+  if (cleaned.length <= 15000) {
+    chunk = cleaned;
+  } else {
+    // Smart RAG: Lấy 4.000 ký tự đầu (Mục lục, tổng quan) + 11.000 ký tự trọng tâm bài tập ở các trang sau
+    const head = cleaned.slice(0, 4000);
+    const tail = cleaned.slice(-11000);
+    chunk = `${head}\n\n[... CẮT LƯỢC TRANG GIỮA, NỐI PHẦN BÀI TẬP VÀ ĐÁP ÁN TRỌNG TÂM TRANG SAU ...]\n\n${tail}`;
+  }
+
+  return `\n====================================================
+TÀI LIỆU PDF ĐÍNH KÈM THAM KHẢO (RAG CONTEXT):
+- Tên tài liệu: ${attachedPdf.fileName} (${attachedPdf.numPages} trang)
+- Nội dung trích xuất:
+"""
+${chunk}
+"""
+- CHỈ THỊ RAG (QUAN TRỌNG): BẮT BUỘC chắt lọc các câu hỏi, dữ kiện và cấu trúc bài từ tài liệu PDF đính kèm trên để biên soạn nội dung sát nhất.
+====================================================\n`;
+};
+
+
 export const generateExamPrompt = (config: ExamConfig): string => {
   const is2025Format = config.examFormat === 'standard2025' || !config.examFormat;
+  const subjectName = config.subject || 'Toán học';
 
   let totalQuestions = 0;
   let structureDescription = "";
@@ -13,8 +45,8 @@ export const generateExamPrompt = (config: ExamConfig): string => {
     const p3 = Number(config.counts.part3_sa || 6);
     totalQuestions = p1 + p2 + p3;
     structureDescription = `
-- CẤU TRÚC ĐỀ THI 3 PHẦN CHUẨN BỘ GD&ĐT 2025--2026:
-  * PHẦN I: ${p1} câu trắc nghiệm nhiều phương án lựa chọn (A, B, C, D) - Dùng macro \\cauhoi{n} và \\dapan{A}{B}{C}{D}.
+- CẤU TRÚC ĐỀ THI 3 PHẦN CHUẨN BỘ GD&ĐT 2025--2026 CHO MÔN ${subjectName.toUpperCase()}:
+  * PHẦN I: ${p1} câu trắc nghiệm nhiều phương án lựa chọn (A, B, C, D) - Dùng macro \\cauhoi{n} và \\dapan (ngắn) hoặc \\dapanHaiCot / \\dapanMotCot (dài).
   * PHẦN II: ${p2} câu trắc nghiệm Đúng / Sai (mỗi câu gồm 4 mệnh đề a, b, c, d) - Dùng macro \\cauhoi{n} và \\yDungSai{...}{...}{...}{...}.
   * PHẦN III: ${p3} câu trắc nghiệm Trả lời ngắn (điền kết quả/đáp số) - Dùng macro \\cauhoi{n} và \\traLoiNgan.
   * TỔNG CỘNG: ${totalQuestions} câu hỏi.`;
@@ -23,9 +55,9 @@ export const generateExamPrompt = (config: ExamConfig): string => {
     const essay = Number(config.counts.essay || 3);
     totalQuestions = mc + essay;
     structureDescription = `
-- CẤU TRÚC ĐỀ THI TRUYỀN THỐNG:
+- CẤU TRÚC ĐỀ THI TRUYỀN THỐNG MÔN ${subjectName.toUpperCase()}:
   * PHẦN I (Trắc nghiệm): ${mc} câu (A, B, C, D).
-  * PHẦN II (Tự luận): ${essay} câu tính toán nâng cao kèm dòng chấm.
+  * PHẦN II (Tự luận): ${essay} câu tính toán/phân tích nâng cao.
   * TỔNG CỘNG: ${totalQuestions} câu hỏi.`;
   }
 
@@ -41,48 +73,42 @@ export const generateExamPrompt = (config: ExamConfig): string => {
   }
 
   const tikzInstruction = config.includeTikZ ? `
-- **YÊU CẦU ĐỒ THỊ & HÌNH HỌC TIKZ (BẮT BUỘC):**
-  * Đối với các câu hỏi về Hình học không gian (khối chóp, lăng trụ, nón, trụ, cầu, tọa độ Oxyz): BẮT BUỘC vẽ hình trực quan bằng TikZ (nét đứt [dashed] cho cạnh khuất, nét liền [thick] cho cạnh nhìn thấy, ký hiệu góc vuông).
-  * Đối với các câu hỏi Khảo sát hàm số: BẮT BUỘC vẽ Bảng biến thiên hoặc Đồ thị hàm số bằng TikZ/pgfplots sạch đẹp.` : '';
+- **YÊU CẦU ĐỒ THỊ, HÌNH HỌC TIKZ & SƠ ĐỒ ĐA MÔN (BẮT BUỘC):**
+  * Môn Toán học: Hình học không gian (nét đứt [dashed], nét liền [thick]), Bảng biến thiên, đồ thị hàm số TikZ/pgfplots sạch đẹp.
+  * Môn Vật lý / Hóa học / Sinh học: Sơ đồ mạch điện, đường sức từ, đồ thị dao động, sơ đồ lai di truyền hoặc sơ đồ thí nghiệm.
+  * Môn Ngôn ngữ / Xã hội: Sơ đồ tư duy, trục thời gian sự kiện, bảng đối chiếu dữ liệu.` : '';
 
-  const ragSection = config.attachedPdf ? `
-====================================================
-TÀI LIỆU PDF ĐÍNH KÈM THAM KHẢO (RAG CONTEXT):
-- Tên tài liệu: ${config.attachedPdf.fileName} (${config.attachedPdf.numPages} trang)
-- Nội dung trích xuất từ tài liệu:
-"""
-${config.attachedPdf.text.slice(0, 15000)}
-"""
-- CHỈ THỊ RAG (QUAN TRỌNG): BẮT BUỘC tham khảo cấu trúc ma trận, câu hỏi và mức độ khó từ tài liệu PDF đính kèm để biên soạn đề thi chuẩn format.
-====================================================` : '';
+  const ragSection = sanitizeAndExtractRag(config.attachedPdf);
 
-  return `Đóng vai Chuyên gia Khảo thí và Biên soạn đề thi Toán học LaTeX chuyên nghiệp (chuẩn format Bộ GD&ĐT 2025--2026).
+  return `Đóng vai Chuyên gia Khảo thí và Biên soạn đề thi ${subjectName} LaTeX chuyên nghiệp (chuẩn format Bộ GD&ĐT 2025--2026).
 
 I. THÔNG TIN KỲ THI:
 - Đơn vị / Trường: ${config.school}
 - Kỳ thi: ${config.examName} (${config.year})
-- Môn học: ${config.subject} - Khối: ${config.grade}
+- Môn thi: ${subjectName} - Khối / Lớp: ${config.grade}
 - Chủ đề trọng tâm: ${config.topic}
 - Thời gian làm bài: ${config.time} phút
 - Ngôn ngữ: ${languageInstruction}
 - Ma trận phân bổ độ khó: ${matrixInfo} (Tăng dần theo logic tư duy)
 ${structureDescription}
-${config.referenceContent ? `- Ngữ cảnh đề cương/tài liệu tham khảo: ${config.referenceContent}` : ''}
-- Yêu cầu bổ sung: ${config.details || "Bám sát định dạng đề thi mới"}
+${config.referenceContent ? "- Ngữ cảnh đề cương/tài liệu tham khảo: " + config.referenceContent : ""}
+- Yêu cầu bổ sung: ${config.details || "Bám sát cấu trúc đề thi chuẩn"}
 ${ragSection}
 
-
-II. LUẬT NỘI DUNG VÀ VĂN PHONG SƯ PHẠM (BẮT BUỘC):
-- **Bám sát thực tế & Chuẩn mực:** Mọi câu hỏi đều phải chuẩn logic toán học, có số liệu đẹp, không vô lý, nghiệm thực tế.
-- **Phân hóa rõ ràng:** Phần I kiểm tra kiến thức nền tảng và thông hiểu; Phần II kiểm tra tư duy biện luận logic qua 4 mệnh đề đúng/sai; Phần III kiểm tra năng lực giải quyết vấn đề và tính toán chính xác.
-- **KHÔNG NGÔN TỪ HOA MỸ:** Ngôn từ trong sáng, khách quan, chuẩn mực sư phạm.
+II. LUẬT NỘI DUNG VÀ VĂN PHONG SƯ PHẠM ĐA MÔN (BẮT BUỘC):
+- **Bám sát đặc thù môn học:**
+  * Môn Toán & KHTN: Dữ liệu chính xác, số liệu đẹp, có ý nghĩa vật lý/hóa học thực tế.
+  * Môn Tiếng Anh / Ngoại ngữ: Chú trọng ngữ pháp, từ vựng theo chủ điểm, ngữ âm, bài đọc hiểu dùng môi trường \\doanvan{Reading Passage}{...}.
+  * Môn Khoa học Xã hội (Sử, Địa, GDKT&PL): Mốc lịch sử chuẩn xác, dữ liệu địa lý cập nhật, bài tập tình huống thực tế.
+- **Phân hóa rõ ràng:** Phần I kiểm tra nhận biết và thông hiểu; Phần II kiểm tra năng lực biện luận 4 mệnh đề đúng/sai; Phần III kiểm tra tư duy giải quyết vấn đề.
+- **ĐIỀU PHỐI DUNG LƯỢNG CHỐNG CẮT CỤT TOKEN:** Phần Hướng dẫn giải chi tiết phải tập trung cô đọng vào chìa khóa then chốt và biến đổi chính, TUYỆT ĐỐI KHÔNG viết lan man để đảm bảo 100% tài liệu được tạo trọn vẹn và đóng \\end{document}.
 ${tikzInstruction}
 
 III. YÊU CẦU KỸ THUẬT VÀ QUY TẮC LATEX:
 ${LATEX_TECHNICAL_RULES}
 
 IV. KHUNG CODE MẪU ĐỀ THI ĐƯỢC ÁP DỤNG:
-Hãy sử dụng bộ khung sau, thay thế các phần comment \`%\` bằng nội dung câu hỏi thực tế và bảng đáp án + lời giải chi tiết:
+Hãy sử dụng bộ khung sau, thay thế các phần comment "%" bằng nội dung câu hỏi thực tế và bảng đáp án + lời giải chi tiết:
 ${is2025Format ? EXAM_TEMPLATE_2025 : EXAM_TEMPLATE_CLASSIC}
 
 V. CHỈ THỊ ĐẦU RA BẮT BUỘC:

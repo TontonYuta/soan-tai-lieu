@@ -8,6 +8,8 @@ const { spawn, exec, execSync } = require('child_process');
 // Tự động bổ sung các thư mục venv & bin hệ thống vào process.env.PATH cho mọi child_process
 const homeDir = os.homedir();
 const extraPaths = [
+  path.join('/home/tontonyuta/soan-tai-lieu', '.venv', 'bin'),
+  path.join(homeDir, '.TinyTeX', 'bin', 'x86_64-linux'),
   path.join(homeDir, '.venv', 'bin'),
   path.join(homeDir, '.local', 'bin'),
   path.join(process.cwd(), '.venv', 'bin'),
@@ -296,6 +298,24 @@ function getVenvPaths() {
 }
 
 function getPdflatexPath() {
+  const home = os.homedir();
+  const candidates = process.platform === 'win32'
+    ? [
+        'C:\\miktex\\miktex\\bin\\x64\\pdflatex.exe',
+        'C:\\texlive\\2024\\bin\\windows\\pdflatex.exe',
+        'C:\\Program Files\\MiKTeX\\miktex\\bin\\x64\\pdflatex.exe'
+      ]
+    : [
+        path.join(home, '.TinyTeX', 'bin', 'x86_64-linux', 'pdflatex'),
+        path.join(home, '.local', 'bin', 'pdflatex'),
+        '/usr/bin/pdflatex',
+        '/usr/local/bin/pdflatex',
+        '/Library/TeX/texbin/pdflatex'
+      ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
+  }
+
   try {
     const whichCmd = process.platform === 'win32' ? 'where pdflatex' : 'which pdflatex';
     const stdout = execSync(whichCmd, { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'] });
@@ -305,21 +325,88 @@ function getPdflatexPath() {
     }
   } catch (e) {}
 
-  const candidates = process.platform === 'win32'
-    ? [
-        'C:\\miktex\\miktex\\bin\\x64\\pdflatex.exe',
-        'C:\\texlive\\2024\\bin\\windows\\pdflatex.exe',
-        'C:\\Program Files\\MiKTeX\\miktex\\bin\\x64\\pdflatex.exe'
-      ]
-    : [
-        '/usr/bin/pdflatex',
-        '/usr/local/bin/pdflatex',
-        '/Library/TeX/texbin/pdflatex'
-      ];
-  for (const c of candidates) {
-    if (fs.existsSync(c)) return c;
-  }
   return 'pdflatex';
+}
+
+function autoRepairLatexCode(latexCode, logContent = '') {
+  let repaired = latexCode;
+
+  // 1. Chống cắt cụt: Đảm bảo có \end{document}
+  if (!repaired.includes('\\end{document}')) {
+    const openEnvs = ['enumerate', 'itemize', 'center', 'tabular', 'tabularx', 'longtable', 'multicols', 'tcolorbox'];
+    for (const env of openEnvs) {
+      const openCount = (repaired.match(new RegExp(`\\\\begin\\{${env}\\}`, 'g')) || []).length;
+      const closeCount = (repaired.match(new RegExp(`\\\\end\\{${env}\\}`, 'g')) || []).length;
+      if (openCount > closeCount) {
+        repaired += `\n\\end{${env}}`.repeat(openCount - closeCount);
+      }
+    }
+    repaired += '\n\\end{document}\n';
+  }
+
+  // 2. Tự động tiêm newunicodechar và map ký tự Unicode nếu thiếu
+  if (!repaired.includes('newunicodechar')) {
+    const unicodePreamble = `
+\\usepackage{newunicodechar}
+\\newunicodechar{↗}{\\ensuremath{\\nearrow}}
+\\newunicodechar{↘}{\\ensuremath{\\searrow}}
+\\newunicodechar{→}{\\ensuremath{\\rightarrow}}
+\\newunicodechar{←}{\\ensuremath{\\leftarrow}}
+\\newunicodechar{•}{\\textbullet}
+\\newunicodechar{≤}{\\ensuremath{\\le}}
+\\newunicodechar{≥}{\\ensuremath{\\ge}}
+\\newunicodechar{≠}{\\ensuremath{\\ne}}
+\\newunicodechar{≈}{\\ensuremath{\\approx}}
+\\newunicodechar{±}{\\ensuremath{\\pm}}
+\\newunicodechar{×}{\\ensuremath{\\times}}
+\\newunicodechar{÷}{\\ensuremath{\\div}}
+\\newunicodechar{∞}{\\ensuremath{\\infty}}
+\\newunicodechar{°}{\\ensuremath{^\\circ}}
+\\newunicodechar{℃}{\\ensuremath{^\\circ\\text{C}}}
+`;
+    if (repaired.includes('\\usepackage[utf8]{inputenc}')) {
+      repaired = repaired.replace('\\usepackage[utf8]{inputenc}', '\\usepackage[utf8]{inputenc}' + unicodePreamble);
+    } else if (repaired.includes('\\documentclass')) {
+      repaired = repaired.replace(/(\\documentclass[^\n]*\n)/, `$1\\usepackage[utf8]{inputenc}${unicodePreamble}\n`);
+    }
+  }
+
+  // 3. Tự động bổ sung các macro hỗ trợ đa môn nếu mã gọi mà preamble thiếu
+  const missingMacros = [];
+  if (repaired.includes('\\dapanHaiCot') && !repaired.includes('\\newcommand{\\dapanHaiCot}')) {
+    missingMacros.push(`\\newcommand{\\dapanHaiCot}[4]{
+  \\begin{tabularx}{\\linewidth}{XX}
+    \\textbf{A.} #1 & \\textbf{B.} #2 \\\\
+    \\textbf{C.} #3 & \\textbf{D.} #4
+  \\end{tabularx}
+}`);
+  }
+  if (repaired.includes('\\dapanMotCot') && !repaired.includes('\\newcommand{\\dapanMotCot}')) {
+    missingMacros.push(`\\newcommand{\\dapanMotCot}[4]{
+  \\begin{tabularx}{\\linewidth}{X}
+    \\textbf{A.} #1 \\\\
+    \\textbf{B.} #2 \\\\
+    \\textbf{C.} #3 \\\\
+    \\textbf{D.} #4
+  \\end{tabularx}
+}`);
+  }
+  if (repaired.includes('\\doanvan') && !repaired.includes('\\newcommand{\\doanvan}')) {
+    missingMacros.push(`\\newcommand{\\doanvan}[2]{
+  \\begin{tcolorbox}[colback=gray!5!white,colframe=gray!50!black,title={\\textbf{#1}},arc=2mm]
+    \\small\\textit{#2}
+  \\end{tcolorbox}
+}`);
+  }
+  if (missingMacros.length > 0 && repaired.includes('\\begin{document}')) {
+    repaired = repaired.replace('\\begin{document}', missingMacros.join('\n\n') + '\n\n\\begin{document}');
+  }
+
+  // 4. Sửa các ký tự đặc biệt hay gây crash trong văn bản thường
+  repaired = repaired.replace(/GD&ĐT/g, 'GD\\&ĐT');
+  repaired = repaired.replace(/(\d+)\s*%/g, '$1\\%');
+
+  return repaired;
 }
 
 function getAgyExecutable() {
@@ -373,8 +460,11 @@ async function runAgyPrompt(promptText, cwdDir, modelName, onProgress, timeoutMs
   const agyExec = getAgyExecutable();
   const { spawn } = require('child_process');
 
+  // Bắt buộc loại bỏ null bytes (\0) để tránh lỗi ERR_INVALID_ARG_VALUE trong child_process.spawn
+  const cleanPromptText = String(promptText || '').replace(/\0/g, '');
+
   // Bắt buộc chỉ thị cấm tool để Antigravity Agent không chạy bash ngầm hay tự render video gây timeout
-  const strictPrompt = `${promptText}\n\n[CHỈ THỊ KỸ THUẬT BẮT BUỘC]:\n- TUYỆT ĐỐI KHÔNG GỌI BẤT KỲ TOOL NÀO (KHÔNG run_command, KHÔNG write_to_file, KHÔNG view_file, KHÔNG schedule).\n- TUYỆT ĐỐI KHÔNG tự chạy lệnh render manim/pdflatex.\n- CHỈ xuất duy nhất nội dung văn bản/khối mã trực tiếp ra output.`;
+  const strictPrompt = `${cleanPromptText}\n\n[CHỈ THỊ KỸ THUẬT BẮT BUỘC]:\n- TUYỆT ĐỐI KHÔNG GỌI BẤT KỲ TOOL NÀO (KHÔNG run_command, KHÔNG write_to_file, KHÔNG view_file, KHÔNG schedule).\n- TUYỆT ĐỐI KHÔNG tự chạy lệnh render manim/pdflatex.\n- CHỈ xuất duy nhất nội dung văn bản/khối mã trực tiếp ra output.`.replace(/\0/g, '');
 
   const args = [
     '-p', strictPrompt,
@@ -527,8 +617,8 @@ async function extractPdfTextSafe(filePath) {
       const parser = new pdfModule.default.PDFParse({ data: buffer });
       const resText = await parser.getText();
       extractedText = resText.text || '';
-      pageCount = resText.total || (resText.pages && resText.pages.length) || 1;
     }
+    extractedText = (extractedText || '').replace(/\0/g, '');
     return { text: extractedText.trim(), numPages: pageCount };
   } catch (err) {
     console.warn('extractPdfTextSafe error:', err.message);
@@ -1453,6 +1543,46 @@ function getFirefoxExecutable() {
   return 'firefox';
 }
 
+function getChromeExecutable() {
+  const platform = process.platform;
+  const home = os.homedir();
+  if (platform === 'win32') {
+    const prefixes = [process.env.LOCALAPPDATA, process.env.PROGRAMFILES, process.env['PROGRAMFILES(X86)']].filter(Boolean);
+    for (const prefix of prefixes) {
+      const p = path.join(prefix, 'Google', 'Chrome', 'Application', 'chrome.exe');
+      if (fs.existsSync(p)) return p;
+      const pEdge = path.join(prefix, 'Microsoft', 'Edge', 'Application', 'msedge.exe');
+      if (fs.existsSync(pEdge)) return pEdge;
+    }
+    return 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+  } else if (platform === 'darwin') {
+    return '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+  } else {
+    const candidates = [
+      path.join(home, '.local', 'bin', 'google-chrome'),
+      path.join(home, '.local', 'bin', 'chrome'),
+      path.join(home, '.local', 'bin', 'chromium'),
+      path.join(home, '.local', 'opt', 'google', 'chrome', 'google-chrome'),
+      path.join(home, '.cache', 'ms-playwright', 'chromium-1243', 'chrome-linux64', 'chrome'),
+      '/opt/google/chrome/chrome',
+      '/opt/google/chrome/google-chrome',
+      '/usr/bin/google-chrome-stable',
+      '/usr/bin/google-chrome',
+      '/usr/bin/chromium-browser',
+      '/usr/bin/chromium',
+      '/snap/bin/chromium',
+    ];
+    for (const p of candidates) {
+      if (fs.existsSync(p)) return p;
+    }
+    try {
+      const pw = chromium.executablePath();
+      if (pw && fs.existsSync(pw)) return pw;
+    } catch {}
+    return 'google-chrome';
+  }
+}
+
 function getDefaultFirefoxProfile() {
   const platform = process.platform;
   const home = os.homedir();
@@ -1666,7 +1796,7 @@ function startInternalServer(callback) {
             success: true,
             fileName: safeName,
             numPages: pageCount,
-            text: extractedText,
+            text: (extractedText || '').replace(/\0/g, ''),
             tempPath: tempPath,
             fileSize: fileSizeStr,
           }));
@@ -1928,21 +2058,32 @@ function startInternalServer(callback) {
                     progress: 29,
                     message: `✓ Đã kết nối tài liệu RAG: ${ragFileName} (${pdfRes.numPages} trang, ${ragText.length} ký tự).`,
                   });
-                  const trimmedRag = ragText.slice(0, 15000);
-                  ragDirectiveBlock = `\n\n[TÀI LIỆU RAG NGUỒN BẮT BUỘC BÁM SÁT (${ragFileName})]:\n"""\n${trimmedRag}\n"""\n\nCHỈ THỊ SƯ PHẠM RAG BẮT BUỘC KHÔNG ĐƯỢC BỎ QUA:\n1. BẮT BUỘC TRÍCH XUẤT CHÍNH XÁC BÀI TOÁN / CÂU HỎI / ĐỊNH LÝ TỪ TÀI LIỆU TRÊN để dựng video bài giảng. Nếu là đề ôn tập gồm nhiều câu, chọn bài toán tiêu biểu nhất (ví dụ Dạng 1 / Câu 1) và giải chi tiết từng bước.\n2. BÁM SÁT 100% CÂU TỪ, DỮ KIỆN, HÀM SỐ, HÌNH VẼ, PHƯƠNG TRÌNH, BƯỚC GIẢI TRONG TÀI LIỆU. TUYỆT ĐỐI KHÔNG BỊA BÀI TOÁN KHÁC!\n3. DIỄN ĐẠT ĐÚNG VÀ ĐỦ Ý CHÍNH: Lời giải, biến đổi đại số, và bảng biến thiên/đồ thị phải phản ánh trung thực bài toán trong tài liệu.`;
+                  const cleanedRag = ragText
+                    .replace(/\r/g, "")
+                    .replace(/(?:Trang\s+\d+\/\d+|SĐT:?\s*\d{8,12}|Hotline:?\s*\d{8,12}|Website:?\s*\S+)/gi, "")
+                    .trim();
+                  let trimmedRag = "";
+                  if (cleanedRag.length <= 15000) {
+                    trimmedRag = cleanedRag;
+                  } else {
+                    const head = cleanedRag.slice(0, 4000);
+                    const tail = cleanedRag.slice(-11000);
+                    trimmedRag = `${head}\n\n[... CẮT LƯỢC PHẦN GIỮA, NỐI PHẦN BÀI TẬP VÀ ĐÁP ÁN TRỌNG TÂM TRANG SAU ...]\n\n${tail}`;
+                  }
+                  ragDirectiveBlock = `\n\n[TÀI LIỆU RAG NGUỒN BẮT BUỘC BÁM SÁT (${ragFileName})]:\n"""\n${trimmedRag}\n"""\n\nCHỈ THỊ SƯ PHẠM RAG BẮT BUỘC KHÔNG ĐƯỢC BỎ QUA:\n1. BẮT BUỘC TRÍCH XUẤT CHÍNH XÁC BÀI TOÁN / CÂU HỎI / ĐỊNH LÝ / DỮ KIỆN TỪ TÀI LIỆU TRÊN để dựng video bài giảng hoặc tài liệu. Nếu là đề ôn tập gồm nhiều câu, chọn bài tiêu biểu nhất (ví dụ Dạng 1 / Câu 1) và giải chi tiết từng bước.\n2. BÁM SÁT 100% CÂU TỪ, DỮ KIỆN, HÀM SỐ, HÌNH VẼ, PHƯƠNG TRÌNH, BƯỚC GIẢI TRONG TÀI LIỆU. TUYỆT ĐỐI KHÔNG BỊA BÀI KHÁC!\n3. DIỄN ĐẠT ĐÚNG VÀ ĐỦ Ý CHÍNH: Lời giải, biến đổi đại số, sơ đồ và bảng biến thiên/đồ thị phải phản ánh trung thực bài toán trong tài liệu.`;
                   if (!promptToSend.includes('[TÀI LIỆU RAG NGUỒN ĐÍNH KÈM / GHIM]')) {
                     promptToSend = ragDirectiveBlock + '\n\n' + promptToSend;
                   }
                 } else {
                   if (!promptToSend.includes('[TÀI LIỆU RAG NGUỒN ĐÍNH KÈM / GHIM]')) {
-                    promptToSend = `[TÀI LIỆU RAG NGUỒN]: File "${ragFileName}" tại "${options.attachedPdfPath}". Bám sát toàn bộ dữ kiện toán học trong tài liệu này.\n\n` + promptToSend;
+                    promptToSend = `[TÀI LIỆU RAG NGUỒN]: File "${ragFileName}" tại "${options.attachedPdfPath}". Bám sát toàn bộ dữ kiện trong tài liệu này.\n\n` + promptToSend;
                   }
                 }
               }
 
               // Bổ sung chỉ thị cho Antigravity Agent nếu là bài giảng Video
               if (isManimTask && !promptToSend.includes('MainScene')) {
-                promptToSend += `\n\nYÊU CẦU BẮT BUỘC CHO VIDEO MANIM CE:\n- Xuất Kịch bản Sư phạm VÀ Khối mã Python Manim CE duy nhất trong \`\`\`python ... \`\`\` có \`class MainScene(Scene)\` và \`def construct(self):\` để có thể render ngay.\n- BỐ CỤC DUAL-ZONE CONTAINER LẤP ĐẦY 93% MÀN HÌNH (height thẻ 6.4 và 6.6), FONT_SIZE LỚN RÕ RÀNG (Tiêu đề 30-34, Thẻ 24, MathTex 28-34, Diễn giải 22-26, CẤM DÙNG FONT_SIZE DƯỚI 22).\n- TUYỆT ĐỐI KHÔNG SỬ DỤNG BẤT KỲ TOOL NÀO (KHÔNG run_command, KHÔNG write_to_file, KHÔNG view_file). KHÔNG TỰ CHẠY LỆNH RENDER. CHỈ XUẤT TEXT TRỰC TIẾP.`;
+                promptToSend += `\n\nYÊU CẦU BẮT BUỘC CHO VIDEO MANIM CE (CHUẨN c1_HamSo_DonDieu.py):\n- Kế thừa cấu trúc 5 Phân Cảnh Vàng: 1. Intro (~7s, ~20 từ); 2. Lý thuyết 2 thẻ màu tương phản (Xanh Emerald & Đỏ Ruby, ~14s, ~40 từ); 3. Dual-Zone Mô phỏng động tương tác & Bảng/Sơ đồ phân tích (~38s, ~105 từ); 4. Chữa đề/bài tập RAG thực chiến (TỐI ĐA 2 CÂU TIÊU BIỂU: Top Card = Câu 1, Bottom Card = Câu 2; TUYỆT ĐỐI KHÔNG nhồi 3-4 câu); 5. Thẻ Outro thương hiệu "Học ${options.subject || 'tập'} cùng Yuta" (giữ nguyên self.wait(3.0), KHÔNG FadeOut).\n- BẮT BUỘC gọi fit_width(group, 7.8) cho mọi khối nội dung trong thẻ để triệt tiêu lỗi tràn viền.\n- FONT_SIZE LỚN RÕ RÀNG TRÊN ĐIỆN THOẠI (Tiêu đề 30-34, Thẻ 22-24, MathTex 26-32, Diễn giải 22-24, CẤM DÙNG FONT_SIZE DƯỚI 22).\n- ĐỒNG BỘ ÂM THANH (TTS): Kịch bản VOICEOVER_SCRIPT có số từ phù hợp thời lượng (~2.85 từ/giây). Các lệnh self.play và self.wait khớp nối với lời thoại từng cảnh.\n- Xuất khối mã Python Manim CE duy nhất trong \`\`\`python ... \`\`\` có class MainScene(Scene) và def construct(self): để render ngay.\n- TUYỆT ĐỐI KHÔNG SỬ DỤNG BẤT KỲ TOOL NÀO (KHÔNG run_command, KHÔNG write_to_file, KHÔNG view_file). KHÔNG TỰ CHẠY LỆNH RENDER. CHỈ XUẤT TEXT TRỰC TIẾP.`;
               }
 
               let lastProgressReport = Date.now();
@@ -1987,15 +2128,19 @@ ${ragDirectiveBlock ? `\n${ragDirectiveBlock}\n` : ''}
 
 Hãy viết TOÀN BỘ file mã nguồn Manim Python (\`scene.py\`) hoàn chỉnh 100% để render video bài giảng này.
 
-YÊU CẦU BẮT BUỘC KHÔNG ĐƯỢC BỎ QUA (TUÂN THỦ DUAL-ZONE CONTAINER CARDS & CHỐNG TRỐNG MÀN HÌNH):
-1. BẮT BUỘC bắt đầu bằng khối mã \`\`\`python ... \`\`\`
+YÊU CẦU BẮT BUỘC KHÔNG ĐƯỢC BỎ QUA (TUÂN THỦ KIẾN TRÚC 5 PHÂN CẢNH VÀNG & c1_HamSo_DonDieu.py):
+1. BẮT BUỘC bắt đầu bằng khối mã \`\`\`python ... \`\`\` và kết thúc bằng \`\`\`.
 2. BẮT BUỘC có dòng đầu: from manim import *
 3. BẮT BUỘC có class MainScene(Scene) hoặc class MainScene(ThreeDScene) chứa def construct(self):
 4. ${isVertical ? 'Cấu hình khung hình DỌC 9:16 (config.pixel_width=1080, config.pixel_height=1920, config.frame_width=9.0, config.frame_height=16.0).' : 'Cấu hình khung hình NGANG 16:9 (1920x1080).'}
-5. BỐ CỤC DUAL-ZONE LẤP ĐẦY 93% MÀN HÌNH (TRIỆT TIÊU KHOẢNG TRỐNG ĐEN):
-   - ${isVertical ? 'Header Bar (y ~ 7.05, height=1.3, width=8.5, tiêu đề font_size=30-34 BOLD); Top Card (y ~ 3.15, height=6.4, width=8.5, tiêu đề font_size=24, axes x_length=7.2, y_length=4.4, nét vẽ stroke_width=4.5); Bottom Card (y ~ -3.75, height=6.6, width=8.5, tiêu đề font_size=24, công thức MathTex font_size=28-34, diễn giải font_size=22-26, bảng biến thiên font_size=24-28). TUYỆT ĐỐI KHÔNG để khoảng trống đen thừa!' : 'Header đỉnh màn hình, Cột Trái Mô phỏng Đồ thị (width=7.2, height=6.2), Cột Phải Lời giải LaTeX (width=5.8, height=6.2).'}
-6. BẮT BUỘC FONT_SIZE LỚN DỄ ĐỌC TRÊN ĐIỆN THOẠI: TUYỆT ĐỐI KHÔNG dùng font_size nhỏ dưới 22! Mọi chữ tiếng Việt font_size=22-26, công thức MathTex font_size=28-34, tiêu đề 30-34.
-7. BẮT BUỘC khớp đúng thời lượng mục tiêu: ${targetDuration} (điều chỉnh số phân cảnh, khối kịch bản lời thoại VOICEOVER_SCRIPT và các khoảng self.wait(2.0-4.0) giữa các bước).
+5. BỐ CỤC 5 PHÂN CẢNH VÀNG CHUẨN MỰC:
+   - Phần 1: Mở đầu ấn tượng (Intro, ~7s) - FadeOut toàn bộ.
+   - Phần 2: Lý thuyết 2 thẻ màu tương phản (Card Xanh Emerald #064E3B & Card Đỏ Ruby #7F1D1D, height=4.0-4.2 mỗi thẻ, width=8.4) - FadeOut toàn bộ.
+   - Phần 3: Dual-Zone Container Mô phỏng động tiếp tuyến trượt đổi màu theo hệ số góc + thanh trạng thái real-time always_redraw + Bảng biến thiên 3 tầng LaTeX chuẩn SGK (\\begin{array}{|c|ccccccc|}) (~38s) - FadeOut toàn bộ.
+   - Phần 4: Chữa đề thi RAG thực chiến (TỐI ĐA 2 CÂU TIÊU BIỂU: Top Card = Câu 1, Bottom Card = Câu 2; TUYỆT ĐỐI KHÔNG nhồi 3-4 câu) (~38s) - FadeOut toàn bộ.
+   - Phần 5: Thẻ Outro tổng kết thương hiệu "Học toán cùng Yuta" (height=13.6, width=8.4) - BẮT BUỘC kết thúc bằng self.wait(3.0) giữ nguyên màn hình, TUYỆT ĐỐI KHÔNG FadeOut làm đen màn hình!
+6. BẮT BUỘC HÀM fit_width(group, 7.8) trên mọi khối nội dung mobject trong thẻ để triệt tiêu lỗi tràn viền.
+7. BẮT BUỘC FONT_SIZE LỚN DỄ ĐỌC TRÊN ĐIỆN THOẠI: TUYỆT ĐỐI KHÔNG dùng font_size nhỏ dưới 22! Mọi chữ tiếng Việt font_size=22-24, công thức MathTex font_size=26-32, tiêu đề 30-34.
 8. 100% công thức MathTex(r"...") dùng raw string r"...".
 9. TUYỆT ĐỐI CHỈ XUẤT MÃ PYTHON TRONG KHỐI \`\`\`python ... \`\`\`, KHÔNG VIẾT LỜI CHÀO HAY GIẢI THÍCH NGOÀI MÃ!
 10. TUYỆT ĐỐI KHÔNG GỌI BẤT KỲ TOOL NÀO (KHÔNG run_command, KHÔNG write_to_file, KHÔNG view_file). KHÔNG TỰ CHẠY LỆNH RENDER. Hệ thống sẽ tự biên dịch mã bằng lệnh: \`manim ${qualityFlag} scene.py MainScene\`.`;
@@ -2025,7 +2170,7 @@ YÊU CẦU BẮT BUỘC KHÔNG ĐƯỢC BỎ QUA (TUÂN THỦ DUAL-ZONE CONTAINE
 
                   const isVertical = options.prompt.includes('9:16') || options.prompt.includes('DỌC');
                   const directPrompt = `Viết duy nhất 1 khối mã Python Manim CE (\`scene.py\`) hoàn chỉnh 100% để tạo video minh họa cho bài toán toán học chủ đề: "${options.topic || options.subject || 'Toán học'}".${ragDirectiveBlock ? `\n${ragDirectiveBlock}\n` : ''}
-BẮT BUỘC bắt đầu bằng \`\`\`python from manim import * ... \`\`\` với class MainScene(Scene) và def construct(self):. Cấu hình ${isVertical ? 'Dọc 9:16 Dual-Zone, lấp đầy 93% màn hình (height 6.4 và 6.6), cỡ chữ lớn >= 22 (MathTex >= 28, Tiêu đề >= 30)' : 'Ngang 16:9'}. TUYỆT ĐỐI KHÔNG SỬ DỤNG TOOL/COMMAND (KHÔNG run_command, KHÔNG write_to_file). CHỈ XUẤT DUY NHẤT KHỐI MÃ PYTHON RA TEXT OUTPUT! KHÔNG VIẾT LỜI CHÀO!`;
+BẮT BUỘC bắt đầu bằng \`\`\`python from manim import * ... \`\`\` với class MainScene(Scene) và def construct(self):. Cấu hình ${isVertical ? 'Dọc 9:16 Dual-Zone theo chuẩn 5 phân cảnh c1_HamSo_DonDieu.py, lấp đầy 93% màn hình, gọi fit_width(group, 7.8), RAG tối đa 2 câu tiêu biểu, cỡ chữ lớn >= 22 (MathTex 26-32, Tiêu đề 30-34), kết thúc bằng self.wait(3.0) giữ Outro card' : 'Ngang 16:9'}. TUYỆT ĐỐI KHÔNG SỬ DỤNG TOOL/COMMAND (KHÔNG run_command, KHÔNG write_to_file). CHỈ XUẤT DUY NHẤT KHỐI MÃ PYTHON RA TEXT OUTPUT! KHÔNG VIẾT LỜI CHÀO!`;
                   const directText = await runAgyPrompt(directPrompt, downloadsDir, selectedModel);
                   extractedPython = extractPythonManimCode(directText, downloadsDir);
                 }
@@ -2196,9 +2341,9 @@ ${ragFileName ? `[LƯU Ý]: Giữ nguyên bài toán và dữ liệu gốc từ 
 
 YÊU CẦU BẮT BUỘC ĐỂ SỬA LỖI:
 1. Đọc kỹ vị trí dòng lỗi và chỉ dẫn sửa lỗi ở trên để khắc phục triệt để.
-2. Viết lại TOÀN BỘ file scene.py hoàn chỉnh, ngắn gọn súc tích.
-3. Đảm bảo đóng đầy đủ mọi dấu ngoặc, kết thúc hàm construct(self) bằng self.wait(3).
-4. Giữ nguyên class MainScene(Scene) hoặc tên Scene tương ứng, cấu hình Dual-Zone lấp đầy 93% màn hình (height 6.4 và 6.6), cỡ chữ lớn dễ đọc (MathTex font_size=28-34, Text font_size=22-26, Tiêu đề 30-34).
+2. Viết lại TOÀN BỘ file scene.py hoàn chỉnh, ngắn gọn súc tích theo cấu trúc 5 phân cảnh chuẩn c1_HamSo_DonDieu.py.
+3. Đảm bảo đóng đầy đủ mọi dấu ngoặc, kết thúc hàm construct(self) bằng self.wait(3.0) giữ Outro card.
+4. Cấu hình Dual-Zone lấp đầy 93% màn hình, BẮT BUỘC gọi fit_width(group, 7.8) cho mọi khối trong thẻ, RAG tối đa 2 câu tiêu biểu, cỡ chữ lớn dễ đọc (MathTex font_size=26-32, Text font_size=22-24, Tiêu đề 30-34).
 5. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, KHÔNG viết lời chào hay giải thích ngoài mã.
 6. TUYỆT ĐỐI KHÔNG SỬ DỤNG TOOL/COMMAND (KHÔNG run_command, KHÔNG write_to_file). CHỈ XUẤT DUY NHẤT MÃ PYTHON RA OUTPUT.`;
 
@@ -2280,17 +2425,8 @@ YÊU CẦU BẮT BUỘC ĐỂ SỬA LỖI:
                 message: '⚙️ Antigravity đang tiến hành biên dịch LaTeX ra PDF bằng pdflatex...',
               });
 
-              const pdflatexBin = await new Promise((res) => {
-                const whichCmd = process.platform === 'win32' ? 'where pdflatex' : 'which pdflatex';
-                const { exec } = require('child_process');
-                exec(whichCmd, (err, stdout) => {
-                  if (!err && stdout.trim()) {
-                    res(stdout.trim().split('\n')[0].trim());
-                  } else {
-                    res(null);
-                  }
-                });
-              });
+              const pdflatexPathFound = getPdflatexPath();
+              const pdflatexBin = (pdflatexPathFound && (fs.existsSync(pdflatexPathFound) || pdflatexPathFound === 'pdflatex')) ? pdflatexPathFound : null;
 
               let compiledPdfPath = null;
               if (pdflatexBin) {
@@ -2308,7 +2444,40 @@ YÊU CẦU BẮT BUỘC ĐỂ SỬA LỖI:
 
                 if (fs.existsSync(pdfPath)) {
                   compiledPdfPath = pdfPath;
+                } else {
+                  // Tự động kích hoạt LaTeX Auto-Healing nếu biên dịch lần 1 thất bại
+                  const logFile = path.join(downloadsDir, `tailieu_${timestamp}.log`);
+                  let logContent = '';
+                  if (fs.existsSync(logFile)) {
+                    try { logContent = fs.readFileSync(logFile, 'utf-8'); } catch {}
+                  }
+                  sendSSE({
+                    step: 'RECOMPILING',
+                    progress: 94,
+                    message: '🔧 Kích hoạt LaTeX Auto-Healing: Đang tự động sửa lỗi cú pháp & ký tự đặc biệt...',
+                  });
+                  const repairedLatex = autoRepairLatexCode(finalLatex, logContent);
+                  if (repairedLatex !== finalLatex) {
+                    finalLatex = repairedLatex;
+                    fs.writeFileSync(texPath, finalLatex, 'utf-8');
+                    for (let pass = 1; pass <= 2; pass++) {
+                      await new Promise((resPass) => {
+                        const proc = spawn(pdflatexBin, [
+                          '-interaction=nonstopmode',
+                          `-output-directory=${downloadsDir}`,
+                          texPath
+                        ], { cwd: downloadsDir });
+                        proc.on('close', () => resPass());
+                        proc.on('error', () => resPass());
+                      });
+                    }
+                    if (fs.existsSync(pdfPath)) {
+                      compiledPdfPath = pdfPath;
+                    }
+                  }
+                }
 
+                if (compiledPdfPath) {
                   // Tự động dọn dẹp các file rác trung gian của pdflatex (.aux, .log, .out, .toc)
                   const auxExtensions = ['.aux', '.log', '.out', '.toc', '.nav', '.snm'];
                   for (const ext of auxExtensions) {
@@ -2394,53 +2563,65 @@ YÊU CẦU BẮT BUỘC ĐỂ SỬA LỖI:
                 progress: 15,
                 message: 'Firefox Snap không hỗ trợ pipe điều khiển, đang tự động chuyển sang Google Chrome...',
               });
+              const chromeExec = getChromeExecutable();
+              const hasChromeExec = chromeExec && fs.existsSync(chromeExec);
+              const getLaunchConfig = (ch) => {
+                const cfg = {
+                  headless: isHeadless,
+                  viewport: viewportSetting,
+                  userAgent: stealthUA,
+                  args: stealthArgs,
+                  ignoreDefaultArgs: ['--enable-automation'],
+                };
+                if (hasChromeExec) {
+                  cfg.executablePath = chromeExec;
+                } else {
+                  cfg.channel = ch;
+                }
+                return cfg;
+              };
               const userDataDir = path.join(os.tmpdir(), 'yuta_chrome_auto_' + Date.now());
-              browserContext = await chromium.launchPersistentContext(userDataDir, {
+              browserContext = await chromium.launchPersistentContext(userDataDir, getLaunchConfig('chrome'));
+            }
+          } else {
+            const chromeExec = getChromeExecutable();
+            const hasChromeExec = chromeExec && fs.existsSync(chromeExec);
+            const getLaunchConfig = (ch) => {
+              const cfg = {
                 headless: isHeadless,
-                channel: 'chrome',
                 viewport: viewportSetting,
                 userAgent: stealthUA,
                 args: stealthArgs,
                 ignoreDefaultArgs: ['--enable-automation'],
-              });
-            }
-          } else {
+              };
+              if (hasChromeExec) {
+                cfg.executablePath = chromeExec;
+              } else {
+                cfg.channel = ch;
+              }
+              return cfg;
+            };
             const defaultUserDataDir = path.join(app.getPath('userData'), 'AutomationProfile');
             const userDataDir = options.chromeProfilePath || defaultUserDataDir;
             cleanStaleChromiumLocks(userDataDir, false);
             try {
-              browserContext = await chromium.launchPersistentContext(userDataDir, {
-                headless: isHeadless,
-                channel: browserType === 'edge' ? 'msedge' : 'chrome',
-                viewport: viewportSetting,
-                userAgent: stealthUA,
-                args: stealthArgs,
-                ignoreDefaultArgs: ['--enable-automation'],
-              });
+              browserContext = await chromium.launchPersistentContext(
+                userDataDir,
+                getLaunchConfig(browserType === 'edge' ? 'msedge' : 'chrome')
+              );
             } catch (e) {
               console.warn('Profile Chrome đang bị khóa hoặc lỗi khởi động, thử xóa lock và khởi động lại:', e.message);
               cleanStaleChromiumLocks(userDataDir, true);
               await new Promise(r => setTimeout(r, 1200));
               try {
-                browserContext = await chromium.launchPersistentContext(userDataDir, {
-                  headless: isHeadless,
-                  channel: browserType === 'edge' ? 'msedge' : 'chrome',
-                  viewport: viewportSetting,
-                  userAgent: stealthUA,
-                  args: stealthArgs,
-                  ignoreDefaultArgs: ['--enable-automation'],
-                });
+                browserContext = await chromium.launchPersistentContext(
+                  userDataDir,
+                  getLaunchConfig(browserType === 'edge' ? 'msedge' : 'chrome')
+                );
               } catch (errRetry) {
                 console.warn('Profile Chrome vẫn bị khóa, chuyển sang session tạm:', errRetry.message);
                 const tempDir = path.join(os.tmpdir(), 'yuta_automation_chrome_' + Date.now());
-                browserContext = await chromium.launchPersistentContext(tempDir, {
-                  headless: isHeadless,
-                  channel: 'chrome',
-                  viewport: viewportSetting,
-                  userAgent: stealthUA,
-                  args: stealthArgs,
-                  ignoreDefaultArgs: ['--enable-automation'],
-                });
+                browserContext = await chromium.launchPersistentContext(tempDir, getLaunchConfig('chrome'));
               }
             }
           }
@@ -3349,26 +3530,26 @@ YÊU CẦU BẮT BUỘC ĐỂ SỬA LỖI:
               const qualityFlag = '-qh';
               const codeFollowupPrompt = `Tuyệt vời! Dựa trên kịch bản sư phạm và khối lời thoại VOICEOVER_SCRIPT vừa thống nhất ở trên, hãy viết TOÀN BỘ file mã nguồn Manim Python (\`scene.py\`) hoàn chỉnh 100% để render video bài giảng này.
 
-YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ BỘ NGUYÊN TẮC VISUAL ENGINEERING & DUAL-ZONE CONTAINER CARDS):
-1. Kế thừa chính xác biến VOICEOVER_SCRIPT (~140-160 từ) và 4 phân cảnh đã duyệt (1. Intro, 2. Lý thuyết, 3. Mô phỏng & Biến đổi LaTeX, 4. Outro).
+YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ KIẾN TRÚC 5 PHÂN CẢNH VÀNG & c1_HamSo_DonDieu.py):
+1. Kế thừa chính xác biến VOICEOVER_SCRIPT và 5 phân cảnh vàng: (1. Intro, 2. Lý thuyết 2 thẻ màu, 3. Dual-Zone Mô phỏng động tiếp tuyến đổi màu & BBT 3 tầng, 4. Chữa đề RAG thực chiến tối đa 2 câu, 5. Outro thương hiệu "Học toán cùng Yuta").
 2. Cấu hình ${isVertical ? 'Khung hình DỌC 9:16 (config.pixel_width=1080, config.pixel_height=1920, config.frame_width=9.0, config.frame_height=16.0)' : 'Khung hình NGANG 16:9 (1920x1080, config.frame_width=14.22, config.frame_height=8.0)'}.
 3. 100% CÔNG THỨC LATEX HOÀN HẢO (PERFECT LATEX):
    - MỌI công thức, phương trình, biến số bắt buộc dùng MathTex(r"...") với raw string r"...".
    - Phân số \\frac{a}{b}, căn thức \\sqrt{x}, tích phân \\int, đạo hàm \\frac{df}{dx}, vector \\vec{u}.
    - Biến đổi toán học nhiều dòng dùng môi trường aligned: MathTex(r"\\begin{aligned} ... &= ... \\\\ &= ... \\end{aligned}").
-   - Đóng khung nổi bật đáp số / kết quả cuối cùng: SurroundingRectangle(result, color=GREEN, buff=0.2, corner_radius=0.12).
+   - Đóng khung nổi bật đáp số / kết quả cuối cùng: SurroundingRectangle(result, color=GREEN, buff=0.16, corner_radius=0.12).
    - Tuyệt đối KHÔNG viết tiếng Việt có dấu trực tiếp trong MathTex; tiếng Việt dùng Text("...", font="Times New Roman").
 4. MÔ PHỎNG TOÁN HỌC TRỰC QUAN SINH ĐỘNG (VISUAL SIMULATION):
-   - Phân cảnh giải toán BẮT BUỘC có mô phỏng hình ảnh động: Hệ trục tọa độ Axes, đồ thị axes.plot(...), điểm Dot di chuyển trên đường cong bằng ValueTracker, tiếp tuyến hoặc hình học/vector. Tuyệt đối không chỉ hiển thị các dòng chữ tĩnh!
+   - Phân cảnh giải toán BẮT BUỘC có mô phỏng hình ảnh động: Hệ trục tọa độ Axes (x_length=7.2, y_length=4.0), đồ thị axes.plot(...), điểm Dot di chuyển trên đường cong bằng ValueTracker, tiếp tuyến trượt đổi màu theo hệ số góc f'(x) và thanh trạng thái real-time always_redraw.
 5. BỐ CỤC KHUNG THẺ CONTAINER (DUAL-ZONE) LẤP ĐẦY 93% MÀN HÌNH (TRIỆT TIÊU KHOẢNG TRỐNG ĐEN):
-   - ${isVertical ? 'Header Bar (y ~ 7.05, height=1.3, width=8.5, tiêu đề font_size=30-34 BOLD); Top Card (y ~ 3.15, height=6.4, width=8.5, tiêu đề font_size=24, axes x_length=7.2, y_length=4.4); Bottom Card (y ~ -3.75, height=6.6, width=8.5, tiêu đề font_size=24, MathTex font_size=28-34, diễn giải font_size=22-26, bảng biến thiên font_size=24-28). TUYỆT ĐỐI KHÔNG để khoảng trống đen thừa!' : 'Header đỉnh màn hình, Cột Trái Mô phỏng Đồ thị (width=7.2, height=6.2), Cột Phải Lời giải LaTeX (width=5.8, height=6.2).'}.
-   - BẮT BUỘC font_size lớn rõ nét (Tiêu đề 30-34, Thẻ 24, MathTex 28-34, Text tiếng Việt 22-26, CẤM DÙNG FONT_SIZE DƯỚI 22).
+   - ${isVertical ? 'Header Bar (y ~ 7.05, height=1.1-1.3, width=8.4, tiêu đề font_size=30-34 BOLD); Top Card (y ~ 3.15, height=6.4, width=8.4, tiêu đề font_size=22-24, axes x_length=7.2, y_length=4.0); Bottom Card (y ~ -3.75, height=6.6, width=8.4, tiêu đề font_size=22-24, MathTex font_size=26-32, diễn giải font_size=22-24, bảng biến thiên font_size=22-24). BẮT BUỘC gọi fit_width(group, 7.8) cho mọi khối trong thẻ!' : 'Header đỉnh màn hình, Cột Trái Mô phỏng Đồ thị (width=7.2, height=6.2), Cột Phải Lời giải LaTeX (width=5.8, height=6.2).'}.
+   - BẮT BUỘC font_size lớn rõ nét (Tiêu đề 30-34, Thẻ 22-24, MathTex 26-32, Text tiếng Việt 22-24, CẤM DÙNG FONT_SIZE DƯỚI 22).
 6. NHỊP ĐIỆU THỊ GIÁC & CHUYỂN CẢNH MƯỢT MÀ:
    - Dùng TransformMatchingTex khi biến đổi công thức đại số.
    - Dùng LaggedStart khi xuất hiện danh sách hoặc các phần tử nối tiếp.
    - Có khoảng dừng self.wait(1.5 đến 2.5s) sau các công thức trọng tâm để người xem kịp quan sát.
-7. Màu nền "#0F172A", toàn bộ Text dùng font="Times New Roman".
-8. Cảnh Outro: Thẻ Card tổng kết toàn màn hình (height=13.8, width=8.5), giữ nguyên màn hình (self.wait(3.0)), TUYỆT ĐỐI KHÔNG DÙNG FadeOut(*self.mobjects) làm đen màn hình.
+7. Màu nền "#0B1120", toàn bộ Text dùng font="Times New Roman".
+8. Cảnh Outro: Thẻ Card tổng kết toàn màn hình (height=13.6, width=8.4), giữ nguyên màn hình (self.wait(3.0)), TUYỆT ĐỐI KHÔNG DÙNG FadeOut(*self.mobjects) làm đen màn hình.
 9. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, không viết bất kỳ lời chào hay giải thích ngoài mã.
 Lệnh render cuối file: \`manim ${qualityFlag} scene.py MainScene\`.`;
 
@@ -3928,6 +4109,29 @@ YÊU CẦU CHO TẬP ${ep}:
               }
               if (fs.existsSync(localPdfPath)) {
                 compiledPdfPath = localPdfPath;
+              } else {
+                // Tự động kích hoạt LaTeX Auto-Healing nếu local render lần 1 thất bại
+                const logFile = path.join(downloadsDir, `tailieu_${timestamp}.log`);
+                let logContent = '';
+                if (fs.existsSync(logFile)) {
+                  try { logContent = fs.readFileSync(logFile, 'utf-8'); } catch {}
+                }
+                const repairedLatex = autoRepairLatexCode(finalLatex, logContent);
+                if (repairedLatex !== finalLatex) {
+                  finalLatex = repairedLatex;
+                  fs.writeFileSync(texPath, finalLatex, 'utf-8');
+                  for (let pass = 1; pass <= 2; pass++) {
+                    try {
+                      execSync(`"${pdflatexBin}" -interaction=nonstopmode -output-directory="${downloadsDir}" "${texPath}"`, { cwd: downloadsDir, stdio: 'ignore' });
+                    } catch {}
+                  }
+                  if (fs.existsSync(localPdfPath)) {
+                    compiledPdfPath = localPdfPath;
+                  }
+                }
+              }
+
+              if (compiledPdfPath) {
                 const auxExtensions = ['.aux', '.log', '.out', '.toc', '.nav', '.snm'];
                 for (const ext of auxExtensions) {
                   const auxFile = path.join(downloadsDir, `tailieu_${timestamp}${ext}`);

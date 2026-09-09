@@ -7,6 +7,7 @@ import {
 import { VideoConfig, GenerationStatus, AttachedPdfData } from '../types';
 import { AI_PROVIDERS, getProviderUrl } from './AutomationModal';
 import PdfUploadZone from './PdfUploadZone';
+import SubjectBadgePicker from './SubjectBadgePicker';
 
 interface VideoFormProps {
   onSubmitScript?: (data: VideoConfig) => void;
@@ -209,34 +210,58 @@ const VideoForm: React.FC<VideoFormProps> = ({
             </div>
 
             {/* Môn học & Thời lượng */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="group relative">
-                <label className={labelClass}>Môn học / Lĩnh vực</label>
-                <div className="relative">
-                  <BookOpen className={iconClass} />
-                  <input
-                    type="text"
-                    className={inputClass}
-                    placeholder="Toán học, Vật lý, Tin học, Hóa học..."
-                    value={config.subject}
-                    onChange={e => handleChange('subject', e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
+            <div className="space-y-3">
+              <SubjectBadgePicker
+                selectedSubject={config.subject}
+                onSelectSubject={(subj, defTopic) => {
+                  let matchingMode = 'general';
+                  const sLow = subj.toLowerCase();
+                  if (sLow.includes('vật lý')) matchingMode = 'physics';
+                  else if (sLow.includes('hóa học')) matchingMode = 'chemistry';
+                  else if (sLow.includes('sinh học')) matchingMode = 'biology';
+                  else if (sLow.includes('tiếng anh')) matchingMode = 'english_language';
+                  else if (sLow.includes('tin học')) matchingMode = 'computer_science';
+                  else if (sLow.includes('lịch sử') || sLow.includes('địa lý') || sLow.includes('gdcd')) matchingMode = 'social_sciences';
+                  else if (sLow.includes('toán')) matchingMode = 'calculus';
 
-              <div className="group relative">
-                <label className={labelClass}>{isSeries ? 'Thời lượng mỗi tập' : 'Thời lượng'}</label>
-                <div className="relative">
-                  <Clock className={iconClass} />
-                  <input
-                    type="text"
-                    className={inputClass}
-                    placeholder="60 giây, 2 - 3 phút..."
-                    value={config.duration}
-                    onChange={e => handleChange('duration', e.target.value)}
-                    required
-                  />
+                  setConfig(prev => ({
+                    ...prev,
+                    subject: subj,
+                    topic: (!prev.topic || prev.topic.includes('Tích phân')) && defTopic ? defTopic : prev.topic,
+                    simulationMode: matchingMode
+                  }));
+                }}
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="group relative">
+                  <label className={labelClass}>Môn học / Lĩnh vực</label>
+                  <div className="relative">
+                    <BookOpen className={iconClass} />
+                    <input
+                      type="text"
+                      className={inputClass}
+                      placeholder="Toán học, Vật lý, Tin học, Hóa học, Tiếng Anh..."
+                      value={config.subject}
+                      onChange={e => handleChange('subject', e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="group relative">
+                  <label className={labelClass}>{isSeries ? 'Thời lượng mỗi tập' : 'Thời lượng'}</label>
+                  <div className="relative">
+                    <Clock className={iconClass} />
+                    <input
+                      type="text"
+                      className={inputClass}
+                      placeholder="60 giây, 2 - 3 phút..."
+                      value={config.duration}
+                      onChange={e => handleChange('duration', e.target.value)}
+                      required
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -251,7 +276,7 @@ const VideoForm: React.FC<VideoFormProps> = ({
                 <input
                   type="text"
                   className={inputClass}
-                  placeholder={isSeries ? "Vd: Khóa học 5 tập về Hình học Không gian Oxyz, Chuỗi 3 tập về Machine Learning..." : "Vd: Quỹ đạo ném xiên, Ý nghĩa hình học Đạo hàm, Mạng nơ-ron..."}
+                  placeholder="Vd: Bản chất Đạo hàm, Dao động điều hòa, Phản ứng thế Este, Cấu trúc mảng..."
                   value={config.topic}
                   onChange={e => handleChange('topic', e.target.value)}
                   required
@@ -294,9 +319,9 @@ const VideoForm: React.FC<VideoFormProps> = ({
             )}
 
             {/* Hook Strategy Selector for Single Video */}
-            {!isSeries && (
+            {isVertical && (
               <div className="group relative">
-                <label className={labelClass}>Chiến lược Mở đầu (Hook 3s giữ chân người xem)</label>
+                <label className={labelClass}>🪝 Kiểu Móc Câu 3 Giây Đầu (Viral Hook)</label>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {[
                     { id: 'visual_intuition', label: '💡 Trực quan hóa', desc: 'Bản chất trực giác' },
@@ -324,14 +349,19 @@ const VideoForm: React.FC<VideoFormProps> = ({
 
             {/* Bộ Form Mô Phỏng Chuyên Môn */}
             <div className="group relative">
-              <label className={labelClass}>🎭 Bộ Form Mô Phỏng Chuyên Môn (Mẫu Diễn Hoạt)</label>
+              <label className={labelClass}>🎭 Bộ Form Mô Phỏng Chuyên Môn (Mẫu Diễn Hoạt Đa Môn)</label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {[
-                  { id: 'geometry', label: '📐 Hình học & Vector', desc: 'Tọa độ, khối 3D, mặt phẳng' },
-                  { id: 'dialogue', label: '🎙️ Đối thoại 2 Người', desc: 'Thầy & Trò Q&A sư phạm' },
                   { id: 'calculus', label: '📊 Giải tích & Hàm số', desc: 'Đồ thị, tiếp tuyến, tích phân' },
+                  { id: 'geometry', label: '📐 Hình học & Vector', desc: 'Tọa độ, khối 3D, mặt phẳng' },
+                  { id: 'physics', label: '⚡ Vật lý & Dao động', desc: 'Con lắc, sóng, mạch điện' },
+                  { id: 'chemistry', label: '🧪 Hóa học & Phản ứng', desc: 'Liên kết phân tử, cân bằng PT' },
+                  { id: 'biology', label: '🧬 Sinh học & Di truyền', desc: 'Menđen, ADN/ARN, phân bào' },
+                  { id: 'english_language', label: '🇬🇧 Tiếng Anh & Từ vựng', desc: 'Pill flashcards, thì timeline' },
+                  { id: 'computer_science', label: '💻 Tin học & Thuật toán', desc: 'Sorting bars, cây nhị phân' },
+                  { id: 'social_sciences', label: '📜 Lịch sử & Địa lý', desc: 'Timeline niên biểu, so sánh' },
+                  { id: 'dialogue', label: '🎙️ Đối thoại 2 Người', desc: 'Thầy & Trò Q&A sư phạm' },
                   { id: 'fast_tricks', label: '⚡ Mẹo & Giải nhanh', desc: 'So sánh 2 cột: Bẫy vs Mẹo 30s' },
-                  { id: 'stem', label: '🧪 STEM & Vật lý - Hóa', desc: 'Quỹ đạo, mô hình phân tử' },
                   { id: 'general', label: '🎓 Bài giảng Tổng hợp', desc: 'Bố cục Dual-Zone chuẩn' }
                 ].map(m => (
                   <button

@@ -1,30 +1,67 @@
 export const LATEX_TECHNICAL_RULES = `
-QUY TẮC KỸ THUẬT LATEX TOÁN HỌC (BẮT BUỘC ĐỂ BIÊN DỊCH 100% THÀNH CÔNG VỚI PDFLATEX TRÊN OVERLEAF):
+QUY TẮC KỸ THUẬT LATEX ĐA MÔN HỌC (BẮT BUỘC ĐỂ BIÊN DỊCH 100% THÀNH CÔNG VỚI PDFLATEX TRÊN OVERLEAF & MÁY CỤC BỘ):
 1. QUY TẮC ĐẦU RA (OUTPUT FORMAT - BẮT BUỘC TUYỆT ĐỐI):
    - BẮT BUỘC chỉ xuất ra duy nhất 1 khối mã nguồn LaTeX hoàn chỉnh bắt đầu bằng \`\`\`latex và kết thúc bằng \`\`\`.
    - TUYỆT ĐỐI KHÔNG xuất bất kỳ câu chào hỏi, lời dẫn, chú thích hay thẻ nào bên ngoài khối \`\`\`latex ... \`\`\`.
    - Mã nguồn phải chứa đầy đủ từ \\documentclass đến \\end{document}, sẵn sàng biên dịch trực tiếp không thiếu sót.
-2. KHÔNG DÙNG CÚ PHÁP MARKDOWN TRONG CODE: Tuyệt đối không dùng **, *, #, - bên trong mã LaTeX. Dùng \\textbf{}, \\textit{}, \\section{}, \\begin{itemize}, \\begin{enumerate}.
-3. TIẾNG VIỆT & TRÌNH BIÊN DỊCH: Bắt buộc tương thích pdfLaTeX. Sử dụng gói lệnh:
-   \\usepackage[utf8]{inputenc}
-   \\usepackage[T1]{fontenc}
-   \\usepackage{vietnam}
-   KHÔNG dùng fontspec hay xelatex.
-4. TOÁN HỌC & KÝ HIỆU:
+   - ĐIỀU PHỐI DUNG LƯỢNG CHỐNG CẮT CỤT TOKEN (TOKEN SAFETY): Khi biên soạn tài liệu/đề thi dài, phần hướng dẫn giải chi tiết phải cô đọng, đi thẳng vào bước biến đổi/mẹo chốt chặn quan trọng, TUYỆT ĐỐI KHÔNG diễn giải lan man khiến file bị cắt cụt token và mất thẻ \\end{document}.
+
+2. KHÔNG DÙNG CÚ PHÁP MARKDOWN TRONG CODE:
+   - Tuyệt đối không dùng **, *, #, - bên trong mã LaTeX.
+   - Dùng \\textbf{}, \\textit{}, \\section{}, \\begin{itemize}, \\begin{enumerate}.
+
+3. TIẾNG VIỆT, UNICODE & TRÌNH BIÊN DỊCH:
+   - Bắt buộc tương thích hoàn toàn với pdfLaTeX. Sử dụng gói lệnh:
+     \\usepackage[utf8]{inputenc}
+     \\usepackage[T1]{fontenc}
+     \\usepackage{vietnam}
+     \\usepackage{newunicodechar}
+   - BẮT BUỘC map các ký tự Unicode thường gặp để tránh lỗi "! Package inputenc Error: Unicode character ... not set up for use with LaTeX":
+     \\newunicodechar{↗}{\\ensuremath{\\nearrow}}
+     \\newunicodechar{↘}{\\ensuremath{\\searrow}}
+     \\newunicodechar{→}{\\ensuremath{\\rightarrow}}
+     \\newunicodechar{←}{\\ensuremath{\\leftarrow}}
+     \\newunicodechar{↔}{\\ensuremath{\\leftrightarrow}}
+     \\newunicodechar{⇒}{\\ensuremath{\\Rightarrow}}
+     \\newunicodechar{⇔}{\\ensuremath{\\Leftrightarrow}}
+     \\newunicodechar{•}{\\ensuremath{\\bullet}}
+     \\newunicodechar{≈}{\\ensuremath{\\approx}}
+     \\newunicodechar{≠}{\\ensuremath{\\neq}}
+     \\newunicodechar{≤}{\\ensuremath{\\le}}
+     \\newunicodechar{≥}{\\ensuremath{\\ge}}
+     \\newunicodechar{±}{\\ensuremath{\\pm}}
+     \\newunicodechar{×}{\\ensuremath{\\times}}
+     \\newunicodechar{÷}{\\ensuremath{\\div}}
+     \\newunicodechar{∞}{\\ensuremath{\\infty}}
+     \\newunicodechar{°}{\\ensuremath{^\\circ}}
+     \\newunicodechar{℃}{\\ensuremath{^\\circ\\mathrm{C}}}
+
+4. CHUẨN HÓA CÔNG THỨC TOÁN & KÝ HIỆU ĐA MÔN HỌC:
    - Mọi biểu thức toán học, biến số, hàm số, phương trình phải nằm trong $...$ hoặc \\[ ... \\].
-   - Tên góc, đoạn thẳng, vectơ: dùng $\\widehat{ABC}$, $AB$, $\\vec{u}$ hoặc $\\overrightarrow{AB}$.
-   - Tích phân, vi phân, giới hạn: $\\int_{a}^{b} f(x)\\,\\mathrm{d}x$, $\\lim_{x \\to x_0} f(x)$.
-   - Đảm bảo đã đóng mở ngoặc $ hoặc \\[ \\] đầy đủ, không thiếu.
-5. KÝ TỰ ĐẶC BIỆT & ESCAPE:
+   - TUYỆT ĐỐI KHÔNG viết tiếng Việt có dấu trực tiếp trong $...$ mà không có \\text{...} (Ví dụ: $S_{\\text{đáy}}$ thay vì $S_{đáy}$, $V_{\\text{chóp}}$ thay vì $V_{chóp}$).
+   - Ký hiệu môn Vật lý / Hóa học:
+     * Đơn vị đo bọc trong \\mathrm{...}: $v = 20\\,\\mathrm{m/s}$, $m = 5\\,\\mathrm{kg}$, $R = 10\\,\\Omega$, $p = 10^5\\,\\mathrm{Pa}$.
+     * Phản ứng hóa học: dùng mũi tên $\\rightarrow$ hoặc $\\rightleftharpoons$ (Ví dụ: $2\\mathrm{H}_2 + \\mathrm{O}_2 \\rightarrow 2\\mathrm{H}_2\\mathrm{O}$).
+
+5. MÔN NGÔN NGỮ (TIẾNG ANH / NGOẠI NGỮ / NGỮ VĂN) & KHOA HỌC XÃ HỘI:
+   - Đoạn văn đọc hiểu (Reading Comprehension / Tình huống thực tế): Sử dụng môi trường \\doanvan{Tiêu đề đoạn văn}{Nội dung bài đọc...} có khung viền trang nhã.
+   - Đáp án trắc nghiệm linh hoạt:
+     * Đáp án ngắn (từ đơn, số, ký hiệu): Dùng macro \\dapan{A}{B}{C}{D} (4 cột).
+     * Đáp án trung bình (cụm từ, mệnh đề ngắn): Dùng macro \\dapanHaiCot{A}{B}{C}{D} (2 cột).
+     * Đáp án dài (nguyên câu văn, lời giải thích): Dùng macro \\dapanMotCot{A}{B}{C}{D} (1 cột).
+
+6. KÝ TỰ ĐẶC BIỆT & ESCAPE:
    - Bắt buộc escape: \\% (phần trăm), \\& (và), \\_ (gạch dưới), \\$ (đô la), \\{ \\} (ngoặc nhọn khi in chữ).
-6. VẼ HÌNH HỌC & ĐỒ THỊ TIKZ:
+
+7. VẼ HÌNH HỌC, ĐỒ THỊ TIKZ & SƠ ĐỒ ĐA MÔN:
    - Sử dụng \\usepackage{tikz}, \\usepackage{pgfplots}, \\pgfplotsset{compat=1.18}.
-   - Thư viện TikZ cần thiết: \\usetikzlibrary{arrows.meta, positioning, calc, angles, quotes, patterns}.
-   - Khi vẽ hình học không gian (khối chóp, lăng trụ, nón, trụ, cầu): nét đứt dùng [dashed], nét liền dùng [thick], góc vuông dùng \\pic [draw, angle radius=2mm] {right angle = ...}.
-   - Bảng biến thiên: Dùng cấu trúc bảng chuẩn sạch (tabular/array) hoặc tikzpicture với các hàng $x$, $f'(x)$, $f(x)$ và mũi tên $\\nearrow, \\searrow$ thẳng hàng.
-7. THIẾT KẾ UI & KHUNG VIỀN:
-   - Nếu dùng tcolorbox, BẮT BUỘC dùng [sharp corners] để viền vuông vức hiện đại, không dùng bo tròn.
-   - Tiêu đề dùng màu xanh dương dịu (\\definecolor{myblue}{RGB}{0,102,204}).
+   - Thư viện TikZ: \\usetikzlibrary{arrows.meta, positioning, calc, angles, quotes, patterns}.
+   - Môn Toán & Hình học: Nét đứt [dashed] cho cạnh khuất, nét liền [thick] cho cạnh nhìn thấy, góc vuông dùng \\pic [draw, angle radius=2mm] {right angle = ...}.
+   - Môn Vật lý & Hóa học & Tin học: Sơ đồ khối, sơ đồ mạch điện, vector lực có mũi tên [-{Latex[length=2.5mm]}]. Luôn bọc trong \\centering và [scale=0.85, baseline=(current bounding box.center)] để hình không tràn lề giấy A4.
+
+8. THIẾT KẾ UI & KHUNG VIỀN:
+   - Dùng tcolorbox với [sharp corners] để viền sắc nét, hiện đại chuẩn in ấn đề thi.
+   - Màu chủ đạo: Xanh dương dịu (\\definecolor{myblue}{RGB}{0,102,204}), Xanh lá đậm (\\definecolor{darkgreen}{RGB}{0,128,0}).
 `;
 
 export const EXAM_TEMPLATE_2025 = `
@@ -35,6 +72,7 @@ export const EXAM_TEMPLATE_2025 = `
 \\usepackage[utf8]{inputenc}
 \\usepackage[T1]{fontenc}
 \\usepackage{vietnam}
+\\usepackage{newunicodechar}
 \\usepackage{mathptmx}
 \\usepackage{amsmath,amssymb}
 \\usepackage{enumitem}
@@ -46,6 +84,26 @@ export const EXAM_TEMPLATE_2025 = `
 \\newcolumntype{C}{>{\\centering\\arraybackslash}X}
 \\newcolumntype{R}{>{\\raggedleft\\arraybackslash}X}
 \\newcolumntype{L}{>{\\raggedright\\arraybackslash}X}
+
+% Khai báo ánh xạ ký tự Unicode an toàn cho pdfLaTeX
+\\newunicodechar{↗}{\\ensuremath{\\nearrow}}
+\\newunicodechar{↘}{\\ensuremath{\\searrow}}
+\\newunicodechar{→}{\\ensuremath{\\rightarrow}}
+\\newunicodechar{←}{\\ensuremath{\\leftarrow}}
+\\newunicodechar{↔}{\\ensuremath{\\leftrightarrow}}
+\\newunicodechar{⇒}{\\ensuremath{\\Rightarrow}}
+\\newunicodechar{⇔}{\\ensuremath{\\Leftrightarrow}}
+\\newunicodechar{•}{\\ensuremath{\\bullet}}
+\\newunicodechar{≈}{\\ensuremath{\\approx}}
+\\newunicodechar{≠}{\\ensuremath{\\neq}}
+\\newunicodechar{≤}{\\ensuremath{\\le}}
+\\newunicodechar{≥}{\\ensuremath{\\ge}}
+\\newunicodechar{±}{\\ensuremath{\\pm}}
+\\newunicodechar{×}{\\ensuremath{\\times}}
+\\newunicodechar{÷}{\\ensuremath{\\div}}
+\\newunicodechar{∞}{\\ensuremath{\\infty}}
+\\newunicodechar{°}{\\ensuremath{^\\circ}}
+\\newunicodechar{℃}{\\ensuremath{^\\circ\\mathrm{C}}}
 
 \\usepackage{tikz}
 \\usepackage{pgfplots}
@@ -65,12 +123,14 @@ export const EXAM_TEMPLATE_2025 = `
 \\pagestyle{fancy}
 \\fancyhf{}
 \\lhead{\\textbf{\\small [TRƯỜNG/SỞ GD\\&ĐT]}}
-\\rhead{\\textbf{\\small ĐỀ THI TOÁN HỌC 2025--2026}}
+\\rhead{\\textbf{\\small ĐỀ THI [MÔN HỌC] 2025--2026}}
 \\cfoot{\\small Trang \\thepage}
 \\renewcommand{\\headrulewidth}{0.4pt}
 
-% Macros định dạng câu hỏi
+% Macros định dạng câu hỏi & đáp án linh hoạt
 \\newcommand{\\cauhoi}[1]{\\vspace{6pt}\\noindent\\textbf{Câu #1.}}
+
+% Đáp án 4 cột (dành cho đáp án ngắn)
 \\newcommand{\\dapan}[4]{
 \\begin{multicols}{4}
     \\begin{enumerate}[label=\\textbf{\\Alph*.}, itemsep=1pt, leftmargin=*]
@@ -81,6 +141,30 @@ export const EXAM_TEMPLATE_2025 = `
     \\end{enumerate}
 \\end{multicols}
 \\vspace{-4pt}
+}
+
+% Đáp án 2 cột (dành cho phương án dài trung bình)
+\\newcommand{\\dapanHaiCot}[4]{
+\\begin{multicols}{2}
+    \\begin{enumerate}[label=\\textbf{\\Alph*.}, itemsep=2pt, leftmargin=*]
+        \\item #1
+        \\item #2
+        \\item #3
+        \\item #4
+    \\end{enumerate}
+\\end{multicols}
+\\vspace{-4pt}
+}
+
+% Đáp án 1 cột (dành cho câu văn dài, đọc hiểu)
+\\newcommand{\\dapanMotCot}[4]{
+\\begin{enumerate}[label=\\textbf{\\Alph*.}, itemsep=3pt, leftmargin=*]
+    \\item #1
+    \\item #2
+    \\item #3
+    \\item #4
+\\end{enumerate}
+\\vspace{-2pt}
 }
 
 \\newcommand{\\yDungSai}[4]{
@@ -94,13 +178,20 @@ export const EXAM_TEMPLATE_2025 = `
 
 \\newcommand{\\traLoiNgan}{\\hfill\\fbox{\\textbf{Đáp số:}\\hspace{3cm}}}
 
+% Khung đoạn văn đọc hiểu / bài đọc / tình huống thực tế
+\\newcommand{\\doanvan}[2]{
+\\begin{tcolorbox}[colback=blue!3!white,colframe=myblue!70!black,title=\\textbf{#1},fonttitle=\\bfseries]
+#2
+\\end{tcolorbox}
+}
+
 \\begin{document}
 
 \\begin{center}
     \\begin{tabularx}{\\linewidth}{X C}
-        \\textbf{[TÊN SỞ GD\\&ĐT / TRƯỜNG]} & \\textbf{KỲ THI ĐÁNH GIÁ NĂNG LỰC TOÁN HỌC} \\\\
+        \\textbf{[TÊN SỞ GD\\&ĐT / TRƯỜNG]} & \\textbf{KỲ THI ĐÁNH GIÁ NĂNG LỰC [MÔN HỌC]} \\\\
         \\textbf{ĐỀ CHÍNH THỨC} & \\textbf{NĂM HỌC 2025 -- 2026} \\\\
-        \\textit{(Đề thi có XX trang)} & \\textbf{Môn: TOÁN HỌC} \\\\
+        \\textit{(Đề thi có XX trang)} & \\textbf{Môn thi: [MÔN HỌC]} \\\\
         & \\textit{Thời gian làm bài: [XX] phút (không kể thời gian phát đề)}
     \\end{tabularx}
 \\end{center}
@@ -115,7 +206,7 @@ export const EXAM_TEMPLATE_2025 = `
 \\textit{Thí sinh trả lời từ câu 1 đến câu [XX]. Mỗi câu hỏi thí sinh chỉ chọn một phương án đúng nhất.}
 \\vspace{5pt}
 
-% Chèn các câu hỏi phần 1 dùng \\cauhoi{n} và \\dapan{A}{B}{C}{D}
+% Chèn các câu hỏi phần 1 dùng \\cauhoi{n} và \\dapan hoặc \\dapanHaiCot / \\dapanMotCot
 
 \\vspace{15pt}
 % ----------------------------------------------------
@@ -153,11 +244,11 @@ export const EXAM_TEMPLATE_2025 = `
 % Bảng đáp án Phần II dạng a: Đ/S, b: Đ/S, c: Đ/S, d: Đ/S
 
 \\subsection*{\\color{myblue}BẢNG ĐÁP ÁN PHẦN III}
-% Bảng đáp số Phần III dạng số/phân số
+% Bảng đáp số Phần III dạng số/phân số/kết quả ngắn
 
 \\vspace{10pt}
 \\subsection*{\\color{myblue}LỜI GIẢI CHI TIẾT TỪNG CÂU}
-% Lời giải chi tiết theo từng câu hỏi
+% Lời giải cô đọng, súc tích từng câu hỏi, đảm bảo kết thúc bằng \\end{document}
 
 \\end{document}
 `;
@@ -170,6 +261,7 @@ export const EXAM_TEMPLATE_CLASSIC = `
 \\usepackage[utf8]{inputenc}
 \\usepackage[T1]{fontenc}
 \\usepackage{vietnam}
+\\usepackage{newunicodechar}
 \\usepackage{mathptmx}
 \\usepackage{amsmath,amssymb}
 \\usepackage{enumitem}
@@ -179,6 +271,25 @@ export const EXAM_TEMPLATE_CLASSIC = `
 \\usepackage{tabularx}
 \\usepackage{array}
 \\newcolumntype{C}{>{\\centering\\arraybackslash}X}
+
+\\newunicodechar{↗}{\\ensuremath{\\nearrow}}
+\\newunicodechar{↘}{\\ensuremath{\\searrow}}
+\\newunicodechar{→}{\\ensuremath{\\rightarrow}}
+\\newunicodechar{←}{\\ensuremath{\\leftarrow}}
+\\newunicodechar{↔}{\\ensuremath{\\leftrightarrow}}
+\\newunicodechar{⇒}{\\ensuremath{\\Rightarrow}}
+\\newunicodechar{⇔}{\\ensuremath{\\Leftrightarrow}}
+\\newunicodechar{•}{\\ensuremath{\\bullet}}
+\\newunicodechar{≈}{\\ensuremath{\\approx}}
+\\newunicodechar{≠}{\\ensuremath{\\neq}}
+\\newunicodechar{≤}{\\ensuremath{\\le}}
+\\newunicodechar{≥}{\\ensuremath{\\ge}}
+\\newunicodechar{±}{\\ensuremath{\\pm}}
+\\newunicodechar{×}{\\ensuremath{\\times}}
+\\newunicodechar{÷}{\\ensuremath{\\div}}
+\\newunicodechar{∞}{\\ensuremath{\\infty}}
+\\newunicodechar{°}{\\ensuremath{^\\circ}}
+\\newunicodechar{℃}{\\ensuremath{^\\circ\\mathrm{C}}}
 
 \\usepackage{tikz}
 \\usepackage{pgfplots}
@@ -196,7 +307,7 @@ export const EXAM_TEMPLATE_CLASSIC = `
 \\pagestyle{fancy}
 \\fancyhf{}
 \\lhead{\\textbf{KỲ THI/BÀI KIỂM TRA}}
-\\rhead{\\textbf{Môn thi: [TÊN MÔN]}}
+\\rhead{\\textbf{Môn thi: [TÊN MÔN HỌC]}}
 \\cfoot{\\small Trang \\thepage}
 \\renewcommand{\\headrulewidth}{0.4pt}
 
@@ -212,12 +323,32 @@ export const EXAM_TEMPLATE_CLASSIC = `
 \\end{multicols}
 \\vspace{-4pt}
 }
+\\newcommand{\\dapanHaiCot}[4]{
+\\begin{multicols}{2}
+    \\begin{enumerate}[label=\\textbf{\\Alph*.}, itemsep=2pt, leftmargin=*]
+        \\item #1
+        \\item #2
+        \\item #3
+        \\item #4
+    \\end{enumerate}
+\\end{multicols}
+\\vspace{-4pt}
+}
+\\newcommand{\\dapanMotCot}[4]{
+\\begin{enumerate}[label=\\textbf{\\Alph*.}, itemsep=3pt, leftmargin=*]
+    \\item #1
+    \\item #2
+    \\item #3
+    \\item #4
+\\end{enumerate}
+\\vspace{-2pt}
+}
 
 \\begin{document}
 
 \\begin{center}
-    {\\Large\\bfseries ĐỀ THI ĐÁNH GIÁ NĂNG LỰC TOÁN HỌC}\\\\[5pt]
-    {\\large\\bfseries Môn: TOÁN HỌC - Chuyên đề: [CHUYÊN ĐỀ]}\\\\[5pt]
+    {\\Large\\bfseries ĐỀ THI ĐÁNH GIÁ NĂNG LỰC [MÔN HỌC]}\\\[5pt]
+    {\\large\\bfseries Môn: [TÊN MÔN HỌC] --- Chuyên đề: [CHUYÊN ĐỀ]}\\\[5pt]
     \\textit{Thời gian làm bài: [XX] phút}
 \\end{center}
 \\vspace{5pt}
@@ -253,6 +384,7 @@ export const LEARNING_TEMPLATE = `
 \\usepackage[utf8]{inputenc}
 \\usepackage[T1]{fontenc}
 \\usepackage{vietnam}
+\\usepackage{newunicodechar}
 \\usepackage{mathptmx}
 \\usepackage{amsmath,amssymb}
 \\usepackage{enumitem}
@@ -264,6 +396,25 @@ export const LEARNING_TEMPLATE = `
 \\newcolumntype{C}{>{\\centering\\arraybackslash}X}
 \\newcolumntype{L}{>{\\raggedright\\arraybackslash}X}
 \\newcolumntype{R}{>{\\raggedleft\\arraybackslash}X}
+
+\\newunicodechar{↗}{\\ensuremath{\\nearrow}}
+\\newunicodechar{↘}{\\ensuremath{\\searrow}}
+\\newunicodechar{→}{\\ensuremath{\\rightarrow}}
+\\newunicodechar{←}{\\ensuremath{\\leftarrow}}
+\\newunicodechar{↔}{\\ensuremath{\\leftrightarrow}}
+\\newunicodechar{⇒}{\\ensuremath{\\Rightarrow}}
+\\newunicodechar{⇔}{\\ensuremath{\\Leftrightarrow}}
+\\newunicodechar{•}{\\ensuremath{\\bullet}}
+\\newunicodechar{≈}{\\ensuremath{\\approx}}
+\\newunicodechar{≠}{\\ensuremath{\\neq}}
+\\newunicodechar{≤}{\\ensuremath{\\le}}
+\\newunicodechar{≥}{\\ensuremath{\\ge}}
+\\newunicodechar{±}{\\ensuremath{\\pm}}
+\\newunicodechar{×}{\\ensuremath{\\times}}
+\\newunicodechar{÷}{\\ensuremath{\\div}}
+\\newunicodechar{∞}{\\ensuremath{\\infty}}
+\\newunicodechar{°}{\\ensuremath{^\\circ}}
+\\newunicodechar{℃}{\\ensuremath{^\\circ\\mathrm{C}}}
 
 \\usepackage{tikz}
 \\usepackage{pgfplots}
@@ -282,8 +433,8 @@ export const LEARNING_TEMPLATE = `
 
 \\pagestyle{fancy}
 \\fancyhf{}
-\\lhead{\\small\\textbf{Tài Liệu Bài Học Toán Học}}
-\\rhead{\\small\\textbf{Chuyên đề: [TÊN CHUYÊN ĐỀ]}}
+\\lhead{\\small\\textbf{Tài Liệu Học Tập: [MÔN HỌC]}}
+\\rhead{\\small\\textbf{Chuyên đề: [CHUYÊN ĐỀ]}}
 \\cfoot{\\small Trang \\thepage}
 \\renewcommand{\\headrulewidth}{0.4pt}
 
@@ -293,21 +444,26 @@ export const LEARNING_TEMPLATE = `
 \\end{tcolorbox}
 }
 \\newcommand{\\dinhly}[2]{
-\\begin{tcolorbox}[colback=green!5!white,colframe=darkgreen,title=\\textbf{Định lý: #1},fonttitle=\\bfseries]
+\\begin{tcolorbox}[colback=green!5!white,colframe=darkgreen,title=\\textbf{Định lý / Quy tắc: #1},fonttitle=\\bfseries]
+#2
+\\end{tcolorbox}
+}
+\\newcommand{\\doanvan}[2]{
+\\begin{tcolorbox}[colback=blue!3!white,colframe=myblue!70!black,title=\\textbf{#1},fonttitle=\\bfseries]
 #2
 \\end{tcolorbox}
 }
 \\newcommand{\\vidu}[1]{\\vspace{6pt}\\noindent\\textbf{\\color{myblue}Ví dụ #1.}}
-\\newcommand{\\loigiai}{\\par\\textbf{Lời giải.}}
+\\newcommand{\\loigiai}{\\par\\textbf{Lời giải / Phân tích.}}
 \\newcommand{\\ghinho}{\\textbf{\\color{red}Ghi nhớ: }}
 \\newcommand{\\dangtoan}[1]{\\vspace{10pt}\\subsection*{\\color{myblue}#1}}
 
 \\begin{document}
 
 \\begin{center}
-    {\\huge\\bfseries\\color{myblue} [TÊN BÀI HỌC]}\\\\[8pt]
-    {\\large\\bfseries Môn: TOÁN HỌC --- Lớp: [LỚP]}\\\\[4pt]
-    \\textit{[TRƯỜNG / SỞ GD\\&ĐT]}
+    {\\huge\\bfseries\\color{myblue} [TÊN BÀI HỌC / CHUYÊN ĐỀ]}\\\[8pt]
+    {\\large\\bfseries Môn: [MÔN HỌC] --- Khối / Lớp: [LỚP]}\\\[4pt]
+    \\textit{[TRƯỜNG / ĐƠN VỊ ĐÀO TẠO]}
 \\end{center}
 \\vspace{5pt}
 \\noindent\\rule{\\linewidth}{0.8pt}
@@ -316,8 +472,8 @@ export const LEARNING_TEMPLATE = `
 \\section*{\\color{myblue}I. TÓM TẮT LÝ THUYẾT TRỌNG TÂM}
 % Trình bày lý thuyết dùng \\hopkienthuc hoặc \\dinhly
 
-\\section*{\\color{myblue}II. CÁC DẠNG TOÁN VÀ PHƯƠNG PHÁP GIẢI}
-% Trình bày các dạng toán dùng \\dangtoan, \\vidu, \\loigiai
+\\section*{\\color{myblue}II. CÁC DẠNG BÀI TẬP VÀ PHƯƠNG PHÁP GIẢI}
+% Trình bày các dạng bài dùng \\dangtoan, \\vidu, \\loigiai
 
 \\section*{\\color{myblue}III. BÀI TẬP TỰ LUYỆN}
 % Trình bày bài tập tự luyện
@@ -333,6 +489,7 @@ export const ROADMAP_TEMPLATE = `
 \\usepackage[utf8]{inputenc}
 \\usepackage[T1]{fontenc}
 \\usepackage{vietnam}
+\\usepackage{newunicodechar}
 \\usepackage{mathptmx}
 \\usepackage{amsmath,amssymb}
 \\usepackage{enumitem}
@@ -351,6 +508,20 @@ export const ROADMAP_TEMPLATE = `
 \\definecolor{darkgreen}{RGB}{0,128,0}
 \\usetikzlibrary{arrows.meta, positioning}
 
+\\newunicodechar{↗}{\\ensuremath{\\nearrow}}
+\\newunicodechar{↘}{\\ensuremath{\\searrow}}
+\\newunicodechar{→}{\\ensuremath{\\rightarrow}}
+\\newunicodechar{←}{\\ensuremath{\\leftarrow}}
+\\newunicodechar{•}{\\ensuremath{\\bullet}}
+\\newunicodechar{≈}{\\ensuremath{\\approx}}
+\\newunicodechar{≠}{\\ensuremath{\\neq}}
+\\newunicodechar{≤}{\\ensuremath{\\le}}
+\\newunicodechar{≥}{\\ensuremath{\\ge}}
+\\newunicodechar{±}{\\ensuremath{\\pm}}
+\\newunicodechar{×}{\\ensuremath{\\times}}
+\\newunicodechar{÷}{\\ensuremath{\\div}}
+\\newunicodechar{∞}{\\ensuremath{\\infty}}
+
 \\usepackage[most]{tcolorbox}
 \\tcbset{sharp corners}
 
@@ -360,7 +531,7 @@ export const ROADMAP_TEMPLATE = `
 
 \\pagestyle{fancy}
 \\fancyhf{}
-\\lhead{\\small\\textbf{Lộ trình học tập}}
+\\lhead{\\small\\textbf{Lộ trình học tập [MÔN HỌC]}}
 \\rhead{\\small\\textbf{Mục tiêu: [MỤC TIÊU]}}
 \\cfoot{\\small Trang \\thepage}
 \\renewcommand{\\headrulewidth}{0.4pt}
@@ -373,8 +544,8 @@ export const ROADMAP_TEMPLATE = `
 \\begin{document}
 
 \\begin{center}
-    {\\huge\\bfseries\\color{myblue} LỘ TRÌNH HỌC TẬP TỪ A ĐẾN Z}\\\\[10pt]
-    {\\Large Chuyên đề: [TÊN CHUYÊN ĐỀ]}\\\\[5pt]
+    {\\huge\\bfseries\\color{myblue} LỘ TRÌNH HỌC TẬP TỪ A ĐẾN Z}\\\[10pt]
+    {\\Large Môn: [MÔN HỌC] --- Chuyên đề: [TÊN CHUYÊN ĐỀ]}\\\[5pt]
     \\textit{Thời gian dự kiến: [X] tuần --- Mục tiêu: [MỤC TIÊU]}
 \\end{center}
 \\vspace{5pt}
@@ -393,7 +564,6 @@ export const ROADMAP_TEMPLATE = `
 \\end{document}
 `;
 
-
 export const PRE_ALGEBRA_TEMPLATE = `
 % !TEX program = pdflatex
 \\documentclass[12pt,a4paper]{article}
@@ -402,6 +572,7 @@ export const PRE_ALGEBRA_TEMPLATE = `
 \\usepackage[utf8]{inputenc}
 \\usepackage[T1]{fontenc}
 \\usepackage{vietnam}
+\\usepackage{newunicodechar}
 \\usepackage{mathptmx}
 \\usepackage{amsmath,amssymb}
 \\usepackage{enumitem}
@@ -419,6 +590,21 @@ export const PRE_ALGEBRA_TEMPLATE = `
 \\definecolor{myblue}{RGB}{0,102,204}
 \\usetikzlibrary{arrows.meta, calc, positioning}
 
+\\newunicodechar{↗}{\\ensuremath{\\nearrow}}
+\\newunicodechar{↘}{\\ensuremath{\\searrow}}
+\\newunicodechar{→}{\\ensuremath{\\rightarrow}}
+\\newunicodechar{←}{\\ensuremath{\\leftarrow}}
+\\newunicodechar{•}{\\ensuremath{\\bullet}}
+\\newunicodechar{≈}{\\ensuremath{\\approx}}
+\\newunicodechar{≠}{\\ensuremath{\\neq}}
+\\newunicodechar{≤}{\\ensuremath{\\le}}
+\\newunicodechar{≥}{\\ensuremath{\\ge}}
+\\newunicodechar{±}{\\ensuremath{\\pm}}
+\\newunicodechar{×}{\\ensuremath{\\times}}
+\\newunicodechar{÷}{\\ensuremath{\\div}}
+\\newunicodechar{∞}{\\ensuremath{\\infty}}
+\\newunicodechar{°}{\\ensuremath{^\\circ}}
+
 \\usepackage[most]{tcolorbox}
 \\tcbset{sharp corners}
 
@@ -430,7 +616,7 @@ export const PRE_ALGEBRA_TEMPLATE = `
 
 \\pagestyle{fancy}
 \\fancyhf{}
-\\lhead{\\small Tài liệu học tập}
+\\lhead{\\small Tài liệu học tập [MÔN HỌC]}
 \\rhead{\\small Giáo viên biên soạn}
 \\cfoot{\\small \\thepage}
 \\renewcommand{\\headrulewidth}{0.4pt}
@@ -456,7 +642,7 @@ export const PRE_ALGEBRA_TEMPLATE = `
 \\begin{titlepage}
 \\begin{center}
     \\vspace*{1.2cm}
-    {\\Large\\bfseries TÀI LIỆU HỌC TẬP TOÁN HỌC}\\\\[8pt]
+    {\\Large\\bfseries TÀI LIỆU HỌC TẬP [MÔN HỌC]}\\\\[8pt]
     {\\Large\\bfseries CHUYÊN SÂU}\\\\[10pt]
     {\\Large\\bfseries CHỦ ĐỀ: [MỤC TIÊU BÀI HỌC CỤ THỂ]}\\\\[8pt]
     {\\Huge\\bfseries [TÊN CHỦ ĐỀ CHÍNH]}\\\\[10pt]

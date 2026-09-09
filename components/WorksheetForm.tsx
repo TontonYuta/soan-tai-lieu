@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Book, User, Layout, Wand2, Info, GraduationCap, ChevronDown, Zap, FileText } from "lucide-react";
 import { WorksheetConfig, GenerationStatus, AttachedPdfData } from '../types';
 import PdfUploadZone from './PdfUploadZone';
+import SubjectBadgePicker from './SubjectBadgePicker';
 
 
 interface WorksheetFormProps {
@@ -96,6 +97,19 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
             </div>
 
             <div className="space-y-4">
+                <div className="pt-1">
+                  <SubjectBadgePicker
+                    selectedSubject={config.subject}
+                    onSelectSubject={(subj, defTopic) => {
+                      setConfig(prev => ({
+                        ...prev,
+                        subject: subj,
+                        topic: (!prev.topic || prev.topic === 'Khảo sát hàm số & Tích phân') && defTopic ? defTopic : prev.topic
+                      }));
+                    }}
+                  />
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="group relative">
                       <label className={labelClass}>Môn học</label>
@@ -104,7 +118,7 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
                           <input
                               type="text"
                               className={inputClass}
-                              placeholder="Vd: Toán học"
+                              placeholder="Vd: Toán học, Vật lý, Tiếng Anh..."
                               value={config.subject}
                               onChange={e => handleChange('subject', e.target.value)}
                               required

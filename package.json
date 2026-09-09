@@ -12,6 +12,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "tsc --noEmit",
+    "test": "tsx --test tests/prompts.test.ts",
     "electron:dev": "vite build && electron electron/main.cjs --no-sandbox",
     "build:linux": "vite build && electron-builder --linux --x64",
     "build:appimage": "vite build && electron-builder --linux AppImage",
@@ -29,6 +30,7 @@
       "dist/**/*",
       "electron/**/*",
       "node_modules/playwright-core/**/*",
+      "icon.svg",
       "package.json"
     ],
     "linux": {
@@ -58,6 +60,7 @@
     "@vitejs/plugin-react": "^5.0.0",
     "electron": "^44.1.0",
     "electron-builder": "^26.15.3",
+    "tsx": "^4.19.2",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }

@@ -1,7 +1,39 @@
 import { WorksheetConfig } from "../../types";
 import { LATEX_TECHNICAL_RULES, PRE_ALGEBRA_TEMPLATE } from "./latex-rules";
 
+
+const sanitizeAndExtractRag = (attachedPdf?: { fileName: string; numPages: number; text: string }): string => {
+  if (!attachedPdf?.text) return "";
+  const rawText = attachedPdf.text.replace(/\r/g, "");
+  // Lọc sạch watermark, số điện thoại rác và số trang lặp
+  const cleaned = rawText
+    .replace(/(?:Trang\s+\d+\/\d+|SĐT:?\s*\d{8,12}|Hotline:?\s*\d{8,12}|Website:?\s*\S+)/gi, "")
+    .trim();
+
+  let chunk = "";
+  if (cleaned.length <= 15000) {
+    chunk = cleaned;
+  } else {
+    // Smart RAG: Lấy 4.000 ký tự đầu (Mục lục, tổng quan) + 11.000 ký tự trọng tâm bài tập ở các trang sau
+    const head = cleaned.slice(0, 4000);
+    const tail = cleaned.slice(-11000);
+    chunk = `${head}\n\n[... CẮT LƯỢC TRANG GIỮA, NỐI PHẦN BÀI TẬP VÀ ĐÁP ÁN TRỌNG TÂM TRANG SAU ...]\n\n${tail}`;
+  }
+
+  return `\n====================================================
+TÀI LIỆU PDF ĐÍNH KÈM THAM KHẢO (RAG CONTEXT):
+- Tên tài liệu: ${attachedPdf.fileName} (${attachedPdf.numPages} trang)
+- Nội dung trích xuất:
+"""
+${chunk}
+"""
+- CHỈ THỊ RAG (QUAN TRỌNG): BẮT BUỘC chắt lọc các câu hỏi, dữ kiện và cấu trúc bài từ tài liệu PDF đính kèm trên để biên soạn nội dung sát nhất.
+====================================================\n`;
+};
+
+
 export const generateWorksheetPrompt = (config: WorksheetConfig): string => {
+  const subjectName = config.subject || 'Toán học';
   let languageInstruction = "";
   if (config.language === "vietnamese" || !config.language) {
     languageInstruction = "Sử dụng 100% TIẾNG VIỆT.";
@@ -11,33 +43,24 @@ export const generateWorksheetPrompt = (config: WorksheetConfig): string => {
     languageInstruction = "Sử dụng SONG NGỮ (Anh - Việt).";
   }
 
-  const ragSection = config.attachedPdf ? `
-====================================================
-TÀI LIỆU PDF ĐÍNH KÈM THAM KHẢO (RAG CONTEXT):
-- Tên tài liệu: ${config.attachedPdf.fileName} (${config.attachedPdf.numPages} trang)
-- Nội dung trích xuất từ tài liệu:
-"""
-${config.attachedPdf.text.slice(0, 15000)}
-"""
-- CHỈ THỊ RAG (QUAN TRỌNG): BẮT BUỘC đọc hiểu và bám sát các dạng bài tập, công thức toán học, cấu trúc bài trong tài liệu PDF đính kèm trên để biên soạn phiếu bài tập.
-====================================================` : '';
+  const ragSection = sanitizeAndExtractRag(config.attachedPdf);
 
-  return `Đóng vai Giáo viên Toán học chuyên nghiệp và Master LaTeX.
-Nhiệm vụ: Tạo một phiếu bài tập toán học (Worksheet) bài bản, chuẩn mực cho chủ đề được yêu cầu.
+  return `Đóng vai Giáo viên ${subjectName} chuyên nghiệp và Master LaTeX.
+Nhiệm vụ: Tạo một phiếu bài tập thực hành (Worksheet) bài bản, chuẩn mực cho chủ đề được yêu cầu.
 
 I. THÔNG TIN PHIẾU BÀI TẬP:
-- Môn học: ${config.subject} (Khối ${config.grade})
+- Môn học: ${subjectName} (Khối / Lớp ${config.grade})
 - Chủ đề: ${config.topic}
 - Giáo viên biên soạn: ${config.teacherName}
 - Ngôn ngữ: ${languageInstruction}
 - Yêu cầu nâng cao: ${config.details || "Không"}
 ${ragSection}
 
-II. NGUYÊN TẮC BIÊN SOẠN BÀI TẬP:
-- **LOGIC TĂNG DẦN ĐỘ KHÓ:** Thiết kế bài tập theo thang đo logic: Từ cơ bản (áp dụng công thức liền) -> Mức trung bình (cần biến đổi 1-2 bước) -> Vận dụng linh hoạt. Đi qua từng dạng bài một cách hệ thống.
+II. NGUYÊN TẮC BIÊN SOẠN BÀI TẬP ĐA MÔN:
+- **LOGIC TĂNG DẦN ĐỘ KHÓ:** Thiết kế bài tập theo thang đo logic: Từ cơ bản (áp dụng công thức/khái niệm liền) -> Mức trung bình (cần biến đổi 1-2 bước) -> Vận dụng linh hoạt.
 - **KHÍT VỚI CHỦ ĐỀ:** Đề bài tạo ra phải liên quan chặt chẽ đến CHÍNH XÁC chủ đề được yêu cầu. Dứt điểm phần lý thuyết nào phải ra ngay bài tập phần đó.
-- **NGÔN TỪ GẦN GŨI:** Hướng dẫn làm bài phải ngắn gọn, đi thẳng vào trọng tâm toán học.
 - **KHÔNG GIAN LÀM BÀI:** Bắt buộc có dòng chấm (lệnh \\dongke) cho học sinh điền kết quả vào tay, in ra được ngay.
+- **ĐIỀU PHỐI DUNG LƯỢNG:** Đảm bảo mã LaTeX hoàn chỉnh 100% từ đầu đến cuối, luôn luôn đóng \\end{document}.
 
 III. CẤU TRÚC MÃ LATEX VÀ MACRO:
 KHÔNG tự ý chèn lệnh \\clearpage. Chú trọng dùng các macro đã định sẵn:

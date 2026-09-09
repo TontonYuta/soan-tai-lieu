@@ -1,35 +1,8 @@
-import { VideoConfig } from "../../types";
+const fs = require("fs");
 
-const sanitizeAndExtractRag = (attachedPdf?: { fileName: string; numPages: number; text: string }): string => {
-  if (!attachedPdf?.text) return "";
-  const rawText = attachedPdf.text.replace(/\r/g, "");
-  const cleaned = rawText
-    .replace(/(?:Trang\s+\d+\/\d+|SĐT:?\s*\d{8,12}|Hotline:?\s*\d{8,12}|Website:?\s*\S+)/gi, "")
-    .trim();
+const newCode = `import { VideoConfig } from "../../types";
 
-  let chunk = "";
-  if (cleaned.length <= 15000) {
-    chunk = cleaned;
-  } else {
-    const head = cleaned.slice(0, 4000);
-    const tail = cleaned.slice(-11000);
-    chunk = `${head}\n\n[... CẮT LƯỢC PHẦN GIỮA, NỐI PHẦN BÀI TẬP VÀ ĐÁP ÁN TRỌNG TÂM TRANG SAU ...]\n\n${tail}`;
-  }
-
-  return `\n[TÀI LIỆU RAG NGUỒN ĐÍNH KÈM / GHIM]:
-Tên file: ${attachedPdf.fileName} (${attachedPdf.numPages} trang)
-Nội dung trích xuất:
-"""
-${chunk}
-"""
-CHỈ THỊ SƯ PHẠM RAG BẮT BUỘC CHO VIDEO:
-1. BẮT BUỘC trích xuất chính xác bài toán, câu hỏi, định nghĩa, định lý, hiện tượng hoặc dữ liệu từ tài liệu RAG trên.
-2. NGUYÊN TẮC MẬT ĐỘ: Chọn ĐÚNG 2 BÀI/CÂU TIÊU BIỂU NHẤT từ tài liệu để đưa vào Phần Thực Chiến (Top Card = Câu 1, Bottom Card = Câu 2). TUYỆT ĐỐI KHÔNG tham lam nhồi nhét 3-4 câu gây vỡ khung hình!
-3. Bám sát 100% câu từ, số liệu, giả thiết và kết luận trong tài liệu gốc. TUYỆT ĐỐI KHÔNG tự bịa nội dung khác!
-4. Trình bày lời giải sư phạm mạch lạc, đúng và đủ ý chính, phân tích bản chất sâu sắc.\n`;
-};
-
-export const MANIM_SKILLS_GUIDE = `
+export const MANIM_SKILLS_GUIDE = \`
 ★★★ BỘ NGUYÊN TẮC MANIM CE TOÁN HỌC & VISUAL ENGINEERING CHUẨN STUDIO ★XX
 (Kế thừa Kiến trúc 5 Phân Cảnh Vàng từ c1_HamSo_DonDieu.py, Hệ Thống Khung Thẻ Container Dual-Zone,
  Mô Phỏng Động ValueTracker + Tiếp Tuyến Đổi Màu, Bảng Biến Thiên 3 Tầng & Chống Đè Chữ Tuyệt Đối)
@@ -47,7 +20,7 @@ export const MANIM_SKILLS_GUIDE = `
        - Top Card (height=6.4, width=8.4): Đồ thị Axes (x_length=7.2, y_length=4.0), đường cong axes.plot, cực trị gióng nét đứt.
          TIẾP TUYẾN CHUYỂN ĐỘNG VỚI ValueTracker + always_redraw: Tiếp tuyến tự động đổi màu theo hệ số góc (GREEN khi dốc lên, RED khi dốc xuống, YELLOW khi đi ngang)
          + THANH TRẠNG THÁI REAL-TIME (status_badge = always_redraw(...)) hiển thị trực tiếp y' > 0 / y' < 0 / y' = 0!
-       - Bottom Card (height=6.6, width=8.4): Đạo hàm + BẢNG BIẾN THIÊN 3 TẦNG LATEX CHUẨN SGK (\\begin{array}{|c|ccccccc|})
+       - Bottom Card (height=6.6, width=8.4): Đạo hàm + BẢNG BIẾN THIÊN 3 TẦNG LATEX CHUẨN SGK (\\\\begin{array}{|c|ccccccc|})
          + Kết luận khoảng đơn điệu/cực trị đóng khung xanh SurroundingRectangle.
        - Cho ValueTracker trượt mượt mà qua các khoảng để học sinh quan sát đồ thị và BBT đồng thời. FadeOut toàn bộ.
      * CHƯƠNG 4 - CHỮA ĐỀ THI RAG THỰC CHIẾN (Thực Chiến RAG, ~38s):
@@ -88,47 +61,24 @@ export const MANIM_SKILLS_GUIDE = `
 
 5. BẢNG BIẾN THIÊN CHUẨN MỰC SGK VIỆT NAM (LATEX ARRAY 3 TẦNG):
    - BẮT BUỘC dùng mảng LaTeX array chuẩn mực:
-     MathTex(r"""\\renewcommand{\\arraystretch}{1.35}
-     \\begin{array}{|c|ccccccc|}
-     \\hline
-     x & -\\infty & & -1 & & 1 & & +\\infty \\\\
-     \\hline
-     y' & & + & 0 & - & 0 & + & \\\\
-     \\hline
-     & & & 2 & & & & +\\infty \\\\
-     y & & \\nearrow & & \\searrow & & \\nearrow & \\\\
-     & -\\infty & & & & -2 & & \\\\
-     \\hline
-     \\end{array}""", font_size=24)
+     MathTex(r"""\\\\renewcommand{\\\\arraystretch}{1.35}
+     \\\\begin{array}{|c|ccccccc|}
+     \\\\hline
+     x & -\\\\infty & & -1 & & 1 & & +\\\\infty \\\\\\\\
+     \\\\hline
+     y' & & + & 0 & - & 0 & + & \\\\\\\\
+     \\\\hline
+     & & & 2 & & & & +\\\\infty \\\\\\\\
+     y & & \\\\nearrow & & \\\\searrow & & \\\\nearrow & \\\\\\\\
+     & -\\\\infty & & & & -2 & & \\\\\\\\
+     \\\\hline
+     \\\\end{array}""", font_size=24)
 
 6. 100% CÔNG THỨC LATEX HOÀN HẢO (PERFECT LATEX):
    - MỌI công thức toán dùng MathTex(r"...") với raw string.
    - Đóng khung nổi bật đáp số / kết luận: SurroundingRectangle(conclusion, color=GREEN, buff=0.16, corner_radius=0.12, stroke_width=2.5).
    - Tách biệt tiếng Việt và công thức: Text("...", font=MAIN_FONT) ghép với MathTex(...) qua VGroup(...).arrange(RIGHT, buff=0.2).
-
-7. BẢN ĐỒ CHIẾN LƯỢC TRỰC QUAN ĐA MÔN (MULTI-SUBJECT VISUAL BLUEPRINT):
-   - Toán học: Đồ thị hàm số, tiếp tuyến trượt đổi màu ValueTracker, Bảng biến thiên 3 tầng, Hình học không gian gióng nét đứt.
-   - Vật lý: Quỹ đạo chuyển động, dao động điều hòa axes.plot(lambda t: np.sin(t)), sơ đồ mạch điện, vector lực, đường sức từ trường. Khung thẻ dưới hiển thị công thức định luật và các bước thay số.
-   - Hóa học: Mô hình nguyên tử/phân tử, phương trình phản ứng hóa học cân bằng có mũi tên trạng thái/nhiệt độ, bảng biến thiên nồng độ/pH theo thời gian.
-   - Sinh học: Sơ đồ lai Menđen (bảng Punnett), sơ đồ phân bào nguyên phân/giảm phân, chuỗi xoắn kép ADN/ARN tách mạch, lưới thức ăn sinh thái.
-   - Tiếng Anh / Ngoại ngữ: Thẻ từ vựng trực quan (Pill Badge từ loại, phiên âm IPA, câu ví dụ), sơ đồ trục thời gian các thì (Tenses Timeline), cấu trúc ngữ pháp then chốt.
-   - Tin học / Thuật toán: Trực quan hóa mảng (Array bars đổi màu), duyệt cây nhị phân (Binary Tree), các bước thuật toán sắp xếp/tìm kiếm, đồ thị độ phức tạp thời gian O(1) đến O(n^2).
-   - Lịch sử / Địa lý / GDCD: Trục thời gian tiến trình sự kiện (Chronological Timeline), sơ đồ tư duy nguyên nhân - hệ quả, biểu đồ cột/tròn đối chiếu số liệu.
-
-8. QUY TẮC ĐỒNG BỘ THỜI GIAN ÂM THANH (TTS) & HOẠT HỌA MANIM (TTS-ANIMATION SYNC):
-   - Tốc độ đọc tự nhiên của giọng đọc AI: ~2.8 - 3.0 từ/giây (160 - 180 từ/phút).
-   - Dung lượng kịch bản VOICEOVER_SCRIPT phải tương ứng: Số từ ≈ Thời lượng (giây) × 2.85.
-     * Video 60s: ~170 từ.
-     * Video 90s: ~255 từ.
-     * Video 110-120s: ~300-330 từ.
-   - Khớp nối phân cảnh chuẩn mực (Animation Duration ≈ Voiceover Duration):
-     * Cảnh 1 (Intro): 7s -> ~20 từ.
-     * Cảnh 2 (Lý thuyết): 14s -> ~40 từ.
-     * Cảnh 3 (Mô phỏng động / Dual-Zone): 38s -> ~105 từ.
-     * Cảnh 4 (Chữa bài thực chiến): 38s -> ~105 từ.
-     * Cảnh 5 (Outro): 8s -> ~25 từ.
-   - Trong code Manim, tổng run_time của self.play(...) cộng với self.wait(...) ở mỗi phân cảnh phải khớp với thời gian đọc của phân cảnh đó để video kết thúc cùng lúc với giọng đọc.
-`.replace("★★★ BỘ NGUYÊN TẮC MANIM CE TOÁN HỌC & VISUAL ENGINEERING CHUẨN STUDIO ★XX", "★★★ BỘ NGUYÊN TẮC MANIM CE TOÁN HỌC & VISUAL ENGINEERING CHUẨN STUDIO ★★★");
+\`.replace("★★★ BỘ NGUYÊN TẮC MANIM CE TOÁN HỌC & VISUAL ENGINEERING CHUẨN STUDIO ★XX", "★★★ BỘ NGUYÊN TẮC MANIM CE TOÁN HỌC & VISUAL ENGINEERING CHUẨN STUDIO ★★★");
 
 const getFontDirective = (fontStyle?: string): string => {
   return fontStyle === 'sans' ? 'Be Vietnam Pro' : 'Times New Roman';
@@ -137,46 +87,26 @@ const getFontDirective = (fontStyle?: string): string => {
 const getSimulationModeDescription = (mode?: string): string => {
   switch (mode) {
     case 'geometry':
-      return `[BỘ FORM MÔ PHỎNG HÌNH HỌC & VECTOR]: 
-Xây dựng mô hình 2D/3D với Axes, Polygon, Circle, Arrow biểu diễn vector, RightAngle đánh dấu góc vuông, và điểm chuyển động Dot. Dùng đường gióng nét đứt và nhãn đỉnh đặt ở hướng an toàn.`;
+      return \`[BỘ FORM MÔ PHỎNG HÌNH HỌC & VECTOR]: 
+Xây dựng mô hình 2D/3D với Axes, Polygon, Circle, Arrow biểu diễn vector, RightAngle đánh dấu góc vuông, và điểm chuyển động Dot. Dùng đường gióng nét đứt và nhãn đỉnh đặt ở hướng an toàn.\`;
     case 'dialogue':
-      return `[BỘ FORM ĐỐI THOẠI 2 NGƯỜI (THẦY - TRÒ Q&A)]: 
+      return \`[BỘ FORM ĐỐI THOẠI 2 NGƯỜI (THẦY - TRÒ Q&A)]: 
 Tạo 2 thẻ đại diện: Thẻ "👨‍🏫 Thầy Yuta" bên Trái/Trên và Thẻ "🙋‍♂️ Học sinh" bên Phải/Dưới. 
-Học sinh đưa ra câu hỏi thắc mắc trong khung thẻ -> Thầy Yuta xuất hiện giải đáp trực quan từng bước bằng công thức LaTeX và mô hình minh họa.`;
+Học sinh đưa ra câu hỏi thắc mắc trong khung thẻ -> Thầy Yuta xuất hiện giải đáp trực quan từng bước bằng công thức LaTeX và mô hình minh họa.\`;
     case 'calculus':
-      return `[BỘ FORM GIẢI TÍCH & KHẢO SÁT HÀM SỐ (CHUẨN c1_HamSo_DonDieu.py)]: 
-Tạo hệ trục Axes, đồ thị axes.plot(...), tiếp tuyến di chuyển trượt trên đường cong với ValueTracker, tự động đổi màu theo độ dốc f'(x), thanh trạng thái real-time always_redraw, đường gióng nét đứt đến cực trị, và BẢNG BIẾN THIÊN 3 tầng chuẩn mực SGK Việt Nam (x, y', y).`;
+      return \`[BỘ FORM GIẢI TÍCH & KHẢO SÁT HÀM SỐ (CHUẨN c1_HamSo_DonDieu.py)]: 
+Tạo hệ trục Axes, đồ thị axes.plot(...), tiếp tuyến di chuyển trượt trên đường cong với ValueTracker, tự động đổi màu theo độ dốc f'(x), thanh trạng thái real-time always_redraw, đường gióng nét đứt đến cực trị, và BẢNG BIẾN THIÊN 3 tầng chuẩn mực SGK Việt Nam (x, y', y).\`;
     case 'fast_tricks':
-      return `[BỘ FORM MẸO & THỦ THUẬT GIẢI NHANH 30S]: 
+      return \`[BỘ FORM MẸO & THỦ THUẬT GIẢI NHANH 30S]: 
 Bố cục 2 thẻ so sánh: 
 - Thẻ 1 (❌ Cách tự luận dài - 3 phút): Hiển thị phép tính dài, dùng gạch đỏ cảnh báo tốn thời gian.
-- Thẻ 2 (⚡ Mẹo thần tốc 30s): Hiển thị công thức rút gọn, đóng khung SurroundingRectangle(color=GREEN) kèm hiệu ứng Flash.`;
+- Thẻ 2 (⚡ Mẹo thần tốc 30s): Hiển thị công thức rút gọn, đóng khung SurroundingRectangle(color=GREEN) kèm hiệu ứng Flash.\`;
     case 'stem':
-    case 'physics':
-    case 'physics_stem':
-      return `[BỘ FORM MÔ PHỎNG VẬT LÝ & KHOA HỌC STEM]: 
-Diễn hoạt quỹ đạo chuyển động con lắc/vật ném, dao động điều hòa axes.plot(lambda t: np.sin(t)), sơ đồ mạch điện (nguồn, điện trở, ampe kế), vector lực kéo/ma sát, hoặc đường sức từ trường. Khung thẻ dưới hiển thị công thức định luật và tính toán số liệu cụ thể.`;
-    case 'chemistry':
-      return `[BỘ FORM HÓA HỌC & PHẢN ỨNG]: 
-Diễn hoạt sơ đồ liên kết phân tử, các hạt nguyên tử chuyển động va chạm phản ứng, phương trình phản ứng hóa học cân bằng có điều kiện nhiệt độ/xúc tác, và bảng biến thiên nồng độ/pH theo thời gian.`;
-    case 'biology':
-      return `[BỘ FORM SINH HỌC & DI TRUYỀN HỌC]: 
-Mô phỏng bảng lai Punnett di truyền Menđen, sơ đồ phân bào nguyên phân/giảm phân, mô hình chuỗi xoắn kép ADN/ARN tách mạch nhân đôi, hoặc sơ đồ lưới thức ăn sinh thái.`;
-    case 'english_language':
-    case 'languages':
-      return `[BỘ FORM TIẾNG ANH & NGOẠI NGỮ]: 
-Thẻ trên hiển thị thẻ học từ vựng trực quan (Pill Badge từ loại, phiên âm IPA, câu ví dụ thực tế), thẻ dưới minh họa sơ đồ trục thời gian các thì (Tenses Timeline) hoặc cấu trúc ngữ pháp then chốt.`;
-    case 'computer_science':
-    case 'algorithms':
-      return `[BỘ FORM TIN HỌC & THUẬT TOÁN]: 
-Mô phỏng trực quan các thanh mảng chuyển động tráo đổi vị trí trong thuật toán sắp xếp (Bubble/Quick Sort), duyệt cây nhị phân (Binary Tree), hoặc đồ thị trực quan so sánh độ phức tạp O(1) đến O(n^2).`;
-    case 'social_sciences':
-    case 'history_geography':
-      return `[BỘ FORM KHOA HỌC XÃ HỘI (LỊCH SỬ - ĐỊA LÝ)]: 
-Trục thời gian tiến trình lịch sử (Chronological Timeline) trượt qua các mốc năm quan trọng, sơ đồ tư duy nguyên nhân - diễn biến - ý nghĩa lịch sử, hoặc biểu đồ trực quan số liệu địa lý/dân số.`;
+      return \`[BỘ FORM MÔ PHỎNG STEM & VẬT LÝ - HÓA HỌC]: 
+Diễn hoạt quỹ đạo chuyển động, dao động điều hòa axes.plot(lambda t: np.sin(t)), mô hình liên kết phân tử/hạt electron quay quanh hạt nhân, hoặc sơ đồ mạch điện.\`;
     default:
-      return `[BỘ FORM BÀI GIẢNG ĐA MÔN CHUẨN STUDIO (5 CHƯƠNG KẾ THỪA c1_HamSo_DonDieu.py)]: 
-Bố cục Khung Thẻ Chuẩn: Intro -> Lý thuyết (2 thẻ màu độc lập) -> Dual-Zone Mô phỏng động tương tác & Bảng phân tích -> Chữa Đề RAG thực chiến (Tối đa 2 câu) -> Thẻ Outro Thương Hiệu.`;
+      return \`[BỘ FORM BÀI GIẢNG TOÁN HỌC TỔNG HỢP (5 CHƯƠNG CHUẨN)]: 
+Bố cục Khung Thẻ Chuẩn: Intro -> Lý thuyết (2 thẻ màu) -> Dual-Zone Mô phỏng tương tác & BBT -> Chữa Đề RAG (Tối đa 2 câu) -> Thẻ Outro Thương Hiệu.\`;
   }
 };
 
@@ -187,49 +117,60 @@ export const generateManimStoryboardPrompt = (config: VideoConfig): string => {
   const isVertical = config.format === 'vertical';
   const targetDurationStr = config.duration || '100 - 120 giây';
   const simDesc = getSimulationModeDescription(config.simulationMode);
-  const ragSection = sanitizeAndExtractRag(config.attachedPdf);
 
-  const approxSeconds = isVertical ? 110 : 120;
-  const targetWords = Math.round(approxSeconds * 2.85);
+  let pdfTextChunk = "";
+  if (config.attachedPdf?.text) {
+    pdfTextChunk = \`\\n[TÀI LIỆU RAG NGUỒN ĐÍNH KÈM / GHIM]:
+Tên file: \${config.attachedPdf.fileName} (\${config.attachedPdf.numPages} trang)
+"""
+\${config.attachedPdf.text.slice(0, 15000)}
+"""
+CHỈ THỊ SƯ PHẠM RAG BẮT BUỘC CHO KỊCH BẢN VIDEO:
+1. BẮT BUỘC trích xuất chính xác bài toán, câu hỏi, định nghĩa, định lý, hàm số hoặc bảng biến thiên từ tài liệu RAG trên.
+2. NGUYÊN TẮC MẬT ĐỘ: Chọn ĐÚNG 2 BÀI TOÁN TIÊU BIỂU NHẤT từ tài liệu để đưa vào Phần Thực Chiến (ví dụ Câu 1 đọc hình/BBT, Câu 2 giải chi tiết). TUYỆT ĐỐI KHÔNG tham lam nhồi nhét 3-4 câu gây vỡ khung hình!
+3. Bám sát 100% câu từ, số liệu, giả thiết và kết luận trong tài liệu gốc. TUYỆT ĐỐI KHÔNG tự bịa đề bài khác!
+4. Trình bày lời giải sư phạm mạch lạc, đúng và đủ ý chính, phân tích bản chất toán học sâu sắc.
+\\n\`;
+  }
 
-  return `Đóng vai Chuyên gia Sư phạm & Đạo diễn Diễn hoạt Khoa học Manim CE (chuẩn phong cách Yuta Academy).
-Nhiệm vụ của bạn là xây dựng KỊCH BẢN SƯ PHẠM VÀ LỜI THOẠI THUYẾT MINH TRÔI CHẢY, PHONG PHÚ cho video bài giảng về: "${config.topic}" (Môn: ${config.subject}, Khán giả: ${config.audience || 'Học sinh / Người học'}).
-Định dạng: ${isVertical ? 'DỌC 9:16 (TikTok / Shorts / Reels - Bố cục Khung Thẻ Dual-Zone lấp đầy 93% màn hình)' : 'NGANG 16:9 (YouTube / Bài giảng)'}.
-THỜI LƯỢNG MỤC TIÊU: ${targetDurationStr}.
-${simDesc}
-${ragSection}
+  return \`Đóng vai Chuyên gia Sư phạm & Đạo diễn Diễn hoạt Khoa học Manim CE (chuẩn phong cách Yuta Academy).
+Nhiệm vụ của bạn là xây dựng KỊCH BẢN SƯ PHẠM VÀ LỜI THOẠI THUYẾT MINH TRÔI CHẢY, PHONG PHÚ cho video bài giảng về: "\${config.topic}" (Môn: \${config.subject}, Khán giả: \${config.audience || 'Học sinh / Người học'}).
+Định dạng: \${isVertical ? 'DỌC 9:16 (TikTok / Shorts / Reels - Bố cục Khung Thẻ Dual-Zone lấp đầy 93% màn hình)' : 'NGANG 16:9 (YouTube / Bài giảng)'}.
+THỜI LƯỢNG MỤC TIÊU: \${targetDurationStr}.
+\${simDesc}
+\${pdfTextChunk}
 
-YÊU CẦU LẬP DÀN Ý 5 PHÂN CẢNH VÀNG VÀ SOẠN LỜI THOẠI TRÔI CHẢY, TRUYỀN CẢM, CÓ NGẮT NGHỈ MẠCH LẠC PHÙ HỢP VỚI THỜI LƯỢNG ${targetDurationStr} (ĐỘ DÀI KỊCH BẢN KHOẢNG ${targetWords} TỪ - TỐC ĐỘ ĐỌC 2.85 TỪ/GIÂY):
+YÊU CẦU LẬP DÀN Ý 5 PHÂN CẢNH VÀNG VÀ SOẠN LỜI THOẠI TRÔI CHẢY, TRUYỀN CẢM, CÓ NGẮT NGHỈ MẠCH LẠC PHÙ HỢP VỚI THỜI LƯỢNG \${targetDurationStr} (LƯỢT NÀY CHƯA CẦN VIẾT CODE MANIM):
 
-1. PHÂN CẢNH 1 - MỞ ĐẦU ẤN TƯỢNG (INTRO, ~7S, ~20 TỪ):
-   - Khung thẻ Intro với Tên bài học, Pill badge môn học "${config.subject.toUpperCase()}" và Ký hiệu/khái niệm cốt lõi.
-   - Lời thoại Intro: Chào mừng, đặt vấn đề kích thích tò mò và tạo cảm hứng học tập.
+1. PHÂN CẢNH 1 - MỞ ĐẦU ẤN TƯỢNG (INTRO, ~7S):
+   - Khung thẻ Intro với Tên bài học, Pill badge môn học và Ký hiệu toán học cốt lõi (chuyển cảnh dọn sạch giao diện êm đềm, KHÔNG đưa watermark lên góc UL).
+   - Lời thoại Intro: Chào mừng, gợi mở vấn đề và tạo hứng thú học tập.
 
-2. PHÂN CẢNH 2 - LÝ THUYẾT CỐT LÕI VỚI 2 THẺ MÀU TƯƠNG PHẢN (~14S, ~40 TỪ):
-   - 2 Thẻ màu độc lập đối chiếu (Thẻ Xanh Emerald cho trường hợp 1 / thuận / khẳng định; Thẻ Đỏ Ruby cho trường hợp 2 / nghịch / phủ định).
-   - Lời thoại Lý thuyết: Phân tích trực quan, so sánh bản chất và làm nổi bật điều kiện áp dụng.
+2. PHÂN CẢNH 2 - LÝ THUYẾT CỐT LÕI VỚI 2 THẺ MÀU ĐỘC LẬP (~14S):
+   - 2 Thẻ màu tương phản: Thẻ Xanh (Đồng biến / Giá trị lớn nhất / Định lý thuận) và Thẻ Đỏ (Nghịch biến / Giá trị nhỏ nhất / Định lý nghịch).
+   - Lời thoại Lý thuyết: Phân tích trực quan ý nghĩa hình học của từng trường hợp.
 
-3. PHÂN CẢNH 3 - DUAL-ZONE CONTAINER MÔ PHỎNG ĐỘNG TƯƠNG TÁC (~38S, ~105 TỪ):
-   - Top Card (Thẻ Trên - height=6.4, width=8.4): Trực quan hóa hiện tượng/đồ thị/mô hình (Toán: đồ thị + tiếp tuyến đổi màu; Vật lý: dao động/mạch điện; Hóa học: liên kết phân tử; Sinh học: sơ đồ lai; Tiếng Anh: thẻ từ vựng & ngữ cảnh; Tin học: mảng dữ liệu thuật toán).
-   - Bottom Card (Thẻ Dưới - height=6.6, width=8.4): Suy luận lý thuyết/biến đổi số/bảng biến thiên/công thức định luật/cấu trúc ngữ pháp.
-   - Lời thoại Mô phỏng: Thuyết minh đồng bộ từng chuyển động, làm sáng tỏ mối liên hệ giữa trực quan và công thức.
+3. PHÂN CẢNH 3 - DUAL-ZONE CONTAINER MÔ PHỎNG ĐỘNG & BẢNG BIẾN THIÊN 3 TẦNG (~38S):
+   - Thẻ Tầng Trên (Top Card - height=6.4, width=8.4): Mô phỏng đồ thị, tiếp tuyến trượt đổi màu theo dấu đạo hàm f'(x), thanh trạng thái real-time.
+   - Thẻ Tầng Dưới (Bottom Card - height=6.6, width=8.4): Biến đổi đại số từng bước, Bảng biến thiên 3 tầng LaTeX chuẩn SGK (x, y', y), đóng khung kết luận xanh.
+   - Lời thoại Mô phỏng: Thuyết minh đồng bộ theo chuyển động của tiếp tuyến và các khoảng tăng giảm.
 
-4. PHÂN CẢNH 4 - THỰC CHIẾN / BÀI TẬP VẬN DỤNG RAG (TỐI ĐA 2 CÂU TIÊU BIỂU, ~38S, ~105 TỪ):
-   - Top Card: Câu 1 (Đọc đồ thị/hình ảnh/nhận biết nhanh) + 4 đáp án + Hộp xanh khoanh đáp án đúng.
-   - Bottom Card: Câu 2 (Vận dụng/tính toán/biện luận logic) + 3 bước giải then chốt + Hộp xanh khoanh đáp án đúng.
-   - Lời thoại Chữa đề: Chỉ ra mẹo giải nhanh, phân tích bẫy đề thi và chốt phương pháp xử lý dứt khoát.
+4. PHÂN CẢNH 4 - CHỮA ĐỀ THI RAG THỰC CHIẾN (TỐI ĐA 2 CÂU TIÊU BIỂU, ~38S):
+   - Top Card: Câu 1 (Đọc BBT hoặc đồ thị) + 4 đáp án hàng ngang + Hộp xanh khoanh đáp án đúng.
+   - Bottom Card: Câu 2 (Xét dấu đạo hàm hoặc biến đổi đại số) + Các bước giải cô đọng + Hộp xanh khoanh đáp án đúng.
+   - Lời thoại Chữa đề: Hướng dẫn mẹo nhận biết nhanh và các bẫy đề thi cần tránh.
 
-5. PHÂN CẢNH 5 - TỔNG KẾT & OUTRO THƯƠNG HIỆU (~8S, ~25 TỪ):
-   - Thẻ Outro: Đúc kết 3 bí kíp bài học + Thông điệp thương hiệu "Học ${config.subject} cùng Yuta" (giữ nguyên khung hình cuối 3s).
-   - Lời thoại Outro: Đúc kết giá trị và kêu gọi follow kênh.
+5. PHÂN CẢNH 5 - TỔNG KẾT & OUTRO THƯƠNG HIỆU (~8S):
+   - Thẻ Outro Tổng Kết: Tóm tắt 3 bí kíp cốt lõi + Thương hiệu "Học toán cùng Yuta" (giữ nguyên khung hình cuối cùng 3s).
+   - Lời thoại Outro: Đúc kết thông điệp và câu chào follow thương hiệu.
 
 ĐỊNH DẠNG TRẢ VỀ:
 - Tóm tắt dàn ý 5 phân cảnh trên.
-- Khối biến kịch bản hoàn chỉnh (chèn dấu ba chấm "..." để tạo khoảng ngắt nghỉ nhịp nhàng cho giọng đọc AI, độ dài khoảng ${targetWords} từ phù hợp với ${targetDurationStr}):
+- Khối biến kịch bản hoàn chỉnh (chèn dấu ba chấm "..." để tạo khoảng ngắt nghỉ nhịp nhàng cho giọng đọc AI, độ dài phù hợp với \${targetDurationStr}):
 VOICEOVER_SCRIPT = """
 [Toàn bộ lời thoại thuyết minh mượt mà, phong phú của 5 phân cảnh trên]
 """
-(Lưu ý: LƯỢT NÀY CHƯA VIẾT CODE PYTHON, chỉ hoàn thiện kịch bản sư phạm và lời thoại!)`;
+(Lưu ý: LƯỢT NÀY CHƯA VIẾT CODE PYTHON, chỉ hoàn thiện kịch bản sư phạm và lời thoại!)\`;
 };
 
 // =========================================================================
@@ -242,7 +183,7 @@ export const generateManimCodePrompt = (config: VideoConfig): string => {
   const chosenFont = getFontDirective(config.fontStyle);
   const simDesc = getSimulationModeDescription(config.simulationMode);
 
-  return `Tuyệt vời! Dựa trên kịch bản sư phạm và khối lời thoại VOICEOVER_SCRIPT vừa thống nhất ở trên, hãy viết TOÀN BỘ file mã nguồn Manim Python (\`scene.py\`) hoàn chỉnh 100% để render video bài giảng này.
+  return \`Tuyệt vời! Dựa trên kịch bản sư phạm và khối lời thoại VOICEOVER_SCRIPT vừa thống nhất ở trên, hãy viết TOÀN BỘ file mã nguồn Manim Python (\`scene.py\`) hoàn chỉnh 100% để render video bài giảng này.
 
 YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ BỘ NGUYÊN TẮC c1_HamSo_DonDieu.py & DUAL-ZONE CONTAINER CARDS):
 1. Kế thừa chính xác biến VOICEOVER_SCRIPT và cấu trúc 5 PHÂN CẢNH VÀNG:
@@ -251,23 +192,23 @@ YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ BỘ NGUYÊN TẮC c1_HamSo_Do
    - Phần 3: Dual-Zone Container Mô phỏng động tiếp tuyến đổi màu + BBT 3 tầng (~38s) - FadeOut toàn bộ.
    - Phần 4: Chữa đề thi RAG thực chiến (TỐI ĐA 2 CÂU: Top Card = Câu 1, Bottom Card = Câu 2, ~38s) - FadeOut toàn bộ.
    - Phần 5: Thẻ Outro tổng kết thương hiệu "Học toán cùng Yuta" (~8s) - Giữ nguyên self.wait(3.0), KHÔNG FadeOut.
-2. Cấu hình ${isVertical ? 'Khung hình DỌC 9:16 (config.pixel_width=1080, config.pixel_height=1920, config.frame_width=9.0, config.frame_height=16.0)' : 'Khung hình NGANG 16:9 (1920x1080)'}.
+2. Cấu hình \${isVertical ? 'Khung hình DỌC 9:16 (config.pixel_width=1080, config.pixel_height=1920, config.frame_width=9.0, config.frame_height=16.0)' : 'Khung hình NGANG 16:9 (1920x1080)'}.
 3. BỐ CỤC KHUNG THẺ CONTAINER (DUAL-ZONE) LẤP ĐẦY 93% MÀN HÌNH - TRIỆT TIÊU KHOẢNG TRỐNG ĐEN:
-   - ${isVertical ? 'Top Header Bar (y ~ 7.05, height=1.1-1.3, width=8.4); Top Card (y ~ 3.15, height=6.4, width=8.4); Bottom Card (y ~ -3.75, height=6.6, width=8.4); Outro Card (height=13.6, width=8.4). BẮT BUỘC gọi fit_width(group, 7.8) cho mọi khối nội dung trong thẻ!' : 'Header đỉnh, Cột Trái Mô phỏng (width=7.2, height=6.2), Cột Phải Công thức (width=5.8, height=6.2).'}
+   - \${isVertical ? 'Top Header Bar (y ~ 7.05, height=1.1-1.3, width=8.4); Top Card (y ~ 3.15, height=6.4, width=8.4); Bottom Card (y ~ -3.75, height=6.6, width=8.4); Outro Card (height=13.6, width=8.4). BẮT BUỘC gọi fit_width(group, 7.8) cho mọi khối nội dung trong thẻ!' : 'Header đỉnh, Cột Trái Mô phỏng (width=7.2, height=6.2), Cột Phải Công thức (width=5.8, height=6.2).'}
 4. ZERO-OVERLAP & WATERMARK SAFETY:
    - TUYỆT ĐỐI KHÔNG để biểu tượng Intro co nhỏ rồi to_corner(UL) làm watermark trôi nổi (tránh va chạm đè chữ tiêu đề)! Dọn sạch từng cảnh trước khi qua cảnh sau.
 5. QUY CHUẨN TYPOGRAPHY CỠ CHỮ LỚN RÕ RÀNG TRÊN ĐIỆN THOẠI:
-   - Sử dụng font="${chosenFont}" cho mọi đối tượng Text.
+   - Sử dụng font="\${chosenFont}" cho mọi đối tượng Text.
    - Tiêu đề 30-34 BOLD, Tiêu đề Thẻ 22-24 BOLD, Công thức MathTex 26-32, Chú thích tiếng Việt 22-24. CẤM font_size < 22!
    - line_spacing=1.2 cho các đoạn Text nhiều dòng.
 6. MÔ PHỎNG TIẾP TUYẾN ĐỘNG & BẢNG BIẾN THIÊN 3 TẦNG:
    - ValueTracker + always_redraw cho tiếp tuyến đổi màu (Xanh/Đỏ/Vàng) và thanh trạng thái status_badge real-time.
-   - Bảng Biến Thiên 3 tầng chuẩn mực SGK Việt Nam: MathTex(r"\\begin{array}{|c|ccccccc|} ... \\end{array}", font_size=24).
+   - Bảng Biến Thiên 3 tầng chuẩn mực SGK Việt Nam: MathTex(r"\\\\begin{array}{|c|ccccccc|} ... \\\\end{array}", font_size=24).
 7. 100% CÔNG THỨC LATEX HOÀN HẢO (PERFECT LATEX):
    - MỌI công thức dùng MathTex(r"...") với raw string. Đóng khung đáp số: SurroundingRectangle(result, color=GREEN, buff=0.16).
 8. Màu nền: "#0B1120".
 9. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, không viết bất kỳ lời chào hay giải thích ngoài mã.
-10. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file). (Hệ thống máy chủ sẽ tự biên dịch mã bằng lệnh: \`manim \${qualityFlag} scene.py MainScene\`, AI không được tự chạy lệnh này).`;
+10. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file). (Hệ thống máy chủ sẽ tự biên dịch mã bằng lệnh: \`manim \${qualityFlag} scene.py MainScene\`, AI không được tự chạy lệnh này).\`;
 };
 
 // =========================================================================
@@ -279,63 +220,73 @@ export const generateVideoManimPrompt = (config: VideoConfig): string => {
   const targetDurationStr = config.duration || '100 - 120 giây';
   const chosenFont = getFontDirective(config.fontStyle);
   const simDesc = getSimulationModeDescription(config.simulationMode);
-  const ragPromptChunk = sanitizeAndExtractRag(config.attachedPdf);
 
-  const approxSeconds = isVertical ? 110 : 120;
-  const targetWords = Math.round(approxSeconds * 2.85);
-  const brandName = config.subject.toLowerCase().includes('toán') ? 'Học toán cùng Yuta' : `Học ${config.subject} cùng Yuta`;
+  let pdfPromptChunk = "";
+  if (config.attachedPdf?.text) {
+    pdfPromptChunk = \`
+[TÀI LIỆU RAG NGUỒN ĐÍNH KÈM / GHIM]:
+Tên file: \${config.attachedPdf.fileName} (\${config.attachedPdf.numPages} trang)
+Nội dung trích xuất:
+"""
+\${config.attachedPdf.text.slice(0, 15000)}
+"""
+CHỈ THỊ BẮT BUỘC KHI CÓ TÀI LIỆU RAG ĐÍNH KÈM:
+1. TRỰC QUAN HÓA BÀI TOÁN GỐC TỪ TÀI LIỆU: Trích xuất chính xác bài toán, câu hỏi, định nghĩa, hàm số hoặc BBT từ tài liệu RAG.
+2. NGUYÊN TẮC MẬT ĐỘ (MAX 2 CÂU): Chọn ĐÚNG 2 câu hỏi/dạng toán tiêu biểu nhất (ví dụ Câu 1 đọc hình/BBT cho Top Card, Câu 2 phương pháp giải đại số cho Bottom Card) để giải chi tiết. TUYỆT ĐỐI KHÔNG nhồi nhét 3-4 câu gây chật chội và đè chữ!
+3. BÁM SÁT BƯỚC GIẢI & CÂU TỪ: Diễn giải từng bước logic ăn khớp 100% với tài liệu, giữ nguyên tham số, TUYỆT ĐỐI KHÔNG tự ý bịa số liệu khác!
+\`;
+  }
 
   let episodeChunk = "";
   if (config.isSeries) {
     const sCount = config.seriesCount || 3;
     const epIdx = config.currentEpisodeIndex !== undefined ? config.currentEpisodeIndex + 1 : 1;
-    episodeChunk = `
-[CHUỖI PLAYLIST - TẬP ${epIdx}/${sCount}]:
-- Sản xuất TẬP ${epIdx}/${sCount} cho chuyên đề "${config.topic}".
-- Góc trên phải màn hình hiển thị: Text("Tập ${epIdx}/${sCount}", font_size=22, color=GRAY_B, font="${chosenFont}")
-`;
+    episodeChunk = \`
+[CHUỖI PLAYLIST - TẬP \${epIdx}/\${sCount}]:
+- Sản xuất TẬP \${epIdx}/\${sCount} cho chuyên đề "\${config.topic}".
+- Góc trên phải màn hình hiển thị: Text("Tập \${epIdx}/\${sCount}", font_size=22, color=GRAY_B, font="\${chosenFont}")
+\`;
   }
 
-  return `Đóng vai Chuyên gia Lập trình Diễn hoạt Khoa học, Toán học & Giáo dục chuyên nghiệp với Manim CE (Python).
-Nhiệm vụ của bạn là viết một file mã nguồn Manim Python (\`scene.py\`) hoàn chỉnh, chuẩn sư phạm, trực quan và chạy được 100% không lỗi để minh họa chủ đề "${config.topic}" thuộc môn học "${config.subject}".
+  return \`Đóng vai Chuyên gia Lập trình Diễn hoạt Khoa học, Toán học & Giáo dục chuyên nghiệp với Manim CE (Python).
+Nhiệm vụ của bạn là viết một file mã nguồn Manim Python (\`scene.py\`) hoàn chỉnh, chuẩn sư phạm, trực quan và chạy được 100% không lỗi để minh họa chủ đề "\${config.topic}" thuộc môn học "\${config.subject}".
 
 I. THÔNG TIN VIDEO & CẤU HÌNH HÌNH THỨC:
-- Môn học: ${config.subject}
-- Chủ đề: ${config.topic}
-- THỜI LƯỢNG MỤC TIÊU: ${targetDurationStr} (Độ dài lời thoại VOICEOVER_SCRIPT ~${targetWords} từ)
-- Định dạng: ${isVertical ? 'DỌC 9:16 (TikTok / YouTube Shorts / Reels)' : 'NGANG 16:9 (YouTube / Bài giảng)'}
-- Font chữ chỉ định: "${chosenFont}" (Có ngắt dòng line_spacing=1.2 & spacing chuẩn giữa các chữ)
-- Mẫu Diễn hoạt: ${simDesc}
-- Khán giả: ${config.audience || 'Học sinh / Người học'}
-- Yêu cầu chi tiết: ${config.details || "Trực quan, bố cục 5 phân cảnh chuẩn c1_HamSo_DonDieu.py, mô phỏng sinh động, chữa đề RAG thực chiến"}
-- ĐỒNG BỘ THỜI GIAN ÂM THANH (TTS): Kịch bản VOICEOVER_SCRIPT phải có độ dài tương ứng (~${targetWords} từ). Các lệnh self.play(..., run_time=...) và self.wait(...) ở mỗi phân cảnh BẮT BUỘC phải khớp với thời gian đọc phân cảnh đó.
-${episodeChunk}
-${ragPromptChunk}
+- Môn học: \${config.subject}
+- Chủ đề: \${config.topic}
+- THỜI LƯỢNG MỤC TIÊU: \${targetDurationStr}
+- Định dạng: \${isVertical ? 'DỌC 9:16 (TikTok / YouTube Shorts / Reels)' : 'NGANG 16:9 (YouTube / Bài giảng)'}
+- Font chữ chỉ định: "\${chosenFont}" (Có ngắt dòng line_spacing=1.2 & spacing chuẩn giữa các chữ)
+- Mẫu Diễn hoạt: \${simDesc}
+- Khán giả: \${config.audience || 'Học sinh / Người học'}
+- Yêu cầu chi tiết: \${config.details || "Trực quan, bố cục 5 phân cảnh chuẩn c1_HamSo_DonDieu.py, mô phỏng tiếp tuyến đổi màu, BBT 3 tầng, chữa đề RAG thực chiến"}
+\${episodeChunk}
+\${pdfPromptChunk}
 
 II. BỘ KỸ NĂNG BẮT BUỘC TUÂN THỦ:
-${MANIM_SKILLS_GUIDE}
+\${MANIM_SKILLS_GUIDE}
 
 III. BỘ KHUNG CODE PYTHON MẪU KIẾN TRÚC SƯ PHẠM (KIẾN TRÚC 5 PHÂN CẢNH VÀNG ĐÃ KIỂM ĐỊNH 100%):
 \`\`\`python
 from manim import *
 
-# 0. KỊCH BẢN THUYẾT MINH ĐỒNG BỘ CHUẨN SHORTS (~100-120 GIÂY, ~${targetWords} TỪ)
+# 0. KỊCH BẢN THUYẾT MINH ĐỒNG BỘ CHUẨN SHORTS (~100-120 GIÂY)
 VOICEOVER_SCRIPT = """
-Chào mừng các bạn đến với bài giảng về ${config.topic} môn ${config.subject}! Hôm nay chúng ta sẽ cùng nắm trọn lý thuyết nền tảng và phương pháp giải các dạng bài thực chiến kinh điển nhất.
-Về phần lý thuyết cốt lõi, hãy ghi nhớ thật kỹ 2 quy tắc vàng tương ứng với hai khía cạnh then chốt được đóng khung rõ ràng trên màn hình.
-Ở phần mô phỏng thực tế, hãy quan sát chuyển động và sự biến thiên trực quan theo thời gian thực, hoàn toàn ăn khớp với các công thức và phân tích logic bên dưới.
-Bây giờ chúng ta cùng bước vào phần thực chiến chữa bài tập điển hình. Ở Câu 1 dạng nhận biết và đọc dữ liệu, ta dễ dàng chốt ngay đáp án chính xác. Ở Câu 2 dạng vận dụng và suy luận, chỉ cần tuân thủ đúng các bước giải ngắn gọn.
-Đừng quên lưu lại video và bấm theo dõi kênh ${brandName} để cùng nhau bứt phá điểm số mỗi ngày nhé!
+Chào mừng các bạn đến với bài giảng về \${config.topic}! Hôm nay chúng ta sẽ cùng nắm trọn lý thuyết nền tảng và phương pháp giải các dạng toán thực chiến kinh điển nhất.
+Về phần lý thuyết cốt lõi, hãy ghi nhớ thật kỹ 2 quy tắc vàng tương ứng với hai dáng điệu của đồ thị được đóng khung rõ ràng trên màn hình.
+Ở phần mô phỏng thực tế, hãy quan sát hệ số góc tiếp tuyến chuyển động trượt theo đồ thị. Tiếp tuyến đổi màu và thanh trạng thái hiển thị dấu đạo hàm trực quan theo thời gian thực, hoàn toàn ăn khớp với bảng biến thiên ba tầng bên dưới.
+Bây giờ chúng ta cùng bước vào phần thực chiến chữa đề thi thật. Ở Câu 1 dạng đọc đồ thị và bảng biến thiên, ta dễ dàng chọn ngay đáp án chính xác. Ở Câu 2 dạng xét dấu đạo hàm, chỉ cần tuân thủ đúng ba bước giải ngắn gọn.
+Đừng quên lưu lại video và bấm theo dõi kênh Học toán cùng Yuta để cùng nhau bứt phá điểm số mỗi ngày nhé!
 """
 
-# 1. CẤU HÌNH KHUNG HÌNH ${isVertical ? 'DỌC 9:16 (1080x1920)' : 'NGANG 16:9 (1920x1080)'}
-${isVertical ? `config.pixel_width = 1080
+# 1. CẤU HÌNH KHUNG HÌNH \${isVertical ? 'DỌC 9:16 (1080x1920)' : 'NGANG 16:9 (1920x1080)'}
+\${isVertical ? \`config.pixel_width = 1080
 config.pixel_height = 1920
 config.frame_width = 9.0
-config.frame_height = 16.0` : `config.pixel_width = 1920
+config.frame_height = 16.0\` : \`config.pixel_width = 1920
 config.pixel_height = 1080
 config.frame_width = 14.22
-config.frame_height = 8.0`}
+config.frame_height = 8.0\`}
 
 def fit_width(mob: Mobject, max_width: float = 7.8) -> Mobject:
     """Tự động co tỷ lệ nếu chiều rộng vượt quá ngưỡng quy định để chống tràn mép thẻ."""
@@ -343,29 +294,29 @@ def fit_width(mob: Mobject, max_width: float = 7.8) -> Mobject:
         mob.scale_to_fit_width(max_width)
     return mob
 
-class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
+class MainScene(\${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
     def construct(self):
         self.camera.background_color = "#0B1120"
-        MAIN_FONT = "${chosenFont}"
+        MAIN_FONT = "\${chosenFont}"
 
         # ======================================================================
         # PHẦN 1: MỞ ĐẦU ẤN TƯỢNG (INTRO, ~7s)
         # ======================================================================
-        badge_text = Text("${config.subject.toUpperCase()} • LUYỆN THI THPTQG", font_size=24, font=MAIN_FONT, weight=BOLD, color=TEAL_A)
+        badge_text = Text("\${config.subject.toUpperCase()} • LUYỆN THI THPTQG", font_size=24, font=MAIN_FONT, weight=BOLD, color=TEAL_A)
         badge_intro = RoundedRectangle(
             corner_radius=0.15, width=badge_text.width + 0.65, height=badge_text.height + 0.35,
             color=TEAL, fill_color="#0F172A", fill_opacity=0.92, stroke_width=2.0
         ).move_to(badge_text)
         intro_badge = VGroup(badge_intro, badge_text)
 
-        intro_title = Text("${config.topic.toUpperCase()}", font_size=32, weight=BOLD, color=YELLOW, line_spacing=1.2, font=MAIN_FONT)
+        intro_title = Text("\${config.topic.toUpperCase()}", font_size=32, weight=BOLD, color=YELLOW, line_spacing=1.2, font=MAIN_FONT)
         intro_box = SurroundingRectangle(intro_title, buff=0.28, color=BLUE_C, corner_radius=0.18, stroke_width=2.5)
 
         intro_sub = Text("Lý thuyết trọng tâm • Mô phỏng trực quan • Chữa đề thực chiến", font_size=22, font=MAIN_FONT, color=GRAY_B)
 
         intro_core_rule = VGroup(
-            MathTex(r"y' > 0 \;\Longrightarrow\; \text{Đồng biến } (\nearrow)", font_size=28, color=GREEN_B),
-            MathTex(r"y' < 0 \;\Longrightarrow\; \text{Nghịch biến } (\searrow)", font_size=28, color=RED_B)
+            MathTex(r"y' > 0 \\;\\Longrightarrow\\; \\text{Đồng biến } (\\nearrow)", font_size=28, color=GREEN_B),
+            MathTex(r"y' < 0 \\;\\Longrightarrow\\; \\text{Nghịch biến } (\\searrow)", font_size=28, color=RED_B)
         ).arrange(DOWN, buff=0.22)
 
         intro_group = VGroup(intro_badge, VGroup(intro_title, intro_box), intro_sub, intro_core_rule).arrange(DOWN, buff=0.45).move_to(ORIGIN)
@@ -385,7 +336,7 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
 
         card_inc = RoundedRectangle(corner_radius=0.2, width=8.4, height=4.2, color=GREEN_D, fill_color="#064E3B", fill_opacity=0.35, stroke_width=2.5)
         t_inc_title = Text("1. HÀM SỐ ĐỒNG BIẾN (TĂNG)", font_size=24, font=MAIN_FONT, weight=BOLD, color=GREEN_B)
-        t_inc_math = MathTex(r"y' = f'(x) > 0, \quad \forall x \in K", font_size=30, color=WHITE)
+        t_inc_math = MathTex(r"y' = f'(x) > 0, \\quad \\forall x \\in K", font_size=30, color=WHITE)
         t_inc_desc1 = Text("➜ Đồ thị đi LÊN từ trái sang phải (↗)", font_size=22, font=MAIN_FONT, color=GREEN_A)
         t_inc_desc2 = Text("➜ Tiếp tuyến dốc lên: hệ số góc k = y' > 0", font_size=22, font=MAIN_FONT, color=GRAY_A)
         c_inc_group = VGroup(t_inc_title, t_inc_math, t_inc_desc1, t_inc_desc2).arrange(DOWN, aligned_edge=LEFT, buff=0.2).move_to(card_inc)
@@ -394,7 +345,7 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
 
         card_dec = RoundedRectangle(corner_radius=0.2, width=8.4, height=4.2, color=RED_D, fill_color="#7F1D1D", fill_opacity=0.35, stroke_width=2.5)
         t_dec_title = Text("2. HÀM SỐ NGHỊCH BIẾN (GIẢM)", font_size=24, font=MAIN_FONT, weight=BOLD, color=RED_B)
-        t_dec_math = MathTex(r"y' = f'(x) < 0, \quad \forall x \in K", font_size=30, color=WHITE)
+        t_dec_math = MathTex(r"y' = f'(x) < 0, \\quad \\forall x \\in K", font_size=30, color=WHITE)
         t_dec_desc1 = Text("➜ Đồ thị đi XUỐNG từ trái sang phải (↘)", font_size=22, font=MAIN_FONT, color=RED_A)
         t_dec_desc2 = Text("➜ Tiếp tuyến dốc xuống: hệ số góc k = y' < 0", font_size=22, font=MAIN_FONT, color=GRAY_A)
         c_dec_group = VGroup(t_dec_title, t_dec_math, t_dec_desc1, t_dec_desc2).arrange(DOWN, aligned_edge=LEFT, buff=0.2).move_to(card_dec)
@@ -482,26 +433,26 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         bottom_card = RoundedRectangle(corner_radius=0.2, width=8.4, height=6.6, color="#334155", fill_color="#1E293B", fill_opacity=0.95).next_to(top_card, DOWN, buff=0.2)
         bot_title = Text("📊 BẢNG BIẾN THIÊN & KẾT LUẬN", font=MAIN_FONT, font_size=22, weight=BOLD, color=YELLOW).next_to(bottom_card.get_top(), DOWN, buff=0.18)
 
-        calc_deriv = MathTex(r"y' = 3x^2 - 3 = 0 \iff x = \pm 1", font_size=26, color=WHITE)
+        calc_deriv = MathTex(r"y' = 3x^2 - 3 = 0 \\iff x = \\pm 1", font_size=26, color=WHITE)
         bbt = MathTex(
-            r"""\renewcommand{\arraystretch}{1.35}
-            \begin{array}{|c|ccccccc|}
-            \hline
-            x & -\infty & & -1 & & 1 & & +\infty \\
-            \hline
-            y' & & + & 0 & - & 0 & + & \\
-            \hline
-            & & & 2 & & & & +\infty \\
-            y & & \nearrow & & \searrow & & \nearrow & \\
-            & -\infty & & & & -2 & & \\
-            \hline
-            \end{array}""",
+            r"""\\renewcommand{\\arraystretch}{1.35}
+            \\begin{array}{|c|ccccccc|}
+            \\hline
+            x & -\\infty & & -1 & & 1 & & +\\infty \\\\
+            \\hline
+            y' & & + & 0 & - & 0 & + & \\\\
+            \\hline
+            & & & 2 & & & & +\\infty \\\\
+            y & & \\nearrow & & \\searrow & & \\nearrow & \\\\
+            & -\\infty & & & & -2 & & \\\\
+            \\hline
+            \\end{array}""",
             font_size=24, color=WHITE
         )
 
         t_res_inc = VGroup(
             Text("• y' > 0 ➜ Đồng biến trên:", font_size=22, font=MAIN_FONT, color=GREEN_B, weight=BOLD),
-            MathTex(r"(-\infty; -1) \;\text{và}\; (1; +\infty)", font_size=24, color=WHITE)
+            MathTex(r"(-\\infty; -1) \\;\\text{và}\\; (1; +\\infty)", font_size=24, color=WHITE)
         ).arrange(RIGHT, buff=0.15)
 
         t_res_dec = VGroup(
@@ -546,31 +497,31 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         c1_quest = Text("Cho hàm số f(x) có bảng biến thiên như hình dưới:", font=MAIN_FONT, font_size=22, color=WHITE)
 
         c1_bbt = MathTex(
-            r"""\renewcommand{\arraystretch}{1.3}
-            \begin{array}{|c|ccccccccc|}
-            \hline
-            x & -\infty & & -1 & & 0 & & 1 & & +\infty \\
-            \hline
-            f'(x) & & - & 0 & + & 0 & - & 0 & + & \\
-            \hline
-            & +\infty & & & & 0 & & & & +\infty \\
-            f(x) & & \searrow & & \nearrow & & \searrow & & \nearrow & \\
-            & & & -1 & & & & -1 & & \\
-            \hline
-            \end{array}""",
+            r"""\\renewcommand{\\arraystretch}{1.3}
+            \\begin{array}{|c|ccccccccc|}
+            \\hline
+            x & -\\infty & & -1 & & 0 & & 1 & & +\\infty \\\\
+            \\hline
+            f'(x) & & - & 0 & + & 0 & - & 0 & + & \\\\
+            \\hline
+            & +\\infty & & & & 0 & & & & +\\infty \\\\
+            f(x) & & \\searrow & & \\nearrow & & \\searrow & & \\nearrow & \\\\
+            & & & -1 & & & & -1 & & \\\\
+            \\hline
+            \\end{array}""",
             font_size=22, color=WHITE
         )
 
         c1_ask = Text("Hỏi: Hàm số đã cho đồng biến trên khoảng nào?", font=MAIN_FONT, font_size=22, color=YELLOW)
-        optA = MathTex(r"A.\; (-\infty; -1)", font_size=22, color=WHITE)
-        optB = MathTex(r"B.\; (0; 1)", font_size=22, color=WHITE)
-        optC = MathTex(r"C.\; (-1; 1)", font_size=22, color=WHITE)
-        optD = MathTex(r"D.\; (-1; 0)", font_size=22, color=GREEN_B)
+        optA = MathTex(r"A.\\; (-\\infty; -1)", font_size=22, color=WHITE)
+        optB = MathTex(r"B.\\; (0; 1)", font_size=22, color=WHITE)
+        optC = MathTex(r"C.\\; (-1; 1)", font_size=22, color=WHITE)
+        optD = MathTex(r"D.\\; (-1; 0)", font_size=22, color=GREEN_B)
         opts_row = VGroup(optA, optB, optC, optD).arrange(RIGHT, buff=0.35)
 
         c1_sol = VGroup(
             Text("➜ f'(x) > 0 và đồ thị đi lên trên (-1; 0). Chọn", font=MAIN_FONT, font_size=22, color=GREEN_B, weight=BOLD),
-            MathTex(r"\mathbf{D}", font_size=24, color=GREEN)
+            MathTex(r"\\mathbf{D}", font_size=24, color=GREEN)
         ).arrange(RIGHT, buff=0.15)
 
         c1_content = VGroup(c1_quest, c1_bbt, c1_ask, opts_row, c1_sol).arrange(DOWN, buff=0.18).move_to(c1_card).shift(DOWN * 0.22)
@@ -588,21 +539,21 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         c2_title = Text("CÂU 2: XÉT DẤU ĐẠO HÀM", font=MAIN_FONT, font_size=22, weight=BOLD, color=YELLOW).next_to(c2_card.get_top(), DOWN, buff=0.18)
         c2_quest = Text("Cho hàm số y = x³ - 3x². Mệnh đề nào dưới đây đúng?", font=MAIN_FONT, font_size=22, color=WHITE)
 
-        c2_optA = MathTex(r"A.\; \text{Đồng biến trên } (0; 2)", font_size=22, color=WHITE)
-        c2_optB = MathTex(r"B.\; \text{Nghịch biến trên } (0; 2)", font_size=22, color=GREEN_B)
-        c2_optC = MathTex(r"C.\; \text{Nghịch biến trên } (-\infty; 0)", font_size=22, color=WHITE)
+        c2_optA = MathTex(r"A.\\; \\text{Đồng biến trên } (0; 2)", font_size=22, color=WHITE)
+        c2_optB = MathTex(r"B.\\; \\text{Nghịch biến trên } (0; 2)", font_size=22, color=GREEN_B)
+        c2_optC = MathTex(r"C.\\; \\text{Nghịch biến trên } (-\\infty; 0)", font_size=22, color=WHITE)
         c2_opts = VGroup(c2_optA, c2_optB, c2_optC).arrange(DOWN, aligned_edge=LEFT, buff=0.12)
 
-        step1 = MathTex(r"\text{Bước 1: } y' = 3x^2 - 6x = 3x(x - 2)", font_size=24, color=LIGHT_GRAY)
-        step2 = MathTex(r"\text{Bước 2: } y' = 0 \iff x = 0 \quad\text{hoặc}\quad x = 2", font_size=24, color=LIGHT_GRAY)
+        step1 = MathTex(r"\\text{Bước 1: } y' = 3x^2 - 6x = 3x(x - 2)", font_size=24, color=LIGHT_GRAY)
+        step2 = MathTex(r"\\text{Bước 2: } y' = 0 \\iff x = 0 \\quad\\text{hoặc}\\quad x = 2", font_size=24, color=LIGHT_GRAY)
         step3 = VGroup(
             Text("Bước 3 (Trong trái ngoài cùng, a = 3 > 0):", font=MAIN_FONT, font_size=22, color=YELLOW),
-            MathTex(r"y' < 0 \iff x \in (0; 2)", font_size=24, color=WHITE)
+            MathTex(r"y' < 0 \\iff x \\in (0; 2)", font_size=24, color=WHITE)
         ).arrange(RIGHT, buff=0.15)
 
         c2_concl = VGroup(
             Text("➜ Hàm số nghịch biến trên (0; 2). Chọn", font=MAIN_FONT, font_size=22, color=GREEN_B, weight=BOLD),
-            MathTex(r"\mathbf{B}", font_size=24, color=GREEN)
+            MathTex(r"\\mathbf{B}", font_size=24, color=GREEN)
         ).arrange(RIGHT, buff=0.15)
 
         c2_content = VGroup(c2_quest, c2_opts, step1, step2, step3, c2_concl).arrange(DOWN, aligned_edge=LEFT, buff=0.16).move_to(c2_card).shift(DOWN * 0.22)
@@ -627,14 +578,14 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         # PHẦN 5: TỔNG KẾT & OUTRO THƯƠNG HIỆU (~8s)
         # ======================================================================
         outro_card = RoundedRectangle(corner_radius=0.25, width=8.4, height=13.6, color=GOLD_E, fill_color="#0F172A", fill_opacity=0.96).move_to(ORIGIN)
-        outro_header = Text("TỔNG KẾT BÍ KÍP ${config.topic.toUpperCase()}", font_size=30, weight=BOLD, color=YELLOW, font=MAIN_FONT)
+        outro_header = Text("TỔNG KẾT BÍ KÍP \${config.topic.toUpperCase()}", font_size=30, weight=BOLD, color=YELLOW, font=MAIN_FONT)
 
         p1_title = Text("1. Dấu đạo hàm quyết định chiều biến thiên:", font_size=24, font=MAIN_FONT, color=TEAL_A, weight=BOLD)
-        p1_desc = Text("• f'(x) > 0 ➜ Đồng biến (Đồ thị đi lên ↗)\n• f'(x) < 0 ➜ Nghịch biến (Đồ thị đi xuống ↘)", font_size=22, font=MAIN_FONT, color=WHITE, line_spacing=1.2)
+        p1_desc = Text("• f'(x) > 0 ➜ Đồng biến (Đồ thị đi lên ↗)\\n• f'(x) < 0 ➜ Nghịch biến (Đồ thị đi xuống ↘)", font_size=22, font=MAIN_FONT, color=WHITE, line_spacing=1.2)
         b_p1 = VGroup(p1_title, p1_desc).arrange(DOWN, aligned_edge=LEFT, buff=0.15)
 
         p2_title = Text("2. Đọc Đồ thị & Bảng Biến Thiên:", font_size=24, font=MAIN_FONT, color=TEAL_A, weight=BOLD)
-        p2_desc = Text("• Đọc chiều biến thiên theo hướng từ TRÁI sang PHẢI\n• Luôn kết luận khoảng đơn điệu theo trục x", font_size=22, font=MAIN_FONT, color=WHITE, line_spacing=1.2)
+        p2_desc = Text("• Đọc chiều biến thiên theo hướng từ TRÁI sang PHẢI\\n• Luôn kết luận khoảng đơn điệu theo trục x", font_size=22, font=MAIN_FONT, color=WHITE, line_spacing=1.2)
         b_p2 = VGroup(p2_title, p2_desc).arrange(DOWN, aligned_edge=LEFT, buff=0.15)
 
         p3_title = Text("3. Bài toán cho công thức hàm số:", font_size=24, font=MAIN_FONT, color=TEAL_A, weight=BOLD)
@@ -666,18 +617,18 @@ IV. HƯỚNG DẪN RENDER VÀ QUY TẮC BẮT BUỘC:
 3. TUYỆT ĐỐI KHÔNG FadeOut toàn bộ màn hình ở cuối video. Giữ nguyên thẻ Outro "Học toán cùng Yuta".
 4. TUÂN THỦ NGUYÊN TẮC CHỐNG ĐÈ CHỮ (ZERO OVERLAP): Bố cục Khung Thẻ Container Dual-Zone chuẩn xác, dãn hàng line_spacing=1.2, gọi fit_width(group, 7.8) cho mọi khối nội dung.
 5. Đóng đầy đủ ngoặc và lệnh construct(self). (Hệ thống máy chủ sẽ tự biên dịch mã bằng lệnh: \`manim \${qualityFlag} scene.py MainScene\`, AI tuyệt đối không tự chạy lệnh render này).
-6. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file, không view_file). CHỈ xuất mã nguồn văn bản trực tiếp.`;
+6. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file, không view_file). CHỈ xuất mã nguồn văn bản trực tiếp.\`;
 };
 
 export const generatePlaylistSeriesOutlinePrompt = (config: VideoConfig): string => {
   const count = config.seriesCount || 3;
-  return `Đóng vai Giám đốc Sản xuất Nội dung Giáo dục & Khóa học Video Khoa học.
-Chủ đề lớn: "${config.topic}" (Môn học: "${config.subject}").
-Đối tượng: ${config.audience}.
-Yêu cầu chi tiết: ${config.details || "Thiết kế lộ trình học mạch lạc, từ nhập môn trực quan đến vận dụng nâng cao"}.
+  return \`Đóng vai Giám đốc Sản xuất Nội dung Giáo dục & Khóa học Video Khoa học.
+Chủ đề lớn: "\${config.topic}" (Môn học: "\${config.subject}").
+Đối tượng: \${config.audience}.
+Yêu cầu chi tiết: \${config.details || "Thiết kế lộ trình học mạch lạc, từ nhập môn trực quan đến vận dụng nâng cao"}.
 
-Hãy lập dàn ý chi tiết cho CHUỖI PLAYLIST GỒM ĐÚNG ${count} TẬP VIDEO DIỄN HOẠT TRỰC QUAN (MANIM CE).
-Với mỗi tập (từ Tập 1 đến Tập ${count}), hãy cung cấp:
+Hãy lập dàn ý chi tiết cho CHUỖI PLAYLIST GỒM ĐÚNG \${count} TẬP VIDEO DIỄN HOẠT TRỰC QUAN (MANIM CE).
+Với mỗi tập (từ Tập 1 đến Tập \${count}), hãy cung cấp:
 1. Tên tập ngắn gọn, thu hút (dưới 12 từ).
 2. Trọng tâm kiến thức / Ý tưởng diễn hoạt thị giác chính.
 3. Thông điệp cốt lõi người xem nhận được sau tập này.
@@ -692,21 +643,21 @@ Với mỗi tập (từ Tập 1 đến Tập ${count}), hãy cung cấp:
     "visual_concept": "Mô phỏng hình học / đồ thị chính"
   }
 ]
-\`\`\``;
+\`\`\`\`;
 };
 
 export const generateVideoScriptPrompt = (config: VideoConfig): string => {
-  return `Đóng vai Biên kịch & Đạo diễn Sản xuất Video Giáo dục Chuyên nghiệp.
-Nhiệm vụ: Viết kịch bản chi tiết và bảng phân cảnh (Storyboard) cho video diễn hoạt chủ đề: "${config.topic}" (Môn học: "${config.subject}").
-- Định dạng: ${config.format === 'vertical' ? 'Video Dọc 9:16 (Shorts/TikTok)' : 'Video Ngang 16:9 (YouTube)'}
-- Thời lượng: ${config.duration}
-- Giọng văn: ${config.tone}
-- Khán giả: ${config.audience}
-- Chi tiết bổ sung: ${config.details || "Trực quan, dễ hiểu"}
+  return \`Đóng vai Biên kịch & Đạo diễn Sản xuất Video Giáo dục Chuyên nghiệp.
+Nhiệm vụ: Viết kịch bản chi tiết và bảng phân cảnh (Storyboard) cho video diễn hoạt chủ đề: "\${config.topic}" (Môn học: "\${config.subject}").
+- Định dạng: \${config.format === 'vertical' ? 'Video Dọc 9:16 (Shorts/TikTok)' : 'Video Ngang 16:9 (YouTube)'}
+- Thời lượng: \${config.duration}
+- Giọng văn: \${config.tone}
+- Khán giả: \${config.audience}
+- Chi tiết bổ sung: \${config.details || "Trực quan, dễ hiểu"}
 
 Hãy xuất bản:
 1. BẢNG PHÂN CẢNH (STORYBOARD TABLE) gồm: Thời gian | Lời thoại thuyết minh (Voiceover) | Hình ảnh diễn hoạt Manim tương ứng | Hiệu ứng âm thanh.
-2. NỘI DUNG PHỤ ĐỀ CHUẨN .SRT.`;
+2. NỘI DUNG PHỤ ĐỀ CHUẨN .SRT.\`;
 };
 
 export const generateManimRevisionPrompt = (
@@ -714,27 +665,27 @@ export const generateManimRevisionPrompt = (
   existingCode: string,
   userFeedback: string
 ): string => {
-  const subjectStr = config?.subject ? `Môn học: "${config.subject}"` : 'Môn học: Toán học / Khoa học';
-  const topicStr = config?.topic ? `Chủ đề: "${config.topic}"` : '';
+  const subjectStr = config?.subject ? \`Môn học: "\${config.subject}"\` : 'Môn học: Toán học / Khoa học';
+  const topicStr = config?.topic ? \`Chủ đề: "\${config.topic}"\` : '';
   const isVertical = config?.format === 'vertical';
   const qualityFlag = config?.renderQuality === '1080p' ? '-qh' : config?.renderQuality === '4k' ? '-qk' : '-ql';
 
-  return `Đóng vai Chuyên gia Diễn hoạt Manim CE & Lập trình Python Sư phạm (chuẩn c1_HamSo_DonDieu.py).
+  return \`Đóng vai Chuyên gia Diễn hoạt Manim CE & Lập trình Python Sư phạm (chuẩn c1_HamSo_DonDieu.py).
 Nhiệm vụ của bạn là đọc mã nguồn Python Manim (\`scene.py\`) đã được tạo trước đó cùng danh sách CÁC LỖI VÀ YÊU CẦU ĐIỀU CHỈNH từ người dùng, sau đó VIẾT LẠI MÃ PYTHON HOÀN CHỈNH TỪ ĐẦU để sửa triệt để các lỗi và render lại video.
 
 I. THÔNG TIN BÀI HỌC:
-- ${subjectStr}
-- ${topicStr}
-- Định dạng: ${isVertical ? 'DỌC 9:16 (TikTok / Shorts)' : 'NGANG 16:9 (YouTube)'}
+- \${subjectStr}
+- \${topicStr}
+- Định dạng: \${isVertical ? 'DỌC 9:16 (TikTok / Shorts)' : 'NGANG 16:9 (YouTube)'}
 
 II. DANH SÁCH LỖI VÀ YÊU CẦU ĐIỀU CHỈNH TỪ NGƯỜI DÙNG:
 """
-${userFeedback.trim()}
+\${userFeedback.trim()}
 """
 
 III. MÃ NGUỒN MANIM PYTHON HIỆN TẠI (CẦN KHẮC PHỤC):
 \`\`\`python
-${existingCode.trim()}
+\${existingCode.trim()}
 \`\`\`
 
 IV. YÊU CẦU THỰC THI BẮT BUỘC:
@@ -743,5 +694,9 @@ IV. YÊU CẦU THỰC THI BẮT BUỘC:
    - Intro -> Lý thuyết 2 thẻ màu -> Dual-Zone Mô phỏng động tiếp tuyến đổi màu & BBT 3 tầng -> Chữa đề RAG (TỐI ĐA 2 CÂU) -> Thẻ Outro thương hiệu (giữ nguyên self.wait(3.0)).
 3. Giữ vững quy chuẩn CHỐNG ĐÈ CHỮ (ZERO OVERLAP), áp dụng Khung Thẻ Container Dual-Zone lấp đầy 93% màn hình, dãn dòng \`line_spacing=1.2\`, gọi fit_width(group, 7.8) cho mọi khối nội dung trong thẻ, font_size lớn rõ nét (Tiêu đề 30-34, Thẻ 22-24, MathTex 26-32, Text tiếng Việt 22-24, TUYỆT ĐỐI KHÔNG DÙNG FONT_SIZE DƯỚI 22).
 4. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, không viết lời chào hay giải thích ngoài mã.
-5. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file). (Hệ thống máy chủ sẽ tự biên dịch mã bằng lệnh: \`manim \${qualityFlag} scene.py MainScene\`, AI không được tự chạy lệnh này).`;
+5. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file). (Hệ thống máy chủ sẽ tự biên dịch mã bằng lệnh: \`manim \${qualityFlag} scene.py MainScene\`, AI không được tự chạy lệnh này).\`;
 };
+`;
+
+fs.writeFileSync("/home/tontonyuta/soan-tai-lieu/services/prompts/manim.ts", newCode, "utf-8");
+console.log("✓ Successfully written services/prompts/manim.ts");

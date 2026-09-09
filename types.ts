@@ -106,8 +106,25 @@ export interface VideoConfig {
   category?: 'math' | 'physics' | 'chemistry' | 'computer_science' | 'biology' | 'economics' | 'general' | string;
   mathType?: string;
   hookType?: 'trap' | 'visual_intuition' | 'fast_trick' | 'real_world';
-  // Bộ Form Mô Phỏng Chuyên Môn & Kiểu Font Chữ
-  simulationMode?: 'geometry' | 'dialogue' | 'calculus' | 'fast_tricks' | 'stem' | 'general';
+  // Bộ Form Mô Phỏng Chuyên Môn Đa Môn & Kiểu Font Chữ
+  simulationMode?: 
+    | 'geometry' 
+    | 'dialogue' 
+    | 'calculus' 
+    | 'fast_tricks' 
+    | 'stem' 
+    | 'physics' 
+    | 'physics_stem'
+    | 'chemistry' 
+    | 'biology' 
+    | 'english_language' 
+    | 'languages' 
+    | 'computer_science' 
+    | 'algorithms' 
+    | 'social_sciences' 
+    | 'history_geography' 
+    | 'general' 
+    | string;
   fontStyle?: 'serif' | 'sans';
   renderQuality?: '480p' | '1080p' | '4k';
   fps?: 30 | 60;
@@ -147,3 +164,23 @@ export enum GenerationStatus {
   SUCCESS = 'SUCCESS',
   ERROR = 'ERROR'
 }
+
+export interface SubjectOption {
+  id: string;
+  label: string;
+  icon: string;
+  defaultTopic?: string;
+  color?: string;
+}
+
+export const COMMON_SUBJECTS: SubjectOption[] = [
+  { id: 'Toán học', label: 'Toán học', icon: '📐', defaultTopic: 'Khảo sát hàm số & Tích phân' },
+  { id: 'Vật lý', label: 'Vật lý', icon: '⚡', defaultTopic: 'Dao động điều hòa & Sóng cơ' },
+  { id: 'Hóa học', label: 'Hóa học', icon: '🧪', defaultTopic: 'Cân bằng phản ứng & Este - Lipit' },
+  { id: 'Sinh học', label: 'Sinh học', icon: '🧬', defaultTopic: 'Quy luật di truyền Menđen & ADN' },
+  { id: 'Tiếng Anh', label: 'Tiếng Anh', icon: '🇬🇧', defaultTopic: 'Câu điều kiện & Thì quá khứ hoàn thành' },
+  { id: 'Tin học', label: 'Tin học', icon: '💻', defaultTopic: 'Thuật toán sắp xếp & Cấu trúc mảng' },
+  { id: 'Lịch sử', label: 'Lịch sử', icon: '📜', defaultTopic: 'Cách mạng tháng Tám 1945 & Điện Biên Phủ' },
+  { id: 'Địa lý', label: 'Địa lý', icon: '🌍', defaultTopic: 'Địa hình và Khí hậu nhiệt đới ẩm gió mùa' },
+  { id: 'GDKT & PL', label: 'GDKT & PL', icon: '⚖️', defaultTopic: 'Quy luật cung cầu & Quyền bình đẳng' }
+];

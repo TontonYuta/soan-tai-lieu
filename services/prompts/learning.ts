@@ -1,7 +1,39 @@
 import { LearningConfig } from "../../types";
 import { LATEX_TECHNICAL_RULES, LEARNING_TEMPLATE } from "./latex-rules";
 
+
+const sanitizeAndExtractRag = (attachedPdf?: { fileName: string; numPages: number; text: string }): string => {
+  if (!attachedPdf?.text) return "";
+  const rawText = attachedPdf.text.replace(/\r/g, "");
+  // Lọc sạch watermark, số điện thoại rác và số trang lặp
+  const cleaned = rawText
+    .replace(/(?:Trang\s+\d+\/\d+|SĐT:?\s*\d{8,12}|Hotline:?\s*\d{8,12}|Website:?\s*\S+)/gi, "")
+    .trim();
+
+  let chunk = "";
+  if (cleaned.length <= 15000) {
+    chunk = cleaned;
+  } else {
+    // Smart RAG: Lấy 4.000 ký tự đầu (Mục lục, tổng quan) + 11.000 ký tự trọng tâm bài tập ở các trang sau
+    const head = cleaned.slice(0, 4000);
+    const tail = cleaned.slice(-11000);
+    chunk = `${head}\n\n[... CẮT LƯỢC TRANG GIỮA, NỐI PHẦN BÀI TẬP VÀ ĐÁP ÁN TRỌNG TÂM TRANG SAU ...]\n\n${tail}`;
+  }
+
+  return `\n====================================================
+TÀI LIỆU PDF ĐÍNH KÈM THAM KHẢO (RAG CONTEXT):
+- Tên tài liệu: ${attachedPdf.fileName} (${attachedPdf.numPages} trang)
+- Nội dung trích xuất:
+"""
+${chunk}
+"""
+- CHỈ THỊ RAG (QUAN TRỌNG): BẮT BUỘC chắt lọc các câu hỏi, dữ kiện và cấu trúc bài từ tài liệu PDF đính kèm trên để biên soạn nội dung sát nhất.
+====================================================\n`;
+};
+
+
 export const generateLearningPrompt = (config: LearningConfig): string => {
+  const subjectName = config.subject || 'Toán học';
   let languageInstruction = "";
   if (config.language === "vietnamese" || !config.language) {
     languageInstruction = "Sử dụng 100% TIẾNG VIỆT.";
@@ -12,26 +44,17 @@ export const generateLearningPrompt = (config: LearningConfig): string => {
   }
 
   const goalText = 
-    config.goal === 'summary' ? 'Tóm tắt lý thuyết trọng tâm và các công thức cần nhớ' :
-    config.goal === 'detailed' ? 'Biên soạn bài giảng chi tiết toàn diện từ định nghĩa đến chứng minh' :
-    'Lý thuyết kết hợp nhiều ví dụ mẫu và phương pháp giải từng dạng toán';
+    config.goal === 'summary' ? 'Tóm tắt lý thuyết trọng tâm và các công thức/quy tắc cần nhớ' :
+    config.goal === 'detailed' ? 'Biên soạn bài giảng chi tiết toàn diện từ định nghĩa, khái niệm đến chứng minh/phân tích' :
+    'Lý thuyết kết hợp nhiều ví dụ mẫu và phương pháp giải từng dạng bài';
 
-  const ragSection = config.attachedPdf ? `
-====================================================
-TÀI LIỆU PDF ĐÍNH KÈM THAM KHẢO (RAG CONTEXT):
-- Tên tài liệu: ${config.attachedPdf.fileName} (${config.attachedPdf.numPages} trang)
-- Nội dung trích xuất từ tài liệu:
-"""
-${config.attachedPdf.text.slice(0, 15000)}
-"""
-- CHỈ THỊ RAG (QUAN TRỌNG): BẮT BUỘC chắt lọc định nghĩa, định lý, ví dụ mẫu từ tài liệu PDF đính kèm để biên soạn bài giảng chi tiết, logic.
-====================================================` : '';
+  const ragSection = sanitizeAndExtractRag(config.attachedPdf);
 
-  return `Đóng vai Giáo viên Toán học chuyên nghiệp và Master LaTeX.
+  return `Đóng vai Giáo viên ${subjectName} chuyên nghiệp và Master LaTeX.
 Nhiệm vụ: Biên soạn một tài liệu bài giảng/bài học chuẩn mực cho chủ đề được yêu cầu.
 
 I. THÔNG TIN BÀI HỌC:
-- Môn học: ${config.subject} (Lớp ${config.grade})
+- Môn học: ${subjectName} (Lớp / Khối ${config.grade})
 - Chủ đề: ${config.topic}
 - Đơn vị / Trường: ${config.school} (${config.year})
 - Mục tiêu bài giảng: ${goalText}
@@ -40,10 +63,10 @@ I. THÔNG TIN BÀI HỌC:
 - Yêu cầu bổ sung: ${config.details || "Không"}
 ${ragSection}
 
-
-II. NGUYÊN TẮC SƯ PHẠM:
-- Đi từ trực quan đến trừu tượng, có ví dụ minh họa và đồ thị/hình vẽ TikZ nếu cần thiết.
-- Trình bày công thức toán học rõ ràng, dùng \\hopkienthuc hoặc \\dinhly, \\vidu, \\loigiai.
+II. NGUYÊN TẮC SƯ PHẠM ĐA MÔN:
+- Đi từ trực quan đến trừu tượng, có ví dụ minh họa và sơ đồ/hình vẽ TikZ nếu cần thiết.
+- Trình bày kiến thức rõ ràng, dùng \\hopkienthuc hoặc \\dinhly, \\vidu, \\loigiai, \\doanvan.
+- Đảm bảo toàn bộ mã LaTeX hoàn chỉnh, đóng \\end{document} đầy đủ.
 
 III. QUY TẮC LATEX:
 ${LATEX_TECHNICAL_RULES}

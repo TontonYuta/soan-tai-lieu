@@ -37,12 +37,15 @@ const Header: React.FC<HeaderProps> = ({ onOpenReadme, onSwitchToMobile, globalP
                   </div>
               </div>
               <div>
-                <h1 className="text-2xl font-black text-black tracking-widest uppercase">
-                  Yuta<span className="text-[#00CECB]">!</span>LaTeX Math
+                <h1 className="text-2xl font-black text-black tracking-widest uppercase flex items-center gap-2">
+                  <span>Yuta<span className="text-[#00CECB]">!</span>LaTeX Multi-Studio</span>
+                  <span className="hidden sm:inline-block px-2 py-0.5 bg-[#FFED66] border-2 border-black text-[9px] font-black uppercase shadow-[2px_2px_0_0_rgba(0,0,0,1)]">
+                    Đa Môn Học
+                  </span>
                 </h1>
                 <p className="text-[10px] text-black font-black tracking-widest uppercase flex items-center gap-1">
                   <span className="w-2 h-2 border-2 border-black rounded-none bg-[#A3E635]"></span>
-                  Soạn Thảo & Tự Động Hóa Toán Học
+                  Soạn Thảo Đa Môn & Video Manim (Toán • Lý • Hóa • Sinh • Anh • Tin • Sử • Địa)
                 </p>
               </div>
             </div>

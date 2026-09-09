@@ -4,6 +4,19 @@ import path from 'path';
 import os from 'os';
 import { spawn, execSync, ChildProcess } from 'child_process';
 
+const homeDir = os.homedir();
+const extraPaths = [
+  path.join('/home/tontonyuta/soan-tai-lieu', '.venv', 'bin'),
+  path.join(homeDir, '.TinyTeX', 'bin', 'x86_64-linux'),
+  path.join(homeDir, '.local', 'bin'),
+  path.join(homeDir, '.venv', 'bin'),
+  '/usr/local/bin',
+  '/usr/bin',
+  '/bin',
+];
+const validExtra = extraPaths.filter(p => fs.existsSync(p));
+process.env.PATH = Array.from(new Set([...validExtra, ...(process.env.PATH || '').split(':')])).filter(Boolean).join(':');
+
 export interface AutomationStepUpdate {
   step: 'INIT' | 'CONNECTING_CHROME' | 'OPENING_GEMINI' | 'SENDING_PROMPT' | 'WAITING_GEMINI' | 'EXTRACTING_LATEX' | 'OPENING_OVERLEAF' | 'PASTING_CODE' | 'RECOMPILING' | 'DOWNLOADING_PDF' | 'RENDERING_VIDEO' | 'COMPLETED' | 'ERROR';
   progress: number; // 0 - 100
@@ -50,6 +63,37 @@ function generatePdfPreviewImage(pdfPath: string, downloadsDir: string): string 
     console.error('Lỗi khi tạo ảnh preview PDF với pdftoppm:', err.message);
   }
   return undefined;
+}
+
+function getPdflatexPath(): string {
+  const home = os.homedir();
+  const candidates = process.platform === 'win32'
+    ? [
+        'C:\\miktex\\miktex\\bin\\x64\\pdflatex.exe',
+        'C:\\texlive\\2024\\bin\\windows\\pdflatex.exe',
+        'C:\\Program Files\\MiKTeX\\miktex\\bin\\x64\\pdflatex.exe'
+      ]
+    : [
+        path.join(home, '.TinyTeX', 'bin', 'x86_64-linux', 'pdflatex'),
+        path.join(home, '.local', 'bin', 'pdflatex'),
+        '/usr/bin/pdflatex',
+        '/usr/local/bin/pdflatex',
+        '/Library/TeX/texbin/pdflatex'
+      ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
+  }
+
+  try {
+    const whichCmd = process.platform === 'win32' ? 'where pdflatex' : 'which pdflatex';
+    const stdout = execSync(whichCmd, { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'] });
+    const firstPath = stdout.trim().split(/\r?\n/)[0]?.trim();
+    if (firstPath && fs.existsSync(firstPath)) {
+      return firstPath;
+    }
+  } catch (e) {}
+
+  return 'pdflatex';
 }
 
 export interface AutomationOptions {
@@ -108,14 +152,24 @@ export class AutomationRunner {
       return '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
     } else {
       const candidates = [
+        path.join(os.homedir(), '.local', 'bin', 'google-chrome'),
+        path.join(os.homedir(), '.local', 'bin', 'chrome'),
+        path.join(os.homedir(), '.local', 'bin', 'chromium'),
+        path.join(os.homedir(), '.local', 'opt', 'google', 'chrome', 'google-chrome'),
+        path.join(os.homedir(), '.cache', 'ms-playwright', 'chromium-1243', 'chrome-linux64', 'chrome'),
         '/usr/bin/google-chrome-stable',
         '/usr/bin/google-chrome',
         '/usr/bin/chromium-browser',
         '/usr/bin/chromium',
+        '/snap/bin/chromium',
       ];
       for (const p of candidates) {
         if (fs.existsSync(p)) return p;
       }
+      try {
+        const pw = chromium.executablePath();
+        if (pw && fs.existsSync(pw)) return pw;
+      } catch {}
       return 'google-chrome';
     }
   }
@@ -1347,19 +1401,43 @@ asyncio.run(synthesize())
             message: 'Đang tự động chuyển sang Google Chrome...',
           });
           const chromeExecutable = AutomationRunner.getDefaultChromePath();
+          const hasChromeExec = chromeExecutable && fs.existsSync(chromeExecutable);
+          const getLaunchConfig = (ch: string) => {
+            const cfg: any = {
+              headless: isHeadless,
+              viewport: viewportSetting,
+              userAgent: DEFAULT_STEALTH_USER_AGENT,
+              args: stealthArgs,
+              ignoreDefaultArgs: ['--enable-automation'],
+            };
+            if (hasChromeExec) {
+              cfg.executablePath = chromeExecutable;
+            } else {
+              cfg.channel = ch;
+            }
+            return cfg;
+          };
           const userDataDir = options.chromeProfilePath || path.join(os.tmpdir(), 'yuta_chrome_auto_' + Date.now());
-          browserContext = await chromium.launchPersistentContext(userDataDir, {
-            executablePath: chromeExecutable,
+          browserContext = await chromium.launchPersistentContext(userDataDir, getLaunchConfig('chrome'));
+        }
+      } else {
+        const chromeExecutable = AutomationRunner.getDefaultChromePath();
+        const hasChromeExec = chromeExecutable && fs.existsSync(chromeExecutable);
+        const getLaunchConfig = (ch: string) => {
+          const cfg: any = {
             headless: isHeadless,
-            channel: 'chrome',
             viewport: viewportSetting,
             userAgent: DEFAULT_STEALTH_USER_AGENT,
             args: stealthArgs,
             ignoreDefaultArgs: ['--enable-automation'],
-          });
-        }
-      } else {
-        const chromeExecutable = AutomationRunner.getDefaultChromePath();
+          };
+          if (hasChromeExec) {
+            cfg.executablePath = chromeExecutable;
+          } else {
+            cfg.channel = ch;
+          }
+          return cfg;
+        };
         const defaultProfile = AutomationRunner.getDefaultUserDataDir();
         const userDataDir = options.chromeProfilePath || defaultProfile;
         AutomationRunner.cleanStaleChromiumLocks(userDataDir, false);
@@ -1369,43 +1447,24 @@ asyncio.run(synthesize())
             const browser = await chromium.connectOverCDP(`http://localhost:${options.cdpPort}`);
             browserContext = browser.contexts()[0];
           } else {
-
-            browserContext = await chromium.launchPersistentContext(userDataDir, {
-              executablePath: chromeExecutable,
-              headless: isHeadless,
-              channel: browserType === 'edge' ? 'msedge' : 'chrome',
-              viewport: viewportSetting,
-              userAgent: DEFAULT_STEALTH_USER_AGENT,
-              args: stealthArgs,
-              ignoreDefaultArgs: ['--enable-automation'],
-            });
+            browserContext = await chromium.launchPersistentContext(
+              userDataDir,
+              getLaunchConfig(browserType === 'edge' ? 'msedge' : 'chrome')
+            );
           }
         } catch (err: any) {
           console.warn('Profile Chrome đang bị khóa hoặc lỗi khởi động, thử xóa lock và khởi động lại:', err.message);
           AutomationRunner.cleanStaleChromiumLocks(userDataDir, true);
           await new Promise(r => setTimeout(r, 1200));
           try {
-            browserContext = await chromium.launchPersistentContext(userDataDir, {
-              executablePath: chromeExecutable,
-              headless: isHeadless,
-              channel: browserType === 'edge' ? 'msedge' : 'chrome',
-              viewport: viewportSetting,
-              userAgent: DEFAULT_STEALTH_USER_AGENT,
-              args: stealthArgs,
-              ignoreDefaultArgs: ['--enable-automation'],
-            });
+            browserContext = await chromium.launchPersistentContext(
+              userDataDir,
+              getLaunchConfig(browserType === 'edge' ? 'msedge' : 'chrome')
+            );
           } catch (errRetry: any) {
             console.warn('Profile Chrome vẫn bị khóa, chuyển sang session tạm:', errRetry.message);
             const tempDir = path.join(os.tmpdir(), 'yuta_automation_chrome_' + Date.now());
-            browserContext = await chromium.launchPersistentContext(tempDir, {
-              executablePath: chromeExecutable,
-              headless: isHeadless,
-              channel: 'chrome',
-              viewport: viewportSetting,
-              userAgent: DEFAULT_STEALTH_USER_AGENT,
-              args: stealthArgs,
-              ignoreDefaultArgs: ['--enable-automation'],
-            });
+            browserContext = await chromium.launchPersistentContext(tempDir, getLaunchConfig('chrome'));
           }
         }
       }
@@ -2991,9 +3050,10 @@ YÊU CẦU CHO TẬP ${ep}:
 
         let compiledPdfPath: string | undefined;
         try {
+          const pdflatexBin = getPdflatexPath();
           for (let pass = 1; pass <= 2; pass++) {
             try {
-              execSync(`pdflatex -interaction=nonstopmode -output-directory="${outputDirectory}" "${texFilePath}"`, { cwd: outputDirectory, stdio: 'ignore' });
+              execSync(`"${pdflatexBin}" -interaction=nonstopmode -output-directory="${outputDirectory}" "${texFilePath}"`, { cwd: outputDirectory, stdio: 'ignore' });
             } catch (cErr: any) {
               console.warn(`Pdflatex local compilation pass ${pass} notice:`, cErr.message);
             }
@@ -3223,7 +3283,8 @@ YÊU CẦU CHO TẬP ${ep}:
       if (!pdfSavedPath && fs.existsSync(texFilePath)) {
         try {
           execSync(`pdftoppm -v`, { stdio: 'ignore' });
-          const pdflatexCmd = `pdflatex -interaction=nonstopmode -output-directory="${outputDirectory}" "${texFilePath}"`;
+          const pdflatexBin = getPdflatexPath();
+          const pdflatexCmd = `"${pdflatexBin}" -interaction=nonstopmode -output-directory="${outputDirectory}" "${texFilePath}"`;
           execSync(pdflatexCmd, { cwd: outputDirectory, stdio: 'ignore' });
           if (fs.existsSync(targetPdfPath)) {
             pdfSavedPath = targetPdfPath;

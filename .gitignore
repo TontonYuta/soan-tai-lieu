@@ -19,6 +19,9 @@ downloads
 media/
 __pycache__/
 *.pyc
+.venv/
+.venv
+.env
 
 
 # Editor directories and files
