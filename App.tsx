@@ -6,6 +6,7 @@ import RoadmapForm from './components/RoadmapForm';
 import WorksheetForm from './components/WorksheetForm';
 import SimilarExerciseForm from './components/SimilarExerciseForm';
 import VideoForm from './components/VideoForm';
+import ProjectForm from './components/ProjectForm';
 import OutputDisplay from './components/OutputDisplay';
 import AutomationModal from './components/AutomationModal';
 import MobileRemoteHub from './components/MobileRemoteHub';
@@ -22,7 +23,8 @@ import {
   generateManimCodePrompt,
   generateVideoManimPrompt, 
   generateVideoScriptPrompt, 
-  generateBatPrompt 
+  generateBatPrompt,
+  generateProjectPrompt
 } from './services/gemini';
 import { 
   ExamConfig, 
@@ -31,7 +33,8 @@ import {
   WorksheetConfig, 
   SimilarExerciseConfig,
   VideoConfig, 
-  BatConfig, 
+  BatConfig,
+  ProjectConfig,
   GenerationStatus,
   AttachedPdfData
 } from './types';
@@ -65,7 +68,7 @@ const App: React.FC = () => {
     return 'auto';
   });
 
-  const [activeTab, setActiveTab] = useState<'roadmap' | 'learning' | 'worksheet' | 'similar' | 'exam' | 'video'>('worksheet');
+  const [activeTab, setActiveTab] = useState<'roadmap' | 'learning' | 'worksheet' | 'similar' | 'exam' | 'video' | 'project'>('worksheet');
   const [status, setStatus] = useState<GenerationStatus>(GenerationStatus.IDLE);
   const [promptContent, setPromptContent] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
@@ -371,7 +374,36 @@ const App: React.FC = () => {
     }, 400);
   };
 
-  const handleForwardContext = (targetTab: 'roadmap' | 'learning' | 'worksheet' | 'similar' | 'exam' | 'video') => {
+  const handleProjectGenerate = (config: ProjectConfig) => {
+    setStatus(GenerationStatus.LOADING);
+    setError(null);
+    const effectivePdf = config.attachedPdf || (isGlobalRagActive ? globalPinnedPdf || undefined : undefined);
+    const finalConfig = { ...config, attachedPdf: effectivePdf };
+    if (effectivePdf) {
+      setActiveAttachedPdf({ path: effectivePdf.tempPath, name: effectivePdf.fileName });
+    } else {
+      setActiveAttachedPdf(null);
+    }
+
+    setTimeout(() => {
+      try {
+        setPromptContent(generateProjectPrompt(finalConfig));
+        setContextMetadata({ topic: finalConfig.title, subject: finalConfig.major || 'Đồ án / Đề tài', grade: finalConfig.projectType });
+        setLearningContext(`Đồ án / Đề tài: ${finalConfig.title}`);
+        setStatus(GenerationStatus.SUCCESS);
+      } catch (err) {
+        setStatus(GenerationStatus.ERROR);
+        setError('Lỗi khi thiết kế tài liệu đồ án / đề tài.');
+      }
+    }, 400);
+  };
+
+  const handleDirectProjectAutomate = (config: ProjectConfig) => {
+    handleProjectGenerate(config);
+    setIsAutomationOpen(true);
+  };
+
+  const handleForwardContext = (targetTab: 'roadmap' | 'learning' | 'worksheet' | 'similar' | 'exam' | 'video' | 'project') => {
     setActiveTab(targetTab);
     window.scrollTo({ top: 300, behavior: 'smooth' });
   };
@@ -489,6 +521,10 @@ const App: React.FC = () => {
                 <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${activeTab === 'video' ? 'text-[#9333EA]' : 'text-black opacity-50'}`}>
                     6. Video
                 </div>
+                <ArrowRight className="w-3 h-3 text-black" />
+                <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${activeTab === 'project' ? 'text-[#00CECB]' : 'text-black opacity-50'}`}>
+                    7. Đồ án / Đề tài
+                </div>
             </div>
 
             {/* Quick Automation Mode Bar */}
@@ -557,6 +593,14 @@ const App: React.FC = () => {
                 >
                     <VideoIcon className="w-4 h-4 stroke-[3]" />
                     Video
+                </button>
+                <button
+                    onClick={() => setActiveTab('project')}
+                    className={`flex items-center gap-2 px-5 py-3 rounded-none text-xs font-black uppercase tracking-widest transition-all cursor-pointer
+                    ${activeTab === 'project' ? 'bg-[#00CECB] text-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-4 border-black' : 'text-black hover:bg-[#ffffff] hover:border-4 hover:border-black'}`}
+                >
+                    <GraduationCap className="w-4 h-4 stroke-[3]" />
+                    Đồ Án / Đề Tài
                 </button>
             </div>
         </div>
@@ -688,6 +732,17 @@ const App: React.FC = () => {
                 status={status} 
                 contextTopic={contextMetadata?.topic}
                 contextSubject={contextMetadata?.subject}
+                globalPinnedPdf={globalPinnedPdf}
+                isGlobalRagActive={isGlobalRagActive}
+                onSetGlobalPin={handleSetGlobalPinnedPdf}
+              />
+            )}
+
+            {activeTab === 'project' && (
+              <ProjectForm 
+                onSubmit={handleProjectGenerate}
+                onDirectAutomate={handleDirectProjectAutomate}
+                status={status}
                 globalPinnedPdf={globalPinnedPdf}
                 isGlobalRagActive={isGlobalRagActive}
                 onSetGlobalPin={handleSetGlobalPinnedPdf}

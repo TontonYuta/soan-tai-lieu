@@ -164,6 +164,22 @@ export interface BatConfig {
   details?: string;
 }
 
+export interface ProjectConfig {
+  university?: string;
+  faculty?: string;
+  major?: string;
+  title: string;
+  studentName?: string;
+  supervisor?: string;
+  projectType?: 'subject_project' | 'capstone_thesis' | 'student_research' | 'master_thesis';
+  description?: string;
+  outputScope?: 'full_report' | 'proposal_roadmap' | 'defense_prep';
+  standardFormat?: 'engineering' | 'academic_vnu' | 'ieee';
+  attachedPdf?: AttachedPdfData;
+  language?: 'vietnamese' | 'english' | 'bilingual';
+  details?: string;
+}
+
 export interface TTSConfig {
   subject: string;
   topic: string;

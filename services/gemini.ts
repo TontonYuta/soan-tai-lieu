@@ -12,6 +12,7 @@ import {
 } from "./prompts/manim";
 import { generateVideoScriptPrompt } from "./prompts/script";
 import { generateBatPrompt } from "./prompts/bat";
+import { generateProjectPrompt } from "./prompts/project";
 
 export {
   generateExamPrompt,
@@ -25,5 +26,6 @@ export {
   generateManimRevisionPrompt,
   generateVideoScriptPrompt,
   generateBatPrompt,
+  generateProjectPrompt,
   extractAttachedImageDirective
 };

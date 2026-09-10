@@ -12,10 +12,11 @@ import {
   generateVideoScriptPrompt,
   generateBatPrompt,
   generateManimRevisionPrompt,
-  extractAttachedImageDirective
+  extractAttachedImageDirective,
+  generateProjectPrompt
 } from '../services/gemini';
 
-import { ExamConfig, WorksheetConfig, VideoConfig, SimilarExerciseConfig, LearningConfig, RoadmapConfig, BatConfig } from '../types';
+import { ExamConfig, WorksheetConfig, VideoConfig, SimilarExerciseConfig, LearningConfig, RoadmapConfig, BatConfig, ProjectConfig } from '../types';
 
 test('1. generateExamPrompt - Standard 2025 Format', () => {
   const config: ExamConfig = {
@@ -527,6 +528,77 @@ test("17. Manim Image Support & Extended Animation Presets Verification", () => 
     assert.match(pPrompt, preset.pattern, `Preset ${preset.mode} must match pattern`);
   }
 });
+
+test("18. University Project & Thesis Generator Verification (1-Click & Clarity)", () => {
+  // 1. Kiểm tra cấu hình 1-Click cơ bản (Chỉ cần Tên đề tài)
+  const basicConfig: ProjectConfig = {
+    title: "Xây dựng hệ thống RAG Hỏi đáp thông minh cho sinh viên Bách Khoa"
+  };
+
+  const basicPrompt = generateProjectPrompt(basicConfig);
+  // Kiểm tra tên đề tài xuất hiện
+  assert.match(basicPrompt, /Xây dựng hệ thống RAG/);
+  // Kiểm tra giải tỏa mơ hồ: "BẮT ĐẦU TỪ ĐÂU"
+  assert.match(basicPrompt, /BẮT ĐẦU TỪ ĐÂU/);
+  assert.match(basicPrompt, /Giai đoạn 1/);
+  assert.match(basicPrompt, /Giai đoạn 5/);
+  // Kiểm tra cấu trúc 5 chương luận văn chuẩn mực
+  assert.match(basicPrompt, /CHƯƠNG 1: GIỚI THIỆU/);
+  assert.match(basicPrompt, /CHƯƠNG 2: CƠ SỞ LÝ THUYẾT/);
+  assert.match(basicPrompt, /CHƯƠNG 3: THIẾT KẾ HỆ THỐNG/);
+  assert.match(basicPrompt, /CHƯƠNG 4: HIỆN THỰC HÓA/);
+  assert.match(basicPrompt, /CHƯƠNG 5: KẾT LUẬN/);
+  // Kiểm tra bộ câu hỏi vấn đáp phản biện của Hội đồng
+  assert.match(basicPrompt, /BỘ CÂU HỎI VẤN ĐÁP HỘI ĐỒNG BẢO VỆ/);
+
+  // 2. Kiểm tra có RAG PDF từ giảng viên
+  const ragConfig: ProjectConfig = {
+    university: "Trường Đại học Công nghệ - ĐHQGHN",
+    faculty: "Khoa Công nghệ Thông tin",
+    major: "Trí tuệ Nhân tạo",
+    title: "Phát hiện buồn ngủ của tài xế bằng Computer Vision",
+    studentName: "Trần Văn C (MSSV: 20020100)",
+    supervisor: "PGS.TS. Lê Văn D",
+    projectType: "capstone_thesis",
+    description: "Sử dụng camera hồng ngoại và mô hình MediaPipe Face Mesh kết hợp CNN-LSTM",
+    outputScope: "full_report",
+    standardFormat: "academic_vnu",
+    language: "vietnamese",
+    attachedPdf: {
+      fileName: "De_Cuong_Do_An_Tot_Nghiep.pdf",
+      numPages: 4,
+      text: "Đề cương yêu cầu: Chương 3 phải so sánh EAR (Eye Aspect Ratio) và MAR (Mouth Aspect Ratio). Tối thiểu 30 FPS."
+    }
+  };
+
+  const ragPrompt = generateProjectPrompt(ragConfig);
+  assert.match(ragPrompt, /Trường Đại học Công nghệ/);
+  assert.match(ragPrompt, /Phát hiện buồn ngủ của tài xế/);
+  assert.match(ragPrompt, /MediaPipe Face Mesh/);
+  assert.match(ragPrompt, /TÀI LIỆU ĐỀ CƯƠNG \/ HƯỚNG DẪN ĐÍNH KÈM TỪ GIẢNG VIÊN/);
+  assert.match(ragPrompt, /Eye Aspect Ratio/);
+  assert.match(ragPrompt, /TUYỆT ĐỐI KHÔNG chèn các nhãn rác/);
+
+  // 3. Kiểm tra các ngôn ngữ và phạm vi đầu ra
+  const engConfig: ProjectConfig = {
+    title: "Autonomous Drone Path Planning using Reinforcement Learning",
+    language: "english",
+    outputScope: "proposal_roadmap"
+  };
+  const engPrompt = generateProjectPrompt(engConfig);
+  assert.match(engPrompt, /100% TIẾNG ANH học thuật/);
+  assert.match(engPrompt, /Đề cương nghiên cứu chi tiết & Lộ trình/);
+
+  const defenseConfig: ProjectConfig = {
+    title: "IoT Smart Agriculture Platform",
+    outputScope: "defense_prep",
+    language: "bilingual"
+  };
+  const defensePrompt = generateProjectPrompt(defenseConfig);
+  assert.match(defensePrompt, /SONG NGỮ/);
+  assert.match(defensePrompt, /Kịch bản thuyết trình, Slide outline/);
+});
+
 
 
 
