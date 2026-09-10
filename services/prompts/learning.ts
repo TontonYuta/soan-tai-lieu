@@ -55,7 +55,7 @@ export const generateLearningPrompt = (config: LearningConfig): string => {
   const ragSection = sanitizeAndExtractRag(config.attachedPdf);
 
   return `Đóng vai Giáo viên ${subjectName} chuyên nghiệp và Master LaTeX.
-Nhiệm vụ: Biên soạn một tài liệu bài giảng/bài học chuẩn mực cho chủ đề được yêu cầu.
+Nhiệm vụ: Biên soạn một tài liệu bài giảng/bài học chuẩn mực, trực quan, sinh động và thích ứng linh hoạt theo từng bài học/chủ đề.
 
 I. THÔNG TIN BÀI HỌC:
 - Môn học: ${subjectName} (Lớp / Khối ${config.grade})
@@ -67,10 +67,19 @@ I. THÔNG TIN BÀI HỌC:
 - Yêu cầu bổ sung: ${config.details || "Không"}
 ${ragSection}
 
-II. NGUYÊN TẮC SƯ PHẠM ĐA MÔN:
-- Đi từ trực quan đến trừu tượng, có ví dụ minh họa và sơ đồ/hình vẽ TikZ nếu cần thiết.
-- Trình bày kiến thức rõ ràng, dùng \\hopkienthuc hoặc \\dinhly, \\vidu, \\loigiai, \\doanvan.
-- Đảm bảo toàn bộ mã LaTeX hoàn chỉnh, đóng \\end{document} đầy đủ.
+II. NGUYÊN TẮC BỐ CỤC TRỰC QUAN & SƯ PHẠM ĐA MÔN (KHÔNG CỨNG NHẮC):
+- **BỐ CỤC TRỰC QUAN THÍCH ỨNG (ADAPTIVE VISUAL HIERARCHY):**
+  * Không dập khuôn một kiểu văn bản đơn điệu. Cấu trúc bài giảng phải uyển chuyển theo bản chất từng chủ đề:
+    • Chủ đề Hình học / Đồ thị / Thí nghiệm: Bố cục 2 cột song song (\\cauhoicohinh) để hình vẽ TikZ, đồ thị hoặc sơ đồ nằm liền kề với lời giải thích/ví dụ mẫu.
+    • Chủ đề Phân loại / Đối chiếu 2 trạng thái (Đồng biến vs Nghịch biến, Cực đại vs Cực tiểu, Phản ứng tỏa nhiệt vs Thu nhiệt): Dùng bảng 2 cột so sánh trực quan hoặc 2 thẻ màu đối chiếu.
+    • Phân tầng thị giác bằng hệ thống thẻ màu chuyên dụng:
+      - \\hopkienthuc{Kiến thức trọng tâm}{...}: Định nghĩa, khái niệm cốt lõi (Khung xanh dương).
+      - \\phuongphap{Phương pháp giải}{...}: Thuật toán và các bước tư duy chuẩn (Khung xanh lục).
+      - \\luuy{Bẫy sai lầm & Lưu ý}{...}: Cảnh báo ngộ nhận phòng thi (Khung hổ phách/cam).
+      - \\meonhanh{Bí quyết & Thủ thuật}{...}: Mẹo giải nhanh, cách bấm máy tính (Khung tím).
+- **ĐAN XEN LÝ THUYẾT VÀ VÍ DỤ MINH HỌA:**
+  * Cứ sau mỗi đơn vị kiến thức nhỏ, đưa ngay 1-2 ví dụ minh họa kèm phân tích logic (\\vidu, \\loigiai) để học sinh nắm chắc ngay.
+- **ĐIỀU PHỐI DUNG LƯỢNG:** Đảm bảo mã LaTeX hoàn chỉnh 100%, đóng \\end{document} đầy đủ.
 
 III. QUY TẮC LATEX:
 ${LATEX_TECHNICAL_RULES}

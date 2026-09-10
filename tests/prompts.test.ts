@@ -269,7 +269,69 @@ test('10. Auto-Repair LaTeX Sanitizer for RAG Noise & ALL CAPS Subheadings', () 
   assert.match(dirtyLatex, /\\subsection\*\{Bảng đáp án Phần I\}/);
   assert.match(dirtyLatex, /\\subsection\*\{Lời giải chi tiết từng câu\}/);
 });
+test("11. Adaptive Visual Layouts & Visual Macros (cauhoicohinh, khungnhap, cards)", () => {
+  const wsConfig: WorksheetConfig = {
+    subject: "Toán học",
+    grade: "12",
+    topic: "Hình học không gian Oxyz",
+    teacherName: "Thầy Yuta",
+    language: "vietnamese"
+  };
+  const wsPrompt = generateWorksheetPrompt(wsConfig);
+  assert.match(wsPrompt, /\\cauhoicohinh/);
+  assert.match(wsPrompt, /\\khungnhap/);
+  assert.match(wsPrompt, /\\hopkienthuc/);
+  assert.match(wsPrompt, /\\phuongphap/);
+  assert.match(wsPrompt, /\\luuy/);
+  assert.match(wsPrompt, /BỐ CỤC THÍCH ỨNG THEO CHỦ ĐỀ/);
 
+  const examConfig: ExamConfig = {
+    school: "Chuyên Sư Phạm",
+    examName: "Thi Thử THPTQG",
+    year: "2026",
+    subject: "Toán học",
+    grade: "12",
+    topic: "Khảo sát hàm số",
+    time: 90,
+    examFormat: "standard2025",
+    counts: { part1_mc: 12, part2_tf: 4, part3_sa: 6 },
+    matrix: { lv1: 6, lv2: 8, lv3: 5, lv4: 3 },
+    includeTikZ: true,
+    language: "vietnamese"
+  };
+  const examPrompt = generateExamPrompt(examConfig);
+  assert.match(examPrompt, /\\cauhoicohinh/);
+  assert.match(examPrompt, /BỐ CỤC TRỰC QUAN THÍCH ỨNG/);
+});
 
+test("12. Compact Visual Header in Worksheet & Learning (No bulky titlepage)", () => {
+  const wsConfig: WorksheetConfig = {
+    subject: "Vật lý",
+    grade: "11",
+    topic: "Mạch điện một chiều",
+    teacherName: "Cô Lan",
+    language: "vietnamese"
+  };
+  const wsPrompt = generateWorksheetPrompt(wsConfig);
+  assert.match(wsPrompt, /HEADER TINH GỌN/);
+  assert.match(wsPrompt, /PHIẾU BÀI TẬP: \[TÊN CHỦ ĐỀ\]/);
+  assert.doesNotMatch(wsPrompt, /\\begin\{titlepage\}/);
 
+  const learnConfig: LearningConfig = {
+    school: "Yuta Studio",
+    year: "2026",
+    subject: "Hóa học",
+    grade: "10",
+    topic: "Liên kết hóa học & Tinh thể",
+    goal: "detailed",
+    tone: "academic",
+    audience: "Học sinh chuyên Hóa",
+    language: "vietnamese"
+  };
+  const learnPrompt = generateLearningPrompt(learnConfig);
+  assert.match(learnPrompt, /ADAPTIVE VISUAL HIERARCHY/);
+  assert.match(learnPrompt, /\\hopkienthuc/);
+  assert.match(learnPrompt, /\\phuongphap/);
+  assert.match(learnPrompt, /\\luuy/);
+});
 

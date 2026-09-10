@@ -50,7 +50,7 @@ export const generateExamPrompt = (config: ExamConfig): string => {
     totalQuestions = p1 + p2 + p3;
     structureDescription = `
 - Cấu trúc đề thi 3 phần chuẩn Bộ GD&ĐT 2025--2026 môn ${subjectName}:
-  * PHẦN I: ${p1} câu trắc nghiệm nhiều phương án lựa chọn (A, B, C, D) - Dùng macro \\cauhoi{n} và \\dapan (ngắn) hoặc \\dapanHaiCot / \\dapanMotCot (dài).
+  * PHẦN I: ${p1} câu trắc nghiệm nhiều phương án lựa chọn (A, B, C, D) - Dùng macro \\cauhoi{n} và \\dapan (ngắn) hoặc \\dapanHaiCot / \\dapanMotCot (dài), hoặc \\cauhoicohinh{n}{...}{hình TikZ} nếu có hình vẽ/đồ thị.
   * PHẦN II: ${p2} câu trắc nghiệm Đúng / Sai (mỗi câu gồm 4 mệnh đề a, b, c, d) - Dùng macro \\cauhoi{n} và \\yDungSai{...}{...}{...}{...}.
   * PHẦN III: ${p3} câu trắc nghiệm Trả lời ngắn (điền kết quả/đáp số) - Dùng macro \\cauhoi{n} và \\traLoiNgan.
   * TỔNG CỘNG: ${totalQuestions} câu hỏi.`;
@@ -100,6 +100,9 @@ ${config.referenceContent ? "- Ngữ cảnh đề cương/tài liệu tham khả
 ${ragSection}
 
 II. LUẬT NỘI DUNG VÀ VĂN PHONG SƯ PHẠM ĐA MÔN (BẮT BUỘC):
+- **BỐ CỤC TRỰC QUAN THÍCH ỨNG (ADAPTIVE EXAM LAYOUT - KHÔNG CỨNG NHẮC):**
+  * Với các câu hỏi có hình vẽ TikZ, đồ thị hoặc bảng biến thiên nhỏ: BẮT BUỘC dùng bố cục 2 cột song song qua macro \\cauhoicohinh{số câu}{nội dung đề bài & 4 phương án}{mã TikZ hoặc đồ thị} (tỷ lệ 65% đề bài bên trái, 32% hình vẽ bên phải). TUYỆT ĐỐI KHÔNG để hình vẽ nằm đơn độc một dòng ở dưới làm khoảng trắng 2 bên bị bỏ phí.
+  * Với các câu hỏi thuần chữ: Linh hoạt dùng \\dapan (4 cột), \\dapanHaiCot (2 cột), \\dapanMotCot (1 cột) tùy độ dài phương án.
 - **Bám sát đặc thù môn học:**
   * Môn Toán & KHTN: Dữ liệu chính xác, số liệu đẹp, có ý nghĩa vật lý/hóa học thực tế.
   * Môn Tiếng Anh / Ngoại ngữ: Chú trọng ngữ pháp, từ vựng theo chủ điểm, ngữ âm, bài đọc hiểu dùng môi trường \\doanvan{Reading Passage}{...}.

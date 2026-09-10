@@ -55,7 +55,7 @@ export const generateSimilarPrompt = (config: SimilarExerciseConfig): string => 
   const ragSection = sanitizeAndExtractRag(config.attachedPdf);
 
   return `Đóng vai Giáo viên ${subjectName} chuyên luyện thi và biên soạn tài liệu LaTeX chuyên nghiệp.
-Nhiệm vụ của bạn: Phát triển bộ bài tập tương tự / đổi số từ bài toán mẫu được cung cấp dưới đây.
+Nhiệm vụ của bạn: Phát triển bộ bài tập tương tự / đổi số từ bài toán mẫu được cung cấp dưới đây, trình bày trực quan, linh hoạt theo từng dạng bài.
 
 I. THÔNG TIN YÊU CẦU:
 - Môn học: ${subjectName} ${config.grade ? `(Lớp ${config.grade})` : ''}
@@ -72,10 +72,13 @@ II. BÀI TẬP MẪU ĐẦU VÀO:
 ${config.sourceExercises || (config.attachedPdf ? 'Tham khảo bài toán mẫu trong tài liệu PDF đính kèm ở trên' : '')}
 """
 
-III. QUY TẮC SÁNG TẠO & KHOA HỌC (BẮT BUỘC):
+III. QUY TẮC SÁNG TẠO & BỐ CỤC TRỰC QUAN (KHÔNG CỨNG NHẮC):
 - **BẢO TOÀN PHƯƠNG PHÁP CỐT LÕI:** Các bài tập tạo mới phải giữ đúng dạng tư duy của bài mẫu, thay đổi số liệu/ngữ cảnh hợp lý (số nghiệm đẹp, không vô lý).
-- **CHẤT LƯỢNG DỮ LIỆU:** Đảm bảo mọi bài toán/bài tập đều có nghiệm thực tế, logic giải chặt chẽ, kiểm tra tính toán cẩn thận.
-- **KHÔNG NGÔN TỪ HOA MỸ:** Văn phong ngắn gọn, trong sáng, chuẩn mực sư phạm.
+- **BỐ CỤC TRỰC QUAN THÍCH ỨNG THEO CHỦ ĐỀ:**
+  * Nếu bài toán mẫu có hình vẽ hoặc đồ thị: BẮT BUỘC các bài tập tương tự sinh ra cũng có hình vẽ TikZ hoặc đồ thị tương ứng, trình bày 2 cột song song qua macro \\cauhoicohinh để hình nằm cạnh đề bài.
+  * Với bài toán đại số/tính toán: Bố trí không gian làm bài \\dongke[3] hoặc \\khungnhap[3.5cm] cho học sinh làm bài trực tiếp.
+  * Header tinh gọn ở đầu trang 1 (Họ tên, Lớp, Ngày, Điểm số), bắt đầu làm bài ngay từ trang 1.
+- **CHẤT LƯỢNG DỮ LIỆU:** Đảm bảo mọi bài toán đều có nghiệm thực tế, logic giải chặt chẽ, kiểm tra tính toán cẩn thận.
 - **ĐIỀU PHỐI DUNG LƯỢNG:** Luôn đảm bảo hoàn tất toàn bộ file LaTeX và đóng \\end{document}.
 
 IV. QUY TẮC KỸ THUẬT LATEX & KHUNG TÀI LIỆU:

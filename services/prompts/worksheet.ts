@@ -50,7 +50,7 @@ export const generateWorksheetPrompt = (config: WorksheetConfig): string => {
   const ragSection = sanitizeAndExtractRag(config.attachedPdf);
 
   return `Đóng vai Giáo viên ${subjectName} chuyên nghiệp và Master LaTeX.
-Nhiệm vụ: Tạo một phiếu bài tập thực hành (Worksheet) bài bản, chuẩn mực cho chủ đề được yêu cầu.
+Nhiệm vụ: Tạo một phiếu bài tập thực hành (Worksheet) bài bản, chuẩn mực, trực quan và linh hoạt cho chủ đề được yêu cầu.
 
 I. THÔNG TIN PHIẾU BÀI TẬP:
 - Môn học: ${subjectName} (Khối / Lớp ${config.grade})
@@ -60,19 +60,26 @@ I. THÔNG TIN PHIẾU BÀI TẬP:
 - Yêu cầu nâng cao: ${config.details || "Không"}
 ${ragSection}
 
-II. NGUYÊN TẮC BIÊN SOẠN BÀI TẬP ĐA MÔN:
+II. NGUYÊN TẮC BỐ CỤC TRỰC QUAN & SƯ PHẠM ĐA MÔN (KHÔNG CỨNG NHẮC):
+- **BỐ CỤC THÍCH ỨNG THEO CHỦ ĐỀ (ADAPTIVE LAYOUT):**
+  * Chủ đề có Hình học / Đồ thị / Sơ đồ: Bắt buộc dùng bố cục 2 cột song song (\\cauhoicohinh{Bài}{Đề bài & Đáp án}{Hình vẽ TikZ}) để hình vẽ nằm cạnh đề bài, tối ưu thị giác. Chừa không gian vẽ hình bằng \\khungnhap[3.5cm].
+  * Chủ đề Đại số / Phương trình / Tính toán: Bố trí ví dụ mẫu có phân tích, bài tập tự luyện có dòng kẻ chấm (\\dongke[3] hoặc \\dongke[4]) để học sinh làm bài ngay vào phiếu.
+  * Chủ đề Lý thuyết / Khái niệm: Dùng hộp màu trực quan phân tầng (\\hopkienthuc, \\phuongphap, \\luuy, \\meonhanh).
+- **HEADER TINH GỌN (COMPACT HEADER):** Sử dụng khung thông tin gọn gàng ở đầu trang 1 (Họ tên, Lớp, Ngày, Điểm số) để học sinh bắt đầu làm bài ngay từ trang 1, TUYỆT ĐỐI KHÔNG làm trang bìa riêng gây lãng phí giấy in.
 - **LOGIC TĂNG DẦN ĐỘ KHÓ:** Thiết kế bài tập theo thang đo logic: Từ cơ bản (áp dụng công thức/khái niệm liền) -> Mức trung bình (cần biến đổi 1-2 bước) -> Vận dụng linh hoạt.
 - **KHÍT VỚI CHỦ ĐỀ:** Đề bài tạo ra phải liên quan chặt chẽ đến CHÍNH XÁC chủ đề được yêu cầu. Dứt điểm phần lý thuyết nào phải ra ngay bài tập phần đó.
-- **KHÔNG GIAN LÀM BÀI:** Bắt buộc có dòng chấm (lệnh \\dongke) cho học sinh điền kết quả vào tay, in ra được ngay.
 - **ĐIỀU PHỐI DUNG LƯỢNG:** Đảm bảo mã LaTeX hoàn chỉnh 100% từ đầu đến cuối, luôn luôn đóng \\end{document}.
 
-III. CẤU TRÚC MÃ LATEX VÀ MACRO:
+III. CẤU TRÚC MÃ LATEX VÀ MACRO TIỆN ÍCH:
 KHÔNG tự ý chèn lệnh \\clearpage. Chú trọng dùng các macro đã định sẵn:
-- \\dangbai{Dạng bài số...}: Trình bày phương pháp giải cực kỳ ngắn gọn rồi đưa bài làm ngay.
-- \\trangbaitap: Mở đầu bài tập tự luyện.
-- \\vidu{1} và \\loigiai: Bài mẫu đơn giản.
-- \\baitap{1} và \\dongke[3]: Chỗ làm bài (Dòng kẻ chấm). 
-- Phần Đáp án ở cuối (Answer Key) vô cùng siêu rút gọn.
+- \\dangbai{Dạng bài số...}: Tiêu đề phân dạng thanh lịch.
+- \\hopkienthuc{...}{...}, \\phuongphap{...}{...}, \\luuy{...}{...}: Các khung thẻ trực quan.
+- \\vidu{1} và \\loigiai: Bài mẫu đơn giản, dễ hiểu.
+- \\cauhoicohinh{1}{Đề bài & Lựa chọn}{Hình TikZ}: Bài toán kèm hình vẽ 2 cột song song.
+- \\baitap{1} và \\dongke[3]: Bài tập kèm dòng chấm làm bài đại số/tự luận.
+- \\khungnhap[3.5cm]: Khung chữ nhật viền nét đứt cho bài hình học/vẽ đồ thị.
+- \\dapan{...}{...}{...}{...}, \\dapanHaiCot{...}{...}{...}{...}: Phương án trắc nghiệm linh hoạt.
+- Phần Đáp án ở cuối (Answer Key) siêu rút gọn, súc tích.
 
 IV. QUY TẮC KỸ THUẬT & TRÌNH BÀY LATEX:
 ${LATEX_TECHNICAL_RULES}

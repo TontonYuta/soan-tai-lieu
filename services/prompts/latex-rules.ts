@@ -92,7 +92,27 @@ QUY TẮC KỸ THUẬT & TRÌNH BÀY LATEX ĐA MÔN HỌC (BẮT BUỘC ĐỂ BI
 
 11. THIẾT KẾ UI & KHUNG VIỀN:
     - Dùng tcolorbox với [sharp corners] để viền sắc nét, hiện đại chuẩn in ấn đề thi.
-    - Màu chủ đạo: Xanh dương dịu (\\definecolor{myblue}{RGB}{0,102,204}), Xanh lá đậm (\\definecolor{darkgreen}{RGB}{0,128,0}).
+    - Màu chủ đạo: Xanh dương dịu (\\definecolor{myblue}{RGB}{0,102,204}), Xanh lá đậm (\\definecolor{darkgreen}{RGB}{0,128,0}), Hổ phách/Cam (\\definecolor{amber}{RGB}{217,119,6}), Tím điểm nhấn (\\definecolor{purpleaccent}{RGB}{124,58,237}).
+
+12. QUY TẮC BỐ CỤC TRỰC QUAN THÍCH ỨNG THEO TỪNG CHỦ ĐỀ (ADAPTIVE VISUAL LAYOUTS - KHÔNG CỨNG NHẮC):
+    - KHÔNG DẬP KHUÔN CỨNG NHẮC: Bố cục tài liệu phải thích ứng tự nhiên, thanh lịch và tối ưu thị giác cho từng dạng bài/chủ đề:
+    * Chủ đề Hình học / Đồ thị hàm số / Sơ đồ mạch điện & Thí nghiệm (Toán hình, Giải tích, Vật lý, Hóa học, Địa lý):
+      - Khi câu hỏi hoặc bài toán có kèm hình vẽ TikZ, đồ thị hoặc sơ đồ: BẮT BUỘC dùng bố cục 2 cột song song qua macro \\cauhoicohinh{số câu}{nội dung câu hỏi & phương án}{mã TikZ hoặc đồ thị} hoặc môi trường \\begin{minipage}[t]{0.65\\linewidth} ... \\end{minipage}\\hfill\\begin{minipage}[t]{0.32\\linewidth} ... \\end{minipage}.
+      - TUYỆT ĐỐI KHÔNG để hình vẽ nằm đơn độc một dòng ở dưới chiếm trọn trang giấy trong khi hai bên trống trơn lãng phí.
+    * Chủ đề Lý thuyết, Bài giảng chuyên sâu:
+      - Bố cục phân tầng thị giác phong phú bằng hệ thống thẻ màu chuyên dụng:
+        • \\hopkienthuc{Kiến thức cốt lõi}{...} (Khung xanh dương thanh lịch).
+        • \\phuongphap{Phương pháp & Mẹo chốt}{...} (Khung xanh lục ngọc).
+        • \\luuy{Cảnh báo sai lầm & Bẫy đề thi}{...} (Khung hổ phách/cam ấm).
+        • \\meonhanh{Bí quyết bấm máy Casio / Công thức tính nhanh 30s}{...} (Khung tím nổi bật).
+      - Với các bài học đối chiếu 2 trường hợp (Đồng biến vs Nghịch biến, Cực đại vs Cực tiểu, Thấu kính hội tụ vs Phân kỳ), linh hoạt dùng bảng 2 cột so sánh trực quan.
+    * Chủ đề Phiếu bài tập (Worksheet / Phiếu thực hành):
+      - HEADER TINH GỌN (Compact Visual Header Box): Dùng khung thẻ thông tin học sinh (Họ tên, Lớp, Ngày, Điểm số) ở đầu trang 1 (chiều cao 3-4cm). Cho phép học sinh làm bài ngay từ trang 1, TUYỆT ĐỐI KHÔNG tạo trang bìa titlepage riêng biệt gây lãng phí giấy in.
+      - KHÔNG GIAN LÀM BÀI TRỰC QUAN: Kết hợp linh hoạt \\dongke[N] (dòng kẻ chấm cho bài đại số, tự luận chữ) và \\khungnhap[chiều cao] (khung chữ nhật nét đứt cho bài hình học cần vẽ hình hoặc bài giải toán sơ đồ).
+    * Trình bày phương án trắc nghiệm linh hoạt chống tràn dòng:
+      - Phương án ngắn (1-3 từ, số ngắn): Dùng \\dapan{A}{B}{C}{D} (4 cột).
+      - Phương án vừa (cụm từ, biểu thức): Dùng \\dapanHaiCot{A}{B}{C}{D} (2 cột).
+      - Phương án dài (câu văn, định nghĩa dài): Dùng \\dapanMotCot{A}{B}{C}{D} (1 cột).
 `;
 
 export const EXAM_TEMPLATE_2025 = `
@@ -143,6 +163,8 @@ export const EXAM_TEMPLATE_2025 = `
 \\usepackage[table]{xcolor}
 \\definecolor{myblue}{RGB}{0,102,204}
 \\definecolor{darkgreen}{RGB}{0,128,0}
+\\definecolor{amber}{RGB}{217,119,6}
+\\definecolor{purpleaccent}{RGB}{124,58,237}
 
 \\usepackage[most]{tcolorbox}
 \\tcbset{sharp corners}
@@ -160,6 +182,19 @@ export const EXAM_TEMPLATE_2025 = `
 
 % Macros định dạng câu hỏi & đáp án linh hoạt
 \\newcommand{\\cauhoi}[1]{\\vspace{6pt}\\noindent\\textbf{Câu #1.}}
+
+% Macro câu hỏi có hình vẽ / đồ thị bên cạnh (Bố cục 2 cột trực quan minipage)
+\\newcommand{\\cauhoicohinh}[3]{%
+\\vspace{6pt}\\noindent
+\\begin{minipage}[t]{0.65\\linewidth}
+    \\textbf{Câu #1.} #2
+\\end{minipage}\\hfill
+\\begin{minipage}[t]{0.32\\linewidth}
+    \\centering\\vspace{0pt}
+    #3
+\\end{minipage}\\par
+\\vspace{4pt}
+}
 
 % Đáp án 4 cột (dành cho đáp án ngắn)
 \\newcommand{\\dapan}[4]{
@@ -237,7 +272,7 @@ export const EXAM_TEMPLATE_2025 = `
 \\textit{Thí sinh trả lời từ câu 1 đến câu [XX]. Mỗi câu hỏi thí sinh chỉ chọn một phương án đúng nhất.}
 \\vspace{5pt}
 
-% Chèn các câu hỏi phần 1 dùng \\cauhoi{n} và \\dapan hoặc \\dapanHaiCot / \\dapanMotCot
+% Chèn các câu hỏi phần 1 dùng \\cauhoi{n} và \\dapan hoặc \\dapanHaiCot / \\dapanMotCot (hoặc \\cauhoicohinh nếu có hình)
 
 \\vspace{15pt}
 % ----------------------------------------------------
@@ -268,7 +303,7 @@ export const EXAM_TEMPLATE_2025 = `
 \\end{center}
 \\vspace{10pt}
 
-\\subsection*{\\color{myblue}BẢNG ĐÁP ÁN PHẦN I}
+\\subsection*{\\color{myblue}Bảng đáp án Phần I}
 % Bảng đáp án Phần I dạng ma trận cột
 
 \\subsection*{\\color{myblue}Bảng đáp án Phần II}
@@ -327,6 +362,8 @@ export const EXAM_TEMPLATE_CLASSIC = `
 \\pgfplotsset{compat=1.18}
 \\usepackage[table]{xcolor}
 \\definecolor{myblue}{RGB}{0,102,204}
+\\definecolor{darkgreen}{RGB}{0,128,0}
+\\definecolor{amber}{RGB}{217,119,6}
 
 \\usepackage[most]{tcolorbox}
 \\tcbset{sharp corners}
@@ -343,6 +380,20 @@ export const EXAM_TEMPLATE_CLASSIC = `
 \\renewcommand{\\headrulewidth}{0.4pt}
 
 \\newcommand{\\cauhoi}[1]{\\vspace{6pt}\\noindent{\\textbf{Câu #1.}}}
+
+% Macro câu hỏi có hình vẽ / đồ thị bên cạnh (Bố cục 2 cột minipage)
+\\newcommand{\\cauhoicohinh}[3]{%
+\\vspace{6pt}\\noindent
+\\begin{minipage}[t]{0.65\\linewidth}
+    \\textbf{Câu #1.} #2
+\\end{minipage}\\hfill
+\\begin{minipage}[t]{0.32\\linewidth}
+    \\centering\\vspace{0pt}
+    #3
+\\end{minipage}\\par
+\\vspace{4pt}
+}
+
 \\newcommand{\\dapan}[4]{ 
 \\begin{multicols}{4}
     \\begin{enumerate}[label=\\textbf{\\Alph*.}, itemsep=2pt, leftmargin=*]
@@ -387,7 +438,7 @@ export const EXAM_TEMPLATE_CLASSIC = `
 \\vspace{10pt}
 
 \\section*{\\color{myblue}Phần I. Trắc nghiệm}
-% Điền các câu hỏi trắc nghiệm
+% Điền các câu hỏi trắc nghiệm (dùng \\cauhoi và \\dapan hoặc \\cauhoicohinh)
 
 \\section*{\\color{myblue}Phần II. Tự luận}
 % Điền các câu hỏi tự luận
@@ -454,6 +505,8 @@ export const LEARNING_TEMPLATE = `
 \\usepackage[table]{xcolor}
 \\definecolor{myblue}{RGB}{0,102,204}
 \\definecolor{darkgreen}{RGB}{0,128,0}
+\\definecolor{amber}{RGB}{217,119,6}
+\\definecolor{purpleaccent}{RGB}{124,58,237}
 
 \\usepackage[most]{tcolorbox}
 \\tcbset{sharp corners}
@@ -469,6 +522,7 @@ export const LEARNING_TEMPLATE = `
 \\cfoot{\\small Trang \\thepage}
 \\renewcommand{\\headrulewidth}{0.4pt}
 
+% Hộp kiến thức & định lý
 \\newcommand{\\hopkienthuc}[2]{
 \\begin{tcolorbox}[colback=blue!5!white,colframe=myblue,title=\\textbf{#1},fonttitle=\\bfseries]
 #2
@@ -479,11 +533,40 @@ export const LEARNING_TEMPLATE = `
 #2
 \\end{tcolorbox}
 }
+\\newcommand{\\phuongphap}[2]{
+\\begin{tcolorbox}[colback=green!4!white,colframe=darkgreen,title=\\textbf{Phương pháp giải: #1},fonttitle=\\bfseries]
+#2
+\\end{tcolorbox}
+}
+\\newcommand{\\luuy}[2]{
+\\begin{tcolorbox}[colback=orange!5!white,colframe=amber,title=\\textbf{Lưu ý & Bẫy đề thi: #1},fonttitle=\\bfseries]
+#2
+\\end{tcolorbox}
+}
+\\newcommand{\\meonhanh}[2]{
+\\begin{tcolorbox}[colback=purple!4!white,colframe=purpleaccent,title=\\textbf{Bí quyết & Mẹo giải nhanh: #1},fonttitle=\\bfseries]
+#2
+\\end{tcolorbox}
+}
 \\newcommand{\\doanvan}[2]{
 \\begin{tcolorbox}[colback=blue!3!white,colframe=myblue!70!black,title=\\textbf{#1},fonttitle=\\bfseries]
 #2
 \\end{tcolorbox}
 }
+
+% Macro bài toán có hình vẽ song song (2 cột minipage trực quan)
+\\newcommand{\\cauhoicohinh}[3]{%
+\\vspace{6pt}\\noindent
+\\begin{minipage}[t]{0.65\\linewidth}
+    \\textbf{Ví dụ #1.} #2
+\\end{minipage}\\hfill
+\\begin{minipage}[t]{0.32\\linewidth}
+    \\centering\\vspace{0pt}
+    #3
+\\end{minipage}\\par
+\\vspace{4pt}
+}
+
 \\newcommand{\\vidu}[1]{\\vspace{6pt}\\noindent\\textbf{\\color{myblue}Ví dụ #1.}}
 \\newcommand{\\loigiai}{\\par\\textbf{Lời giải / Phân tích.}}
 \\newcommand{\\ghinho}{\\textbf{\\color{red}Ghi nhớ: }}
@@ -501,10 +584,10 @@ export const LEARNING_TEMPLATE = `
 \\vspace{10pt}
 
 \\section*{\\color{myblue}Phần I. Tóm tắt lý thuyết trọng tâm}
-% Trình bày lý thuyết dùng \\hopkienthuc hoặc \\dinhly
+% Trình bày lý thuyết trực quan bằng \\hopkienthuc, \\dinhly, \\luuy hoặc bảng so sánh đối chiếu
 
 \\section*{\\color{myblue}Phần II. Các dạng bài tập và phương pháp giải}
-% Trình bày các dạng bài dùng \\dangtoan, \\vidu, \\loigiai
+% Trình bày các dạng bài dùng \\dangtoan, \\phuongphap, \\vidu, \\cauhoicohinh, \\loigiai
 
 \\section*{\\color{myblue}Phần III. Bài tập tự luyện}
 % Trình bày bài tập tự luyện
@@ -537,6 +620,7 @@ export const ROADMAP_TEMPLATE = `
 \\usepackage[table]{xcolor}
 \\definecolor{myblue}{RGB}{0,102,204}
 \\definecolor{darkgreen}{RGB}{0,128,0}
+\\definecolor{amber}{RGB}{217,119,6}
 \\usetikzlibrary{arrows.meta, positioning}
 
 \\newunicodechar{↗}{\\ensuremath{\\nearrow}}
@@ -599,7 +683,7 @@ export const PRE_ALGEBRA_TEMPLATE = `
 % !TEX program = pdflatex
 \\documentclass[12pt,a4paper]{article}
 
-\\usepackage[a4paper,top=1.8cm,bottom=1.8cm,left=1.8cm,right=1.8cm]{geometry}
+\\usepackage[a4paper,top=1.5cm,bottom=1.5cm,left=1.5cm,right=1.5cm]{geometry}
 \\usepackage[utf8]{inputenc}
 \\usepackage[T1]{fontenc}
 \\usepackage{vietnam}
@@ -613,13 +697,18 @@ export const PRE_ALGEBRA_TEMPLATE = `
 \\usepackage{tabularx}
 \\usepackage{array}
 \\newcolumntype{C}{>{\\centering\\arraybackslash}X}
+\\newcolumntype{L}{>{\\raggedright\\arraybackslash}X}
+\\newcolumntype{R}{>{\\raggedleft\\arraybackslash}X}
 \\usepackage{pgffor}
 \\usepackage{tikz}
 \\usepackage{pgfplots}
 \\pgfplotsset{compat=1.18}
 \\usepackage[table]{xcolor}
 \\definecolor{myblue}{RGB}{0,102,204}
-\\usetikzlibrary{arrows.meta, calc, positioning}
+\\definecolor{darkgreen}{RGB}{0,128,0}
+\\definecolor{amber}{RGB}{217,119,6}
+\\definecolor{purpleaccent}{RGB}{124,58,237}
+\\usetikzlibrary{arrows.meta, calc, positioning, angles, quotes, patterns}
 
 \\newunicodechar{↗}{\\ensuremath{\\nearrow}}
 \\newunicodechar{↘}{\\ensuremath{\\searrow}}
@@ -640,81 +729,150 @@ export const PRE_ALGEBRA_TEMPLATE = `
 \\tcbset{sharp corners}
 
 \\setlength{\\parindent}{0pt}
-\\setlength{\\parskip}{5pt}
+\\setlength{\\parskip}{4pt}
 \\renewcommand{\\baselinestretch}{1.12}
 \\setlist[itemize]{leftmargin=1.2cm}
-\\setlist[enumerate]{leftmargin=1cm,itemsep=4pt}
+\\setlist[enumerate]{leftmargin=1cm,itemsep=3pt}
 
 \\pagestyle{fancy}
 \\fancyhf{}
-\\lhead{\\small Tài liệu học tập [MÔN HỌC]}
-\\rhead{\\small Giáo viên biên soạn}
-\\cfoot{\\small \\thepage}
+\\lhead{\\small\\textbf{Phiếu bài tập [MÔN HỌC]}}
+\\rhead{\\small\\textbf{Giáo viên biên soạn}}
+\\cfoot{\\small Trang \\thepage}
 \\renewcommand{\\headrulewidth}{0.4pt}
 
 \\titleformat{\\section}{\\Large\\bfseries\\color{myblue}}{Bài \\thesection.}{0.5em}{}
 \\titleformat{\\subsection}{\\large\\bfseries\\color{myblue}}{}{0pt}{}
 \\titleformat{\\subsubsection}{\\normalsize\\bfseries\\color{myblue}}{}{0pt}{}
-\\renewcommand{\\contentsname}{Mục lục}
 
+% Dòng kẻ chấm làm bài tự luận / đại số
 \\newcommand{\\dongke}[1][4]{%
 \\par\\vspace{2mm}\\textit{Bài làm.}\\par
-\\foreach \\i in {1,...,#1}{\\vspace{5mm}\\noindent\\makebox[\\linewidth]{\\dotfill}\\par}\\vspace{2mm}
+\\foreach \\i in {1,...,#1}{\\vspace{4.5mm}\\noindent\\makebox[\\linewidth]{\\dotfill}\\par}\\vspace{2mm}
 }
-\\newcommand{\\dangbai}[1]{\\vspace{10pt}\\subsection{#1}\\vspace{-2mm}{\\color{myblue}\\hrule}\\vspace{5mm}}
-\\newcommand{\\trangbaitap}{\\vspace{15pt}\\subsubsection{Bài tập tự luyện}\\vspace{-2mm}{\\color{myblue}\\hrule}\\vspace{5mm}}
+
+% Khung chữ nhật nét đứt cho bài hình học / vẽ đồ thị / nháp
+\\newcommand{\\khungnhap}[1][3.5cm]{%
+\\par\\vspace{2mm}
+\\noindent\\begin{tcolorbox}[colback=white,colframe=gray!40!white,arc=1.5mm,height=#1,valign=top,boxrule=0.6pt,borderline={0.5pt}{0pt}{dashed,gray!60!black}]
+\\small\\color{gray!70!black}\\textit{Không gian vẽ hình & nháp bài làm...}
+\\end{tcolorbox}
+\\vspace{2mm}
+}
+
+% Macro bài toán có hình vẽ song song (2 cột minipage trực quan)
+\\newcommand{\\cauhoicohinh}[3]{%
+\\vspace{6pt}\\noindent
+\\begin{minipage}[t]{0.65\\linewidth}
+    \\textbf{Bài #1.} #2
+\\end{minipage}\\hfill
+\\begin{minipage}[t]{0.32\\linewidth}
+    \\centering\\vspace{0pt}
+    #3
+\\end{minipage}\\par
+\\vspace{4pt}
+}
+
+% Khung lý thuyết & phương pháp trực quan
+\\newcommand{\\hopkienthuc}[2]{%
+\\begin{tcolorbox}[colback=blue!4!white,colframe=myblue,title=\\textbf{#1},fonttitle=\\bfseries]
+#2
+\\end{tcolorbox}
+}
+\\newcommand{\\phuongphap}[2]{%
+\\begin{tcolorbox}[colback=green!4!white,colframe=darkgreen,title=\\textbf{Phương pháp giải: #1},fonttitle=\\bfseries]
+#2
+\\end{tcolorbox}
+}
+\\newcommand{\\luuy}[2]{%
+\\begin{tcolorbox}[colback=orange!5!white,colframe=amber,title=\\textbf{Lưu ý & Bẫy đề thi: #1},fonttitle=\\bfseries]
+#2
+\\end{tcolorbox}
+}
+\\newcommand{\\meonhanh}[2]{%
+\\begin{tcolorbox}[colback=purple!4!white,colframe=purpleaccent,title=\\textbf{Mẹo giải nhanh: #1},fonttitle=\\bfseries]
+#2
+\\end{tcolorbox}
+}
+
+\\newcommand{\\dangbai}[1]{\\vspace{8pt}\\subsection{#1}\\vspace{-2mm}{\\color{myblue}\\hrule}\\vspace{4mm}}
+\\newcommand{\\trangbaitap}{\\vspace{10pt}\\subsubsection{Bài tập tự luyện}\\vspace{-2mm}{\\color{myblue}\\hrule}\\vspace{4mm}}
 \\newcommand{\\vidu}[1]{\\vspace{5pt}\\noindent{\\color{myblue}\\textbf{Ví dụ #1.}}}
 \\newcommand{\\loigiai}{\\par\\textbf{Lời giải.}}
 \\newcommand{\\ghinho}{\\textbf{Ghi nhớ.}}
 \\newcommand{\\baitap}[1]{\\vspace{6pt}\\noindent{\\color{myblue}\\textbf{Bài #1.}}}
 
+% Trắc nghiệm linh hoạt
+\\newcommand{\\dapan}[4]{ 
+\\begin{multicols}{4}
+    \\begin{enumerate}[label=\\textbf{\\Alph*.}, itemsep=1pt, leftmargin=*]
+        \\item #1
+        \\item #2
+        \\item #3
+        \\item #4
+    \\end{enumerate}
+\\end{multicols}
+\\vspace{-4pt}
+}
+\\newcommand{\\dapanHaiCot}[4]{
+\\begin{multicols}{2}
+    \\begin{enumerate}[label=\\textbf{\\Alph*.}, itemsep=2pt, leftmargin=*]
+        \\item #1
+        \\item #2
+        \\item #3
+        \\item #4
+    \\end{enumerate}
+\\end{multicols}
+\\vspace{-4pt}
+}
+\\newcommand{\\dapanMotCot}[4]{
+\\begin{enumerate}[label=\\textbf{\\Alph*.}, itemsep=3pt, leftmargin=*]
+    \\item #1
+    \\item #2
+    \\item #3
+    \\item #4
+\\end{enumerate}
+\\vspace{-2pt}
+}
+
 \\begin{document}
 
-\\begin{titlepage}
-\\begin{center}
-    \\vspace*{1.2cm}
-    {\\Large\\bfseries TÀI LIỆU HỌC TẬP [MÔN HỌC]}\\\\[8pt]
-    {\\Large\\bfseries CHUYÊN SÂU}\\\\[10pt]
-    {\\Large\\bfseries CHỦ ĐỀ: [MỤC TIÊU BÀI HỌC CỤ THỂ]}\\\\[8pt]
-    {\\Huge\\bfseries [TÊN CHỦ ĐỀ CHÍNH]}\\\\[10pt]
-    {\\Large\\bfseries [PHỤ ĐỀ NẾU CÓ]}\\\\[12pt]
-    \\rule{0.75\\linewidth}{0.5pt}\\\\[12pt]
-    {\\large\\bfseries Giáo viên: [TÊN GIÁO VIÊN]}\\\\[4pt]
-\\end{center}
-\\vspace{18pt}
-\\begin{tabularx}{\\linewidth}{X X}
-Họ và tên: \\dotfill & Lớp: \\dotfill\\\\[8pt]
-Ngày học: \\dotfill & Điểm: \\dotfill
+% ====================================================
+% HEADER TINH GỌN (COMPACT VISUAL HEADER - TIẾT KIỆM GIẤY, BẮT ĐẦU NGAY TRANG 1)
+% ====================================================
+\\noindent
+\\begin{tcolorbox}[colback=myblue!4!white,colframe=myblue,arc=2mm,boxrule=0.8pt]
+\\begin{tabularx}{\\linewidth}{X r}
+    {\\large\\bfseries\\color{myblue} PHIẾU BÀI TẬP: [TÊN CHỦ ĐỀ]} & \\textbf{Môn: [MÔN HỌC]} \\\\
+    \\textit{Khóa học / Khối lớp: [LỚP]} & \\textit{Giáo viên: [TÊN GIÁO VIÊN]}
 \\end{tabularx}
-\\vfill
-\\begin{center}
-\\textit{Tài liệu lưu hành nội bộ.}\\\\
-\\textit{Khóa học: [TÊN KHÓA HỌC / LỚP HỌC]}
-\\end{center}
-\\end{titlepage}
+\\vspace{2pt}\\hrule\\vspace{5pt}
+\\begin{tabularx}{\\linewidth}{X X X}
+    \\textbf{Họ và tên:} \\dotfill & \\textbf{Lớp:} \\dotfill & \\textbf{Ngày:} \\dotfill \\\\
+    \\textbf{Điểm số:} \\dotfill & \\textbf{Nhận xét:} \\dotfill & \\textbf{Mã đề:} \\dotfill
+\\end{tabularx}
+\\end{tcolorbox}
+\\vspace{8pt}
 
-\\vspace{20pt}
+\\dangbai{Phần 1. Lý thuyết cốt lõi & Phương pháp giải}
+% Tóm tắt công thức/quy tắc bằng \\hopkienthuc, \\phuongphap, \\luuy
 
-\\section{[TÊN BÀI HỌC CHÍNH]}
+\\dangbai{Phần 2. Ví dụ minh họa có lời giải}
+% Ví dụ mẫu dùng \\vidu, \\loigiai (hoặc \\cauhoicohinh nếu có hình vẽ TikZ)
 
-\\dangbai{Phần 1. Lý thuyết trọng tâm}
+\\dangbai{Phần 3. Bài tập thực hành tự luyện}
+% Bài tập tự luyện dùng \\baitap, \\dongke cho đại số hoặc \\khungnhap cho hình học
 
-\\dangbai{Phần 2. Ví dụ mẫu & Phương pháp giải}
-
-\\trangbaitap
-\\dangbai{Phần 3. Bài tập trắc nghiệm}
-
-\\trangbaitap
-\\dangbai{Phần 4. Bài tập tự luận & Dòng kẻ chấm}
-
-\\vspace{20pt}
+\\vspace{15pt}
 \\section{Đáp án & Hướng dẫn giải ngắn gọn}
 
 \\vfill
 \\begin{center}
 \\rule{0.65\\linewidth}{0.4pt}\\\\[5pt]
-\\textbf{Chúc các em học tốt!}
+\\textbf{Chúc các em học tập tiến bộ và đạt kết quả cao!}
 \\end{center}
 
 \\end{document}
 `;
+
+export const WORKSHEET_TEMPLATE = PRE_ALGEBRA_TEMPLATE;
