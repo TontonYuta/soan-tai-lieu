@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { FileEdit, Sparkles, HelpCircle, Smartphone, Pin } from 'lucide-react';
+import { FileEdit, Sparkles, Smartphone, Pin } from 'lucide-react';
 import MobileAccessModal from './MobileAccessModal';
 import { AutomationClient, NetworkInfo } from '../services/automationClient';
 
 interface HeaderProps {
-  onOpenReadme?: () => void;
   onSwitchToMobile?: () => void;
   globalPinnedPdf?: { fileName: string; numPages?: number } | null;
   isGlobalRagActive?: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ onOpenReadme, onSwitchToMobile, globalPinnedPdf, isGlobalRagActive = true }) => {
+const Header: React.FC<HeaderProps> = ({ onSwitchToMobile, globalPinnedPdf, isGlobalRagActive = true }) => {
   const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);
   const [networkInfo, setNetworkInfo] = useState<NetworkInfo | null>(null);
 
@@ -30,7 +29,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenReadme, onSwitchToMobile, globalP
       <header className="sticky top-0 z-50 bg-[#ffffff] border-b-4 border-black shadow-[0_8px_0_0_rgba(0,0,0,1)] hover:shadow-none transition-shadow duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
-            <div className="flex items-center gap-4 group cursor-pointer" onClick={onOpenReadme}>
+            <div className="flex items-center gap-4">
               <div className="relative group">
                   <div className="relative bg-[#FF5E5B] border-4 border-black p-2.5 rounded-none shadow-[4px_4px_0_0_rgba(0,0,0,1)] group-hover:translate-x-1 group-hover:translate-y-1 group-hover:-ml-1 group-hover:-mt-1 group-hover:shadow-none transition-all">
                     <FileEdit className="w-6 h-6 text-black stroke-[3]" />
@@ -94,14 +93,6 @@ const Header: React.FC<HeaderProps> = ({ onOpenReadme, onSwitchToMobile, globalP
                       </span>
                     </div>
                   </div>
-               </button>
-
-               <button 
-                  onClick={onOpenReadme}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#00CECB] text-black font-black uppercase text-xs tracking-wider border-4 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all cursor-pointer"
-               >
-                  <HelpCircle className="w-4 h-4 stroke-[3]" />
-                  <span className="hidden sm:inline">Hướng Dẫn</span> README
                </button>
 
                <div className="hidden sm:flex flex-col items-end mr-2">

@@ -6,9 +6,7 @@ import RoadmapForm from './components/RoadmapForm';
 import WorksheetForm from './components/WorksheetForm';
 import SimilarExerciseForm from './components/SimilarExerciseForm';
 import VideoForm from './components/VideoForm';
-import BatForm from './components/BatForm';
 import OutputDisplay from './components/OutputDisplay';
-import ReadmeModal from './components/ReadmeModal';
 import AutomationModal from './components/AutomationModal';
 import MobileRemoteHub from './components/MobileRemoteHub';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -47,7 +45,6 @@ import {
   Save, 
   Book, 
   Video as VideoIcon, 
-  Terminal, 
   Info, 
   ExternalLink,
   MessageSquareText,
@@ -68,11 +65,10 @@ const App: React.FC = () => {
     return 'auto';
   });
 
-  const [activeTab, setActiveTab] = useState<'roadmap' | 'learning' | 'worksheet' | 'similar' | 'exam' | 'video' | 'bat'>('worksheet');
+  const [activeTab, setActiveTab] = useState<'roadmap' | 'learning' | 'worksheet' | 'similar' | 'exam' | 'video'>('worksheet');
   const [status, setStatus] = useState<GenerationStatus>(GenerationStatus.IDLE);
   const [promptContent, setPromptContent] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
-  const [isReadmeOpen, setIsReadmeOpen] = useState(false);
   const [isAutomationOpen, setIsAutomationOpen] = useState(false);
   const [headless, setHeadless] = useState<boolean>(
     localStorage.getItem('yuta_headless') === 'true'
@@ -375,21 +371,7 @@ const App: React.FC = () => {
     }, 400);
   };
 
-  const handleBatGenerate = (config: BatConfig) => {
-    setStatus(GenerationStatus.LOADING);
-    setError(null);
-    setTimeout(() => {
-        try {
-            setPromptContent(generateBatPrompt(config));
-            setStatus(GenerationStatus.SUCCESS);
-        } catch (err) {
-            setStatus(GenerationStatus.ERROR);
-            setError('Lỗi khi thiết kế script .bat.');
-        }
-    }, 400);
-  };
-
-  const handleForwardContext = (targetTab: 'roadmap' | 'learning' | 'worksheet' | 'similar' | 'exam' | 'video' | 'bat') => {
+  const handleForwardContext = (targetTab: 'roadmap' | 'learning' | 'worksheet' | 'similar' | 'exam' | 'video') => {
     setActiveTab(targetTab);
     window.scrollTo({ top: 300, behavior: 'smooth' });
   };
@@ -403,13 +385,11 @@ const App: React.FC = () => {
     <ErrorBoundary>
       <div className="min-h-screen flex flex-col">
         <Header 
-          onOpenReadme={() => setIsReadmeOpen(true)} 
           onSwitchToMobile={isMobileUserAgent && !isElectron ? handleSwitchToMobile : undefined}
           globalPinnedPdf={globalPinnedPdf}
           isGlobalRagActive={isGlobalRagActive}
         />
       
-      <ReadmeModal isOpen={isReadmeOpen} onClose={() => setIsReadmeOpen(false)} />
       <AutomationModal 
         isOpen={isAutomationOpen} 
         onClose={() => setIsAutomationOpen(false)} 
@@ -509,10 +489,6 @@ const App: React.FC = () => {
                 <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${activeTab === 'video' ? 'text-[#9333EA]' : 'text-black opacity-50'}`}>
                     6. Video
                 </div>
-                <ArrowRight className="w-3 h-3 text-black" />
-                <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${activeTab === 'bat' ? 'text-[#FFED66]' : 'text-black opacity-50'}`}>
-                    7. Script
-                </div>
             </div>
 
             {/* Quick Automation Mode Bar */}
@@ -581,14 +557,6 @@ const App: React.FC = () => {
                 >
                     <VideoIcon className="w-4 h-4 stroke-[3]" />
                     Video
-                </button>
-                <button
-                    onClick={() => setActiveTab('bat')}
-                    className={`flex items-center gap-2 px-5 py-3 rounded-none text-xs font-black uppercase tracking-widest transition-all cursor-pointer
-                    ${activeTab === 'bat' ? 'bg-[#FFED66] text-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] border-4 border-black' : 'text-black hover:bg-[#ffffff] hover:border-4 hover:border-black'}`}
-                >
-                    <Terminal className="w-4 h-4 stroke-[3]" />
-                    Script .BAT
                 </button>
             </div>
         </div>
@@ -723,15 +691,6 @@ const App: React.FC = () => {
                 globalPinnedPdf={globalPinnedPdf}
                 isGlobalRagActive={isGlobalRagActive}
                 onSetGlobalPin={handleSetGlobalPinnedPdf}
-              />
-            )}
-
-            {activeTab === 'bat' && (
-              <BatForm 
-                onSubmit={handleBatGenerate} 
-                status={status} 
-                contextTopic={contextMetadata?.topic}
-                contextSubject={contextMetadata?.subject}
               />
             )}
           </div>

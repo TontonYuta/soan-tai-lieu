@@ -16,7 +16,7 @@ interface OutputDisplayProps {
   content: string;
   status: GenerationStatus;
   error: string | null;
-  onForwardContext?: (targetTab: 'roadmap' | 'learning' | 'worksheet' | 'similar' | 'exam' | 'video' | 'bat') => void;
+  onForwardContext?: (targetTab: 'roadmap' | 'learning' | 'worksheet' | 'similar' | 'exam' | 'video') => void;
   onOpenAutomation?: () => void;
   videoConfig?: VideoConfig | null;
   onSelectPrompt?: (prompt: string) => void;
@@ -697,12 +697,6 @@ pause
               className="px-2 py-1 bg-white hover:bg-[#9333EA] hover:text-white text-black border border-black text-[10px] font-black uppercase transition-all cursor-pointer"
             >
               🎬 Video
-            </button>
-            <button
-              onClick={() => onForwardContext('bat')}
-              className="px-2 py-1 bg-white hover:bg-[#FFED66] text-black border border-black text-[10px] font-black uppercase transition-all cursor-pointer"
-            >
-              💻 Script
             </button>
           </div>
         </div>
