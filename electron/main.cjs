@@ -1857,6 +1857,77 @@ function startInternalServer(callback) {
       }
     }
 
+    // 5c. API: Upload Image (Hỗ trợ ImageMobject cho Manim Studio)
+    if (pathname === '/api/upload-image' && req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => { body += chunk; });
+      req.on('end', async () => {
+        try {
+          const { fileName, fileBase64, description, layoutMode } = JSON.parse(body || '{}');
+          if (!fileBase64) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: 'Thiếu dữ liệu hình ảnh' }));
+            return;
+          }
+          const assetsDir = path.join(downloadsDir, 'assets');
+          if (!fs.existsSync(assetsDir)) {
+            fs.mkdirSync(assetsDir, { recursive: true });
+          }
+          const ext = path.extname(fileName || '.png') || '.png';
+          const safeBase = path.basename(fileName || 'image', ext).replace(/[^a-zA-Z0-9_-]/g, '_');
+          const safeName = `img_${Date.now()}_${safeBase}${ext}`;
+          const filePath = path.join(assetsDir, safeName);
+          const buffer = Buffer.from(fileBase64, 'base64');
+          fs.writeFileSync(filePath, buffer);
+
+          const fileSizeStr = buffer.length > 1024 * 1024
+            ? (buffer.length / (1024 * 1024)).toFixed(1) + ' MB'
+            : Math.round(buffer.length / 1024) + ' KB';
+
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            success: true,
+            fileName: fileName || safeName,
+            filePath: filePath,
+            previewUrl: `/downloads/assets/${safeName}`,
+            fileSize: fileSizeStr,
+            description: description || '',
+            layoutMode: layoutMode || 'top_card'
+          }));
+        } catch (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: err.message || 'Lỗi lưu hình ảnh' }));
+        }
+      });
+      return;
+    }
+
+    // 5d. API: View Image Stream
+    if (pathname.startsWith('/api/view-image')) {
+      try {
+        const parsedUrl = new URL(req.url, `http://${req.headers.host || '127.0.0.1'}`);
+        const filePath = parsedUrl.searchParams.get('path');
+        if (filePath && fs.existsSync(filePath)) {
+          const ext = path.extname(filePath).toLowerCase();
+          const stat = fs.statSync(filePath);
+          res.writeHead(200, {
+            'Content-Type': MIME_TYPES[ext] || 'image/png',
+            'Content-Length': stat.size,
+          });
+          fs.createReadStream(filePath).pipe(res);
+          return;
+        } else {
+          res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+          res.end('Hình ảnh không tồn tại.');
+          return;
+        }
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end(`Lỗi đọc ảnh: ${err.message}`);
+        return;
+      }
+    }
+
     // Đảm bảo mở phiên chat mới tinh sạch sẽ (100% không dính context chat cũ)
     async function ensureFreshChatSession(page, targetAiUrl, aiName, sendSSE) {
       if (!page || page.isClosed()) return;

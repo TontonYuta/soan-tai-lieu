@@ -7,7 +7,8 @@ import {
   generateManimStoryboardPrompt, 
   generateManimCodePrompt, 
   generateVideoManimPrompt,
-  generateManimRevisionPrompt
+  generateManimRevisionPrompt,
+  extractAttachedImageDirective
 } from "./prompts/manim";
 import { generateVideoScriptPrompt } from "./prompts/script";
 import { generateBatPrompt } from "./prompts/bat";
@@ -23,5 +24,6 @@ export {
   generateVideoManimPrompt,
   generateManimRevisionPrompt,
   generateVideoScriptPrompt,
-  generateBatPrompt
+  generateBatPrompt,
+  extractAttachedImageDirective
 };

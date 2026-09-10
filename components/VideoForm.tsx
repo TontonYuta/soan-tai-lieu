@@ -7,6 +7,7 @@ import {
 import { VideoConfig, GenerationStatus, AttachedPdfData } from '../types';
 import { AI_PROVIDERS, getProviderUrl } from './AutomationModal';
 import PdfUploadZone from './PdfUploadZone';
+import ImageUploadZone from './ImageUploadZone';
 import SubjectBadgePicker from './SubjectBadgePicker';
 
 interface VideoFormProps {
@@ -46,8 +47,8 @@ const VideoForm: React.FC<VideoFormProps> = ({
     safeZoneShorts: true,
     details: '',
     hookType: 'visual_intuition',
-    simulationMode: 'general',
-    fontStyle: 'serif',
+    simulationMode: 'calculus',
+    fontStyle: 'sans',
     isSeries: false,
     seriesCount: 3,
     seriesOutline: '',
@@ -349,27 +350,30 @@ const VideoForm: React.FC<VideoFormProps> = ({
 
             {/* Bộ Form Mô Phỏng Chuyên Môn */}
             <div className="group relative">
-              <label className={labelClass}>🎭 Bộ Form Mô Phỏng Chuyên Môn (Mẫu Diễn Hoạt Đa Môn)</label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <label className={labelClass}>🎭 Thư Viện Hoạt Họa & Bộ Form Mô Phỏng Chuyên Môn (14 Presets Đỉnh Cao)</label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                 {[
-                  { id: 'calculus', label: '📊 Giải tích & Hàm số', desc: 'Đồ thị, tiếp tuyến, tích phân' },
-                  { id: 'geometry', label: '📐 Hình học & Vector', desc: 'Tọa độ, khối 3D, mặt phẳng' },
+                  { id: 'calculus', label: '📊 Giải tích & Tiếp tuyến', desc: 'Đồ thị, tiếp tuyến đổi màu, BBT 3 tầng' },
+                  { id: 'geometry_3d', label: '🧊 Hình học không gian 3D', desc: 'ThreeDScene, hình chóp, xoay 360°' },
+                  { id: 'trigonometry', label: '⭕ Vòng tròn lượng giác', desc: 'Trục Sin/Cos, góc quay alpha' },
+                  { id: 'complex_numbers', label: '🌀 Số phức & Argand', desc: 'Vector z = a+bi, quỹ tích đường tròn' },
+                  { id: 'coordinate_oxyz', label: '📈 Hệ tọa độ Oxyz', desc: 'Mặt phẳng, vector pháp tuyến' },
+                  { id: 'image_showcase', label: '🖼️ Phân tích Ảnh & SGK', desc: 'Chèn ảnh ImageMobject + vector' },
+                  { id: 'geometry', label: '📐 Hình học phẳng & Vector', desc: 'Tam giác, đường tròn, góc' },
                   { id: 'physics', label: '⚡ Vật lý & Dao động', desc: 'Con lắc, sóng, mạch điện' },
-                  { id: 'chemistry', label: '🧪 Hóa học & Phản ứng', desc: 'Liên kết phân tử, cân bằng PT' },
+                  { id: 'chemistry', label: '🧪 Hóa học & Phản ứng', desc: 'Mô hình phân tử, cân bằng PT' },
                   { id: 'biology', label: '🧬 Sinh học & Di truyền', desc: 'Menđen, ADN/ARN, phân bào' },
                   { id: 'english_language', label: '🇬🇧 Tiếng Anh & Từ vựng', desc: 'Pill flashcards, thì timeline' },
                   { id: 'computer_science', label: '💻 Tin học & Thuật toán', desc: 'Sorting bars, cây nhị phân' },
-                  { id: 'social_sciences', label: '📜 Lịch sử & Địa lý', desc: 'Timeline niên biểu, so sánh' },
-                  { id: 'dialogue', label: '🎙️ Đối thoại 2 Người', desc: 'Thầy & Trò Q&A sư phạm' },
-                  { id: 'fast_tricks', label: '⚡ Mẹo & Giải nhanh', desc: 'So sánh 2 cột: Bẫy vs Mẹo 30s' },
-                  { id: 'general', label: '🎓 Bài giảng Tổng hợp', desc: 'Bố cục Dual-Zone chuẩn' }
+                  { id: 'fast_tricks', label: '⚡ Mẹo & Giải nhanh 30s', desc: 'So sánh 2 cột: Bẫy vs Mẹo' },
+                  { id: 'general', label: '🎓 Bài giảng Tổng hợp', desc: 'Bố cục Dual-Zone tiêu chuẩn' }
                 ].map(m => (
                   <button
                     key={m.id}
                     type="button"
                     onClick={() => handleChange('simulationMode', m.id)}
                     className={`p-2.5 border-2 border-black text-left transition-all cursor-pointer ${
-                      (config.simulationMode || 'general') === m.id
+                      (config.simulationMode || 'calculus') === m.id
                         ? 'bg-[#00CECB] text-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] translate-x-[1px] translate-y-[1px]'
                         : 'bg-white text-black hover:bg-slate-100'
                     }`}
@@ -567,6 +571,14 @@ const VideoForm: React.FC<VideoFormProps> = ({
                 onSetGlobalPin={onSetGlobalPin}
                 title="Đính Kèm File PDF Tham Khảo Cho Video (RAG / Bài Toán / Đồ Thị):"
                 description="AI sẽ trích xuất bài toán, hình vẽ, định lý hoặc đồ thị từ file PDF đính kèm để lập trình hoạt cảnh Manim CE bám sát nội dung."
+              />
+            </div>
+
+            {/* Image Upload Zone for Video */}
+            <div className="pt-2">
+              <ImageUploadZone
+                attachedImage={config.attachedImage || null}
+                onImageChange={(imgData) => handleChange('attachedImage', imgData)}
               />
             </div>
 

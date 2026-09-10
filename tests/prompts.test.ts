@@ -11,7 +11,8 @@ import {
   generateVideoManimPrompt,
   generateVideoScriptPrompt,
   generateBatPrompt,
-  generateManimRevisionPrompt
+  generateManimRevisionPrompt,
+  extractAttachedImageDirective
 } from '../services/gemini';
 
 import { ExamConfig, WorksheetConfig, VideoConfig, SimilarExerciseConfig, LearningConfig, RoadmapConfig, BatConfig } from '../types';
@@ -445,5 +446,87 @@ test("16. Manim Typography & Snappy Pacing Rules Verification", () => {
   // Kiểm tra quy tắc không để khoảng chờ quá lâu
   assert.match(codePrompt, /Tuyệt đối không dừng quá lâu/i);
 });
+
+test("17. Manim Image Support & Extended Animation Presets Verification", () => {
+  // 1. Kiểm tra trích xuất chỉ thị ảnh đính kèm (extractAttachedImageDirective)
+  assert.strictEqual(extractAttachedImageDirective(undefined), "");
+  assert.strictEqual(extractAttachedImageDirective(null), "");
+
+  const attachedImg = {
+    fileName: "hinh_hop_chu_nhat.png",
+    filePath: "/home/tontonyuta/Downloads/assets/img_123_hinh_hop.png",
+    previewUrl: "http://localhost:3000/api/view-image?path=/home/tontonyuta/Downloads/assets/img_123_hinh_hop.png",
+    fileSize: 102400,
+    description: "Hình hộp chữ nhật ABCD.A'B'C'D' có các cạnh a, b, c",
+    layoutMode: "split_left" as const
+  };
+
+  const directive = extractAttachedImageDirective(attachedImg);
+  assert.match(directive, /HÌNH ẢNH MINH HỌA ĐÍNH KÈM/);
+  assert.match(directive, /hinh_hop_chu_nhat\.png/);
+  assert.match(directive, /img_123_hinh_hop\.png/);
+  assert.match(directive, /Chia đôi màn hình/);
+  assert.match(directive, /Hình hộp chữ nhật ABCD/);
+  // Quy tắc sống còn: CẤM VGroup(ImageMobject), BẮT BUỘC Group(...)
+  assert.match(directive, /TUYỆT ĐỐI CẤM thêm ImageMobject vào VGroup/);
+  assert.match(directive, /BẮT BUỘC DÙNG Group\(/i);
+
+  // Kiểm tra các layout mode khác
+  const directiveTopCard = extractAttachedImageDirective({ ...attachedImg, layoutMode: "top_card" });
+  assert.match(directiveTopCard, /Bố cục Top Card/);
+
+  const directiveOverlay = extractAttachedImageDirective({ ...attachedImg, layoutMode: "overlay" });
+  assert.match(directiveOverlay, /Vẽ chú thích tương tác/);
+
+  // 2. Kiểm tra VideoConfig tích hợp attachedImage vào generateManimCodePrompt và generateVideoManimPrompt
+  const imgVideoConfig: VideoConfig = {
+    subject: "Toán học",
+    topic: "Thể tích khối hộp chữ nhật",
+    mathType: "3d_geometry",
+    simulationMode: "image_showcase",
+    duration: "100s",
+    tone: "academic",
+    audience: "Học sinh 12",
+    format: "vertical",
+    renderQuality: "1080p",
+    attachedImage: attachedImg
+  };
+
+  const manimCodeWithImg = generateManimCodePrompt(imgVideoConfig);
+  assert.match(manimCodeWithImg, /HÌNH ẢNH MINH HỌA ĐÍNH KÈM/);
+  assert.match(manimCodeWithImg, /img_123_hinh_hop\.png/);
+  assert.match(manimCodeWithImg, /ImageMobject/);
+  assert.match(manimCodeWithImg, /QUY TẮC SỬ DỤNG HÌNH ẢNH MINH HỌA/);
+
+  const manimFullWithImg = generateVideoManimPrompt(imgVideoConfig);
+  assert.match(manimFullWithImg, /HÌNH ẢNH MINH HỌA ĐÍNH KÈM/);
+  assert.match(manimFullWithImg, /img_123_hinh_hop\.png/);
+
+  // 3. Kiểm tra 5 Animation Presets chuyên sâu mới
+  const presetsToTest: Array<{ mode: VideoConfig['simulationMode'], pattern: RegExp }> = [
+    { mode: 'geometry_3d', pattern: /ThreeDScene|Khối đa diện 3D|set_camera_orientation/i },
+    { mode: 'trigonometry', pattern: /lượng giác|Vector.*quay|đường tròn đơn vị/i },
+    { mode: 'complex_numbers', pattern: /Argand|số phức|mặt phẳng phức/i },
+    { mode: 'coordinate_oxyz', pattern: /Oxyz|trục tọa độ không gian/i },
+    { mode: 'image_showcase', pattern: /ImageMobject|hình ảnh|sơ đồ/i }
+  ];
+
+  for (const preset of presetsToTest) {
+    const pConfig: VideoConfig = {
+      subject: "Toán",
+      topic: "Mô phỏng chuyên sâu",
+      mathType: "calculus",
+      simulationMode: preset.mode,
+      duration: "90s",
+      tone: "academic",
+      audience: "Học sinh 12",
+      format: "vertical",
+      renderQuality: "720p"
+    };
+    const pPrompt = generateManimCodePrompt(pConfig);
+    assert.match(pPrompt, preset.pattern, `Preset ${preset.mode} must match pattern`);
+  }
+});
+
 
 

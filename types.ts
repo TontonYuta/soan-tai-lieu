@@ -96,6 +96,15 @@ export interface PlaylistItem {
   manimCode?: string;
 }
 
+export interface AttachedImageData {
+  fileName: string;
+  filePath: string;
+  previewUrl?: string;
+  fileSize?: string | number;
+  description?: string;
+  layoutMode?: 'top_card' | 'split_left' | 'fullscreen' | 'overlay';
+}
+
 export interface VideoConfig {
   subject: string;
   topic: string;
@@ -108,9 +117,14 @@ export interface VideoConfig {
   hookType?: 'trap' | 'visual_intuition' | 'fast_trick' | 'real_world';
   // Bộ Form Mô Phỏng Chuyên Môn Đa Môn & Kiểu Font Chữ
   simulationMode?: 
+    | 'calculus'
+    | 'geometry_3d'
+    | 'trigonometry'
+    | 'complex_numbers'
+    | 'coordinate_oxyz'
+    | 'image_showcase'
     | 'geometry' 
     | 'dialogue' 
-    | 'calculus' 
     | 'fast_tricks' 
     | 'stem' 
     | 'physics' 
@@ -130,6 +144,7 @@ export interface VideoConfig {
   fps?: 30 | 60;
   safeZoneShorts?: boolean;
   attachedPdf?: AttachedPdfData;
+  attachedImage?: AttachedImageData | null;
   language?: 'bilingual' | 'vietnamese' | 'english';
   details?: string;
   // Giọng đọc AI (TTS Voiceover)

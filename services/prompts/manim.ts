@@ -152,11 +152,65 @@ const getFontDirective = (fontStyle?: string): string => {
   return 'Be Vietnam Pro';
 };
 
+export const extractAttachedImageDirective = (attachedImage?: any): string => {
+  if (!attachedImage?.filePath) return "";
+  const layoutDesc = attachedImage.layoutMode === 'split_left'
+    ? 'Chia đôi màn hình: Nửa trái đặt ảnh ImageMobject, nửa phải đặt công thức MathTex và phân tích.'
+    : attachedImage.layoutMode === 'overlay'
+    ? 'Vẽ chú thích tương tác: Đặt ảnh ở trung tâm, vẽ các mũi tên Arrow, vòng tròn khoanh vùng và nhãn MathTex trực tiếp lên các điểm quan trọng của ảnh.'
+    : 'Bố cục Top Card: Đặt ảnh ImageMobject trọn vẹn trong Top Card, Bottom Card hiển thị lời giải chi tiết và công thức.';
+
+  return `\n[HÌNH ẢNH MINH HỌA ĐÍNH KÈM / SƠ ĐỒ BÀI TOÁN]:
+- Tên ảnh: ${attachedImage.fileName}
+- Đường dẫn file cục bộ (Dùng nguyên vẹn trong code): r"${attachedImage.filePath}"
+- Yêu cầu mô tả của người dùng: "${attachedImage.description || 'Chèn ảnh minh họa vào video và vẽ hoạt họa phân tích'}"
+- Kiểu bố cục chỉ định: ${attachedImage.layoutMode || 'top_card'} (${layoutDesc})
+
+QUY TẮC CỐT TỬ KHI SỬ DỤNG ImageMobject TRONG MANIM CE (CHỐNG CRASH 100%):
+1. BẮT BUỘC DÙNG Group(...) THAY CHO VGroup(...):
+   - ImageMobject kế thừa từ Mobject, KHÔNG PHẢI VMobject. TUYỆT ĐỐI CẤM thêm ImageMobject vào VGroup(...) vì sẽ gây crash TypeError: "Only values of type VMobject can be added as submobjects of VGroup".
+   - Do đó, mọi nhóm chứa ảnh PHẢI KHỞI TẠO BẰNG Group(...):
+     m_img = ImageMobject(r"${attachedImage.filePath}")
+     m_img.scale_to_fit_width(4.5)
+     border = SurroundingRectangle(m_img, buff=0.08, color=TEAL_A, stroke_width=2.5, corner_radius=0.15)
+     img_group = Group(m_img, border)  # BẮT BUỘC Group, KHÔNG DÙNG VGroup!
+2. CO TỶ LỆ VỪA VẶN: Dùng m_img.scale_to_fit_width(4.5) hoặc m_img.scale_to_fit_height(3.8) để ảnh không bao giờ bị to tràn khung hình.
+3. HIỆU ỨNG DIỄN HOẠT: self.play(FadeIn(img_group, shift=UP * 0.2), run_time=0.8).
+4. TƯƠNG TÁC SƯ PHẠM: Vẽ mũi tên Arrow(start, end, color=YELLOW) hoặc khung nhãn MathTex trỏ vào chi tiết then chốt trên ảnh theo đúng yêu cầu mô tả.\n`;
+};
+
 const getSimulationModeDescription = (mode?: string): string => {
   switch (mode) {
+    case 'geometry_3d':
+      return `[BỘ FORM MÔ PHỎNG HÌNH HỌC KHÔNG GIAN 3D (ThreeDScene)]:
+Xây dựng mô hình 3D với ThreeDScene: Vẽ hình chóp (S.ABCD, S.ABC), khối lăng trụ, khối lập phương hoặc mặt cầu.
+- Phân biệt rõ ràng các cạnh nét đứt (DashedLine) cho đường khuất bên trong và Line3D / Line nét liền cho các cạnh thấy.
+- Sử dụng self.move_camera(phi=70*DEGREES, theta=30*DEGREES, run_time=2.0) tạo góc nhìn 3D có chiều sâu cuốn hút.
+- Thẻ dưới hiển thị phương pháp xác định góc giữa đường thẳng và mặt phẳng, góc nhị diện, khoảng cách hoặc công thức thể tích.`;
+    case 'trigonometry':
+      return `[BỘ FORM LƯỢNG GIÁC & VÒNG TRÒN ĐƠN VỊ]:
+Vẽ đường tròn lượng giác đơn vị tâm O bán kính 1 với hệ trục Oxy. Vector bán kính quay góc alpha qua ValueTracker.
+- Trục Cos ngang (màu Cyan), trục Sin đứng (màu Yellow), trục Tan tiếp tuyến (màu Red) tự động gióng nét đứt và cập nhật giá trị theo góc quay real-time.
+- Thẻ dưới hiển thị đồ thị hàm số y = sin(x) hoặc y = cos(x) chạy đồng bộ với điểm quay trên đường tròn.`;
+    case 'complex_numbers':
+      return `[BỘ FORM SỐ PHỨC & MẶT PHẲNG PHỨC ARGAND]:
+Hệ trục tọa độ phức Oxy: Trục hoành Re(z) và trục tung Im(z). Điểm biểu diễn M(a, b) và vector v = (a, b) cho số phức z = a + bi.
+- Diễn hoạt module |z| bằng độ dài vector và argument phi bằng cung góc quay.
+- Biểu diễn trực quan tập hợp điểm quỹ tích đường tròn |z - z0| = R hoặc đường trung trực elip. Thẻ dưới phân tích biến đổi đại số tương ứng.`;
+    case 'coordinate_oxyz':
+      return `[BỘ FORM HỆ TỌA ĐỘ KHÔNG GIAN OXYZ]:
+Vẽ 3 trục Ox, Oy, Oz với ThreeDAxes có nhãn vector đơn vị i, j, k.
+- Biểu diễn mặt phẳng (P): Ax + By + Cz + D = 0 dưới dạng hình bình hành tô màu trong suốt, vector pháp tuyến n = (A, B, C) dựng vuông góc với mặt phẳng.
+- Vẽ đường thẳng (d) với vector chỉ phương u và hình chiếu vuông góc của điểm H lên mặt phẳng.`;
+    case 'image_showcase':
+      return `[BỘ FORM PHÂN TÍCH HÌNH ẢNH & SƠ ĐỒ THỰC TẾ (ImageMobject)]:
+Tích hợp trực tiếp hình ảnh thực tế / đề bài / sơ đồ SGK qua ImageMobject.
+- BẮT BUỘC dùng Group(...) thay vì VGroup(...) để chứa ImageMobject nhằm chống lỗi crash TypeError.
+- Co tỷ lệ vừa vặn thẻ, đóng khung viền bo tròn thẩm mỹ SurroundingRectangle(color=TEAL_A, corner_radius=0.15).
+- Vẽ các vector, vòng tròn khoanh vùng, mũi tên Arrow và công thức MathTex tương tác trỏ trực tiếp vào các điểm mấu chốt trên ảnh để phân tích bài toán.`;
     case 'geometry':
-      return `[BỘ FORM MÔ PHỎNG HÌNH HỌC & VECTOR]: 
-Xây dựng mô hình 2D/3D với Axes, Polygon, Circle, Arrow biểu diễn vector, RightAngle đánh dấu góc vuông, và điểm chuyển động Dot. Dùng đường gióng nét đứt và nhãn đỉnh đặt ở hướng an toàn.`;
+      return `[BỘ FORM MÔ PHỎNG HÌNH HỌC PHẲNG & VECTOR]: 
+Xây dựng mô hình 2D với Axes, Polygon, Circle, Arrow biểu diễn vector, RightAngle đánh dấu góc vuông, và điểm chuyển động Dot. Dùng đường gióng nét đứt và nhãn đỉnh đặt ở hướng an toàn.`;
     case 'dialogue':
       return `[BỘ FORM ĐỐI THOẠI 2 NGƯỜI (THẦY - TRÒ Q&A)]: 
 Tạo 2 thẻ đại diện: Thẻ "👨‍🏫 Thầy Yuta" bên Trái/Trên và Thẻ "🙋‍♂️ Học sinh" bên Phải/Dưới. 
@@ -206,6 +260,7 @@ export const generateManimStoryboardPrompt = (config: VideoConfig): string => {
   const targetDurationStr = config.duration || '100 - 120 giây';
   const simDesc = getSimulationModeDescription(config.simulationMode);
   const ragSection = sanitizeAndExtractRag(config.attachedPdf);
+  const imageSection = extractAttachedImageDirective(config.attachedImage);
 
   const approxSeconds = isVertical ? 110 : 120;
   const targetWords = Math.round(approxSeconds * 2.85);
@@ -216,6 +271,7 @@ Nhiệm vụ của bạn là xây dựng KỊCH BẢN SƯ PHẠM VÀ LỜI THO�
 THỜI LƯỢNG MỤC TIÊU: ${targetDurationStr}.
 ${simDesc}
 ${ragSection}
+${imageSection}
 
 YÊU CẦU LẬP DÀN Ý 5 PHÂN CẢNH CHUẨN MỰC VÀ SOẠN LỜI THOẠI TRÔI CHẢY, TRUYỀN CẢM, CÓ NGẮT NGHỈ MẠCH LẠC PHÙ HỢP VỚI THỜI LƯỢNG ${targetDurationStr} (ĐỘ DÀI KỊCH BẢN KHOẢNG ${targetWords} TỪ - TỐC ĐỘ ĐỌC 2.85 TỪ/GIÂY):
 
@@ -228,7 +284,7 @@ YÊU CẦU LẬP DÀN Ý 5 PHÂN CẢNH CHUẨN MỰC VÀ SOẠN LỜI THOẠI T
    - Lời thoại Lý thuyết: Phân tích trực quan, so sánh bản chất và làm nổi bật điều kiện áp dụng.
 
 3. PHÂN CẢNH 3 - DUAL-ZONE CONTAINER MÔ PHỎNG ĐỘNG TƯƠNG TÁC (~38S, ~105 TỪ):
-   - Top Card (Thẻ Trên - height=6.4, width=8.4): Trực quan hóa hiện tượng/đồ thị/mô hình (Toán: đồ thị + tiếp tuyến đổi màu; Vật lý: dao động/mạch điện; Hóa học: liên kết phân tử; Sinh học: sơ đồ lai; Tiếng Anh: thẻ từ vựng & ngữ cảnh; Tin học: mảng dữ liệu thuật toán).
+   - Top Card (Thẻ Trên - height=6.4, width=8.4): Trực quan hóa hiện tượng/đồ thị/mô hình/hình ảnh minh họa ImageMobject.
    - Bottom Card (Thẻ Dưới - height=6.6, width=8.4): Suy luận lý thuyết/biến đổi số/bảng biến thiên/công thức định luật/cấu trúc ngữ pháp.
    - Lời thoại Mô phỏng: Thuyết minh đồng bộ từng chuyển động, làm sáng tỏ mối liên hệ giữa trực quan và công thức.
 
@@ -238,7 +294,7 @@ YÊU CẦU LẬP DÀN Ý 5 PHÂN CẢNH CHUẨN MỰC VÀ SOẠN LỜI THOẠI T
    - Lời thoại Chữa đề: Chỉ ra mẹo giải nhanh, phân tích bẫy đề thi và chốt phương pháp xử lý dứt khoát.
 
 5. PHÂN CẢNH 5 - TỔNG KẾT & OUTRO THƯƠNG HIỆU (~8S, ~25 TỪ):
-   - Thẻ Outro: Đúc kết 3 bí kíp bài học + Thông điệp thương hiệu "Học ${config.subject} cùng Yuta" (giữ nguyên khung hình cuối 3s).
+   - Thẻ Outro: Đúc kết 3 bí kíp bài học + Thông điệp thương hiệu "Học ${config.subject} cùng Yuta" (giữ nguyên khung hình cuối 1.5s).
    - Lời thoại Outro: Đúc kết giá trị và kêu gọi follow kênh.
 
 ĐỊNH DẠNG TRẢ VỀ:
@@ -259,8 +315,13 @@ export const generateManimCodePrompt = (config: VideoConfig): string => {
   const targetDurationStr = config.duration || '100 - 120 giây';
   const chosenFont = getFontDirective(config.fontStyle);
   const simDesc = getSimulationModeDescription(config.simulationMode);
+  const ragSection = sanitizeAndExtractRag(config.attachedPdf);
+  const imageSection = extractAttachedImageDirective(config.attachedImage);
 
   return `Tuyệt vời! Dựa trên kịch bản sư phạm và khối lời thoại VOICEOVER_SCRIPT vừa thống nhất ở trên, hãy viết TOÀN BỘ file mã nguồn Manim Python (\`scene.py\`) hoàn chỉnh 100% để render video bài giảng này.
+${simDesc}
+${ragSection}
+${imageSection}
 
 YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ BỘ NGUYÊN TẮC c1_HamSo_DonDieu.py & DUAL-ZONE CONTAINER CARDS):
 1. Kế thừa chính xác biến VOICEOVER_SCRIPT và cấu trúc 5 PHÂN CẢNH CHUẨN MỰC:
@@ -291,11 +352,15 @@ YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ BỘ NGUYÊN TẮC c1_HamSo_Do
    - ValueTracker + always_redraw cho tiếp tuyến đổi màu (Xanh/Đỏ/Vàng) và thanh trạng thái status_badge real-time. Tiếp tuyến lướt mượt với run_time=2.0s đến 2.5s.
    - PACING & NHỊP ĐỘ DỨT KHOÁT: Dừng nhẹ nhàng vừa đủ tại điểm mấu chốt (self.wait(0.8) đến self.wait(1.0) khi đổi màu tiếp tuyến, xuất hiện BBT, đóng khung đáp án). Tuyệt đối không dừng quá lâu (>1.2s - 1.5s) gây cảm giác màn hình bị đơ hoặc kéo dài lê thê.
    - Bảng Biến Thiên 3 tầng chuẩn mực SGK Việt Nam: MathTex(r"\\begin{array}{|c|ccccccc|} ... \\end{array}", font_size=24).
-9. 100% CÔNG THỨC LATEX HOÀN HẢO (PERFECT LATEX):
+9. QUY TẮC SỬ DỤNG HÌNH ẢNH MINH HỌA (ImageMobject - CHỐNG CRASH 100%):
+   - Khi có ảnh đính kèm (hoặc khi cần chèn ảnh minh họa): BẮT BUỘC dùng ImageMobject(r"...").
+   - TUYỆT ĐỐI CẤM thêm ImageMobject vào VGroup(...) (sẽ crash TypeError!). BẮT BUỘC dùng Group(...) thay cho VGroup(...) khi có chứa ImageMobject.
+   - Luôn co tỷ lệ vừa vặn thẻ: img.scale_to_fit_width(4.5) và đóng khung viền bo tròn SurroundingRectangle(img, buff=0.08, color=TEAL_A, corner_radius=0.15).
+10. 100% CÔNG THỨC LATEX HOÀN HẢO (PERFECT LATEX):
    - MỌI công thức dùng MathTex(r"...") với raw string. Đóng khung đáp số: SurroundingRectangle(result, color=GREEN, buff=0.16).
-10. Màu nền: "#0B1120".
-11. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, không viết bất kỳ lời chào hay giải thích ngoài mã.
-12. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file). (Hệ thống máy chủ sẽ tự biên dịch mã bằng lệnh: \`manim \${qualityFlag} scene.py MainScene\`, AI không được tự chạy lệnh này).`;
+11. Màu nền: "#0B1120".
+12. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, không viết bất kỳ lời chào hay giải thích ngoài mã.
+13. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file). (Hệ thống máy chủ sẽ tự biên dịch mã bằng lệnh: \`manim \${qualityFlag} scene.py MainScene\`, AI không được tự chạy lệnh này).`;
 };
 
 // =========================================================================
@@ -308,6 +373,7 @@ export const generateVideoManimPrompt = (config: VideoConfig): string => {
   const chosenFont = getFontDirective(config.fontStyle);
   const simDesc = getSimulationModeDescription(config.simulationMode);
   const ragPromptChunk = sanitizeAndExtractRag(config.attachedPdf);
+  const imagePromptChunk = extractAttachedImageDirective(config.attachedImage);
 
   const approxSeconds = isVertical ? 110 : 120;
   const targetWords = Math.round(approxSeconds * 2.85);
@@ -339,6 +405,7 @@ I. THÔNG TIN VIDEO & CẤU HÌNH HÌNH THỨC:
 - ĐỒNG BỘ THỜI GIAN ÂM THANH (TTS): Kịch bản VOICEOVER_SCRIPT phải có độ dài tương ứng (~${targetWords} từ). Các lệnh self.play(..., run_time=...) và self.wait(...) ở mỗi phân cảnh BẮT BUỘC phải khớp với thời gian đọc phân cảnh đó.
 ${episodeChunk}
 ${ragPromptChunk}
+${imagePromptChunk}
 
 II. BỘ KỸ NĂNG BẮT BUỘC TUÂN THỦ:
 ${MANIM_SKILLS_GUIDE}
