@@ -270,6 +270,18 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
     localStorage.setItem('yuta_ai_provider', selectedAi);
   }, [selectedAi]);
 
+  // Đồng bộ mã nguồn Python khi nhận được từ AI hoặc từ prompt
+  useEffect(() => {
+    if (progress.manimCode && !customPythonCode) {
+      setCustomPythonCode(progress.manimCode);
+    } else if (!customPythonCode && promptContent) {
+      const match = promptContent.match(/```(?:python)?\s*([\s\S]*?from manim[\s\S]*?)```/i);
+      if (match && match[1]) {
+        setCustomPythonCode(match[1].trim());
+      }
+    }
+  }, [progress.manimCode, promptContent]);
+
   const currentProvider = AI_PROVIDERS.find(p => p.id === selectedAi) || AI_PROVIDERS[0];
 
   if (!isOpen) return null;
@@ -443,18 +455,6 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
     setRevisionFeedback('');
     await handleStart(revPrompt);
   };
-
-  // Đồng bộ mã nguồn Python khi nhận được từ AI hoặc từ prompt
-  useEffect(() => {
-    if (progress.manimCode && !customPythonCode) {
-      setCustomPythonCode(progress.manimCode);
-    } else if (!customPythonCode && promptContent) {
-      const match = promptContent.match(/```(?:python)?\s*([\s\S]*?from manim[\s\S]*?)```/i);
-      if (match && match[1]) {
-        setCustomPythonCode(match[1].trim());
-      }
-    }
-  }, [progress.manimCode, promptContent]);
 
   const handleRerenderDirect = async (overrideQuality?: '480p' | '720p' | '1080p') => {
     const codeToRun = customPythonCode.trim() || progress.manimCode || '';
