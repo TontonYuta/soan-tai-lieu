@@ -11,13 +11,14 @@ import {
   generateVideoManimPrompt,
   generateManimRevisionPrompt
 } from '../services/prompts/manim';
+import { generateLatexRevisionPrompt } from '../services/gemini';
 
 interface OutputDisplayProps {
   content: string;
   status: GenerationStatus;
   error: string | null;
   onForwardContext?: (targetTab: 'roadmap' | 'learning' | 'worksheet' | 'similar' | 'exam' | 'video' | 'project') => void;
-  onOpenAutomation?: () => void;
+  onOpenAutomation?: (initialTab?: 'auto' | 'rerender') => void;
   videoConfig?: VideoConfig | null;
   onSelectPrompt?: (prompt: string) => void;
 }
@@ -35,6 +36,7 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({
   const [downloaded, setDownloaded] = useState<string | null>(null);
   const [isPlayingTTS, setIsPlayingTTS] = useState(false);
   const [revisionFeedback, setRevisionFeedback] = useState('');
+  const [latexRevisionFeedback, setLatexRevisionFeedback] = useState('');
   const [manimTab, setManimTab] = useState<'turn1' | 'turn2' | 'combined'>('turn1');
 
   useEffect(() => {
@@ -408,7 +410,7 @@ pause
           {/* Nút Tự Động Hóa 1-Click Duy Nhất */}
           {onOpenAutomation && (
             <button
-              onClick={onOpenAutomation}
+              onClick={() => onOpenAutomation('auto')}
               className="flex items-center gap-1.5 px-4 py-2 bg-[#A3E635] text-black border-2 border-black text-xs font-black uppercase tracking-widest shadow-[3px_3px_0_0_rgba(0,0,0,1)] hover:bg-[#86EFAC] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all cursor-pointer"
               title={isManim ? "Tự động sinh mã Manim và render video MP4 trực tiếp" : "Tự động dán sang Gemini, lấy mã LaTeX và compile trên Overleaf để ra PDF"}
             >
@@ -510,7 +512,7 @@ pause
             <>
               {onOpenAutomation && (
                 <button
-                  onClick={onOpenAutomation}
+                  onClick={() => onOpenAutomation('rerender')}
                   className="flex items-center gap-1 text-[11px] font-black text-black bg-[#00CECB] px-2.5 py-1 border border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:bg-[#2DD4BF] cursor-pointer"
                   title="Mở bảng điều khiển Rerender Video hoặc Tự động hóa 1-Click"
                 >
@@ -566,6 +568,15 @@ pause
             </>
           ) : isLatex ? (
             <>
+              {onOpenAutomation && (
+                <button
+                  onClick={() => onOpenAutomation('rerender')}
+                  className="flex items-center gap-1 text-[11px] font-black text-black bg-[#00CECB] px-2.5 py-1 border border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:bg-[#2DD4BF] cursor-pointer"
+                  title="Mở bảng điều khiển Rerender PDF trực tiếp bằng pdflatex hoặc chỉnh sửa mã LaTeX"
+                >
+                  <Zap className="w-3 h-3 stroke-[3] fill-black" /> ⚡ Rerender PDF
+                </button>
+              )}
               <button
                 onClick={() => downloadFile('tailieu.tex', extractCode(content, 'latex'))}
                 className="flex items-center gap-1 text-[11px] font-black text-black bg-white px-2.5 py-1 border border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:bg-[#FFED66] cursor-pointer"
@@ -654,6 +665,63 @@ pause
               >
                 <Zap className="w-4 h-4 stroke-[3] fill-black" />
                 <span>⚡ Sinh Prompt Sửa Lỗi & Tạo Video Lại</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* SECTION: CHỈNH SỬA MÃ LATEX & SỬA LỖI TÀI LIỆU (RE-PROMPT AGY) */}
+        {isLatex && (
+          <div className="border-t-4 border-black bg-[#E0F2FE] p-4 space-y-2 shrink-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Edit3 className="w-4 h-4 text-black stroke-[3]" />
+                <h4 className="text-xs font-black uppercase text-black tracking-wider">
+                  ✏️ Chỉnh Sửa Mã LaTeX / Góp Ý Nội Dung (Re-Prompt AGY)
+                </h4>
+              </div>
+              <span className="text-[10px] font-black uppercase bg-black text-[#0284C7] px-2 py-0.5 border border-black font-mono">
+                LaTeX Refine
+              </span>
+            </div>
+            <p className="text-[11px] font-bold text-black">
+              Nhập các yêu cầu sửa đổi, thêm bớt bài tập, thay đổi đáp án hoặc sửa lỗi công thức:
+            </p>
+            <textarea
+              value={latexRevisionFeedback}
+              onChange={(e) => setLatexRevisionFeedback(e.target.value)}
+              placeholder="Vd: 1. Bổ sung thêm 2 bài toán thực tế có hình vẽ TikZ minh họa&#10;2. Đổi đáp án câu 3 thành A&#10;3. Điều chỉnh khoảng cách các dòng kẻ tự luận rộng hơn..."
+              className="w-full p-2.5 bg-white border-2 border-black text-xs font-bold text-black placeholder:text-gray-500 min-h-[70px] focus:outline-none shadow-[2px_2px_0_0_rgba(0,0,0,1)]"
+            />
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              {onOpenAutomation && (
+                <button
+                  type="button"
+                  onClick={() => onOpenAutomation('rerender')}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-[#00CECB] hover:bg-[#2DD4BF] text-black border-2 border-black text-xs font-black uppercase shadow-[2px_2px_0_0_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none cursor-pointer"
+                  title="Mở tab Rerender PDF trực tiếp bằng pdflatex để xem ngay kết quả"
+                >
+                  <Zap className="w-4 h-4 stroke-[3] fill-black" />
+                  <span>⚡ Rerender Trực Tiếp (pdflatex)</span>
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  if (!latexRevisionFeedback.trim() || !onSelectPrompt) return;
+                  const revPrompt = generateLatexRevisionPrompt(null, extractCode(content, 'latex'), latexRevisionFeedback);
+                  onSelectPrompt(revPrompt);
+                  setLatexRevisionFeedback('');
+                }}
+                disabled={!latexRevisionFeedback.trim()}
+                className={`flex items-center gap-1.5 px-3 py-2 border-2 border-black text-xs font-black uppercase shadow-[2px_2px_0_0_rgba(0,0,0,1)] transition-all cursor-pointer ${
+                  !latexRevisionFeedback.trim()
+                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed border-gray-400 shadow-none'
+                    : 'bg-[#A3E635] hover:bg-[#86EFAC] text-black active:translate-x-[1px] active:translate-y-[1px] active:shadow-none'
+                }`}
+                title="Tự động tạo prompt sửa đổi kèm mã LaTeX hiện tại gửi cho AI cập nhật tài liệu"
+              >
+                <Zap className="w-4 h-4 stroke-[3] fill-black" />
+                <span>⚡ Sinh Prompt Sửa Đổi & Cập Nhật</span>
               </button>
             </div>
           </div>

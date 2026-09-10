@@ -6,7 +6,7 @@ import {
   Clock, Cpu, Volume2, Mic, Zap, Edit3, RefreshCw, Terminal, Bot
 } from 'lucide-react';
 import { AutomationClient, AutomationProgress } from '../services/automationClient';
-import { generateManimRevisionPrompt } from '../services/prompts/manim';
+import { generateManimRevisionPrompt, generateLatexRevisionPrompt } from '../services/gemini';
 
 interface AutomationModalProps {
   isOpen: boolean;
@@ -24,6 +24,7 @@ interface AutomationModalProps {
   voiceSpeed?: string;
   topic?: string;
   subject?: string;
+  initialTabMode?: 'auto' | 'rerender';
 }
 
 import { 
@@ -53,6 +54,7 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
   voiceSpeed,
   topic,
   subject,
+  initialTabMode = 'auto',
 }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [progress, setProgress] = useState<AutomationProgress>({
@@ -67,11 +69,13 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
   const [selectedPlaylistIndex, setSelectedPlaylistIndex] = useState<number>(0);
   const [revisionFeedback, setRevisionFeedback] = useState<string>('');
 
-  // Rerender Video State (Tự sửa code, import file .py và chỉnh chất lượng 480p/720p/1080p)
+  // Rerender State (Tự sửa code, import file .py / .tex và biên dịch trực tiếp)
   const [rerenderQuality, setRerenderQuality] = useState<'480p' | '720p' | '1080p'>('480p');
   const [customPythonCode, setCustomPythonCode] = useState<string>('');
+  const [customLatexCode, setCustomLatexCode] = useState<string>('');
   const [activeTabMode, setActiveTabMode] = useState<'auto' | 'rerender'>('auto');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const fileInputLatexRef = useRef<HTMLInputElement | null>(null);
 
   // Quota & Limit State (Antigravity Dynamic Quota)
   const [quotaWeekly, setQuotaWeekly] = useState<number>(98);
@@ -270,6 +274,13 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
     localStorage.setItem('yuta_ai_provider', selectedAi);
   }, [selectedAi]);
 
+  // Đồng bộ chế độ tab khi mở modal
+  useEffect(() => {
+    if (isOpen && initialTabMode) {
+      setActiveTabMode(initialTabMode);
+    }
+  }, [isOpen, initialTabMode]);
+
   // Đồng bộ mã nguồn Python khi nhận được từ AI hoặc từ prompt
   useEffect(() => {
     if (progress.manimCode && !customPythonCode) {
@@ -281,6 +292,21 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
       }
     }
   }, [progress.manimCode, promptContent]);
+
+  // Đồng bộ mã nguồn LaTeX khi nhận được từ AI hoặc từ prompt
+  useEffect(() => {
+    if (progress.latexCode && !customLatexCode) {
+      setCustomLatexCode(progress.latexCode);
+    } else if (!customLatexCode && promptContent) {
+      const match = promptContent.match(/```(?:latex)?\s*([\s\S]*?\\begin\{document\}[\s\S]*?)```/i) ||
+                    promptContent.match(/```(?:latex)?\s*([\s\S]*?\\documentclass[\s\S]*?)```/i);
+      if (match && match[1]) {
+        setCustomLatexCode(match[1].trim());
+      } else if (promptContent.includes('\\documentclass') || promptContent.includes('\\begin{document}')) {
+        setCustomLatexCode(promptContent.trim());
+      }
+    }
+  }, [progress.latexCode, promptContent]);
 
   const currentProvider = AI_PROVIDERS.find(p => p.id === selectedAi) || AI_PROVIDERS[0];
 
@@ -439,21 +465,95 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
 
   const handleReGenerateWithFeedback = async () => {
     if (!revisionFeedback.trim()) return;
-    const currentCode = progress.manimCode || progress.latexCode || '';
-    const revPrompt = generateManimRevisionPrompt(
-      { 
-        subject: subject || 'Toán học',
-        topic: topic || 'Bài giảng',
-        duration: '60 giây',
-        tone: 'simple',
-        audience: 'Học sinh & Người tự học',
-        format: 'vertical' 
-      },
-      currentCode,
-      revisionFeedback
-    );
+    const currentCode = isManimTask
+      ? (customPythonCode.trim() || progress.manimCode || '')
+      : (customLatexCode.trim() || progress.latexCode || '');
+
+    let revPrompt = '';
+    if (isManimTask) {
+      revPrompt = generateManimRevisionPrompt(
+        { 
+          subject: subject || 'Toán học',
+          topic: topic || 'Bài giảng',
+          duration: '60 giây',
+          tone: 'simple',
+          audience: 'Học sinh & Người tự học',
+          format: 'vertical' 
+        },
+        currentCode,
+        revisionFeedback
+      );
+    } else {
+      revPrompt = generateLatexRevisionPrompt(
+        {
+          subject: subject || 'Toán học',
+          topic: topic || 'Tài liệu học tập',
+          grade: '12',
+          documentType: 'Tài liệu LaTeX chuẩn mực'
+        },
+        currentCode,
+        revisionFeedback
+      );
+    }
     setRevisionFeedback('');
     await handleStart(revPrompt);
+  };
+
+  const handleRerenderLatexDirect = async () => {
+    const codeToRun = customLatexCode.trim() || progress.latexCode || '';
+    if (!codeToRun) {
+      alert('Vui lòng nhập, dán hoặc tải file mã nguồn LaTeX (tailieu.tex) để Rerender!');
+      return;
+    }
+    startTimer();
+    setIsRunning(true);
+    setLogs([]);
+    addLog(`⚡ Kích hoạt RERENDER TÀI LIỆU PDF TRỰC TIẾP [Chế độ: ${renderMode === 'overleaf' ? 'Overleaf Cloud' : 'Local pdflatex'}]...`);
+    addLog(`✓ Chế độ Offline/Direct: Bỏ qua AI prompt -> Tiết kiệm 100% thời gian chờ và quota.`);
+
+    await AutomationClient.rerenderLatex(
+      codeToRun,
+      (update) => {
+        setProgress(update);
+        addLog(update.message);
+        if (update.step === 'COMPLETED' || update.step === 'ERROR') {
+          setIsRunning(false);
+          stopTimer();
+        }
+      },
+      {
+        topic: topic,
+        subject: subject,
+        renderMode: renderMode,
+        overleafUrl: overleafUrl,
+      }
+    );
+  };
+
+  const handleFileUploadLatex = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const content = ev.target?.result as string;
+      if (content) {
+        setCustomLatexCode(content);
+        addLog(`✓ Đã import thành công file LaTeX: ${file.name} (${content.length} ký tự).`);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handlePasteClipboardLatex = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        setCustomLatexCode(text);
+        addLog(`✓ Đã dán mã LaTeX từ Clipboard (${text.length} ký tự).`);
+      }
+    } catch {
+      alert('Không thể đọc Clipboard. Vui lòng dán thủ công bằng Ctrl+V vào khung soạn thảo.');
+    }
   };
 
   const handleRerenderDirect = async (overrideQuality?: '480p' | '720p' | '1080p') => {
@@ -812,33 +912,183 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
             onChange={handleFileUpload}
           />
 
-          {/* Chế độ Làm Việc: 1-Click Tự Động AI vs ⚡ Rerender Video Nhanh */}
-          {isManimTask && (
-            <div className="p-1 bg-black border-2 border-black grid grid-cols-2 gap-1 text-xs font-black uppercase shadow-[3px_3px_0_0_rgba(0,0,0,1)]">
-              <button
-                type="button"
-                onClick={() => setActiveTabMode('auto')}
-                className={`py-2 px-3 flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                  activeTabMode === 'auto'
-                    ? 'bg-[#FFED66] text-black shadow-none translate-x-[1px] translate-y-[1px]'
-                    : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
-                }`}
-              >
-                <Bot className="w-4 h-4" />
-                <span>1. Tự Động Hóa AI Agent (2 Lượt Kịch Bản + Mã)</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTabMode('rerender')}
-                className={`py-2 px-3 flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                  activeTabMode === 'rerender'
-                    ? 'bg-[#00CECB] text-black shadow-none translate-x-[1px] translate-y-[1px]'
-                    : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
-                }`}
-              >
-                <Zap className="w-4 h-4 fill-current" />
-                <span>2. ⚡ Rerender Video Nhanh (Import / Sửa Code)</span>
-              </button>
+          {/* Hidden File Input cho việc import file .tex */}
+          <input
+            type="file"
+            ref={fileInputLatexRef}
+            accept=".tex,.txt"
+            className="hidden"
+            onChange={handleFileUploadLatex}
+          />
+
+          {/* Chế độ Làm Việc: 1-Click Tự Động AI vs ⚡ Rerender Theo Yêu Cầu */}
+          <div className="p-1 bg-black border-2 border-black grid grid-cols-2 gap-1 text-xs font-black uppercase shadow-[3px_3px_0_0_rgba(0,0,0,1)]">
+            <button
+              type="button"
+              onClick={() => setActiveTabMode('auto')}
+              className={`py-2 px-3 flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                activeTabMode === 'auto'
+                  ? 'bg-[#FFED66] text-black shadow-none translate-x-[1px] translate-y-[1px]'
+                  : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+              }`}
+            >
+              <Bot className="w-4 h-4" />
+              <span>1. Tự Động Hóa AI Agent (Sinh Mới & Xuất Bản)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTabMode('rerender')}
+              className={`py-2 px-3 flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                activeTabMode === 'rerender'
+                  ? 'bg-[#00CECB] text-black shadow-none translate-x-[1px] translate-y-[1px]'
+                  : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+              }`}
+            >
+              <Zap className="w-4 h-4 fill-current" />
+              <span>
+                {isManimTask
+                  ? '2. ⚡ Rerender Video Nhanh (Import / Sửa Code)'
+                  : '2. ⚡ Rerender PDF Theo Yêu Cầu (Sửa Mã / Xuất Ngay)'}
+              </span>
+            </button>
+          </div>
+
+          {/* KHỐI RERENDER TÀI LIỆU PDF LATEX ĐỘC LẬP KHI CHỌN TAB RERENDER */}
+          {!isManimTask && activeTabMode === 'rerender' && (
+            <div className="bg-[#00CECB]/15 border-4 border-black p-4 shadow-[6px_6px_0_0_rgba(0,0,0,1)] space-y-3 animate-in fade-in">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-black stroke-[3] fill-black" />
+                  <h4 className="text-sm font-black uppercase text-black tracking-wider">
+                    ⚡ Rerender Tài Liệu PDF Trực Tiếp (Biên Dịch pdflatex Siêu Tốc)
+                  </h4>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black uppercase bg-black text-[#00CECB] px-2 py-0.5 border border-black font-mono">
+                    Local pdflatex • Biên Dịch Siêu Tốc ~1s • Không tốn Quota AI
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-xs font-bold text-black">
+                Dán mã nguồn LaTeX đã chỉnh sửa bằng tay hoặc tải file <code>tailieu.tex</code> từ máy tính lên. Hệ thống sẽ sử dụng trình biên dịch <code>pdflatex</code> cục bộ để xuất file PDF ngay lập tức mà không cần gọi lại AI.
+              </p>
+
+              {/* Thanh thao tác và chế độ biên dịch */}
+              <div className="flex items-center justify-between flex-wrap gap-2 p-2 bg-white border-2 border-black">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black uppercase text-black">⚙️ Chế độ:</span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      disabled={isRunning}
+                      onClick={() => setRenderMode('local')}
+                      className={`px-2.5 py-1 border-2 border-black text-xs font-black uppercase transition-all cursor-pointer ${
+                        renderMode === 'local'
+                          ? 'bg-[#A3E635] text-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]'
+                          : 'bg-gray-100 text-gray-700 hover:bg-white'
+                      }`}
+                      title="Biên dịch tức thì bằng pdflatex cục bộ trên máy tính (khuyên dùng)"
+                    >
+                      ⚡ pdflatex Cục Bộ (~1s)
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isRunning}
+                      onClick={() => setRenderMode('overleaf')}
+                      className={`px-2.5 py-1 border-2 border-black text-xs font-black uppercase transition-all cursor-pointer ${
+                        renderMode === 'overleaf'
+                          ? 'bg-[#FFED66] text-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]'
+                          : 'bg-gray-100 text-gray-700 hover:bg-white'
+                      }`}
+                      title="Đẩy mã nguồn lên Overleaf để biên dịch trực tuyến"
+                    >
+                      🌐 Overleaf Cloud
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={handlePasteClipboardLatex}
+                    className="px-2.5 py-1 bg-white hover:bg-[#FFED66] border border-black text-[11px] font-black uppercase cursor-pointer shadow-[1px_1px_0_0_rgba(0,0,0,1)]"
+                  >
+                    📋 Dán Từ Clipboard
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => fileInputLatexRef.current?.click()}
+                    className="px-2.5 py-1 bg-white hover:bg-[#FFED66] border border-black text-[11px] font-black uppercase cursor-pointer shadow-[1px_1px_0_0_rgba(0,0,0,1)]"
+                  >
+                    📂 Tải File .tex Lên
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (progress.latexCode) {
+                        setCustomLatexCode(progress.latexCode);
+                      } else if (promptContent) {
+                        const match = promptContent.match(/```(?:latex)?\s*([\s\S]*?\\begin\{document\}[\s\S]*?)```/i) ||
+                                      promptContent.match(/```(?:latex)?\s*([\s\S]*?\\documentclass[\s\S]*?)```/i);
+                        if (match && match[1]) {
+                          setCustomLatexCode(match[1].trim());
+                        } else if (promptContent.includes('\\documentclass') || promptContent.includes('\\begin{document}')) {
+                          setCustomLatexCode(promptContent.trim());
+                        }
+                      }
+                    }}
+                    className="px-2.5 py-1 bg-white hover:bg-[#FFED66] border border-black text-[11px] font-black uppercase cursor-pointer"
+                  >
+                    🔄 Lấy Mã LaTeX Gốc
+                  </button>
+                </div>
+              </div>
+
+              {/* Trình soạn thảo Code LaTeX */}
+              <div className="relative">
+                <textarea
+                  value={customLatexCode}
+                  onChange={(e) => setCustomLatexCode(e.target.value)}
+                  placeholder="Dán hoặc viết mã nguồn LaTeX (tailieu.tex) tại đây... Bắt đầu bằng: \documentclass{article}"
+                  className="w-full h-64 p-3 bg-[#0f172a] text-[#86efac] font-mono text-xs border-2 border-black focus:outline-none selection:bg-[#FFED66] selection:text-black resize-y leading-relaxed"
+                  spellCheck={false}
+                />
+                <span className="absolute right-3 bottom-3 text-[10px] font-mono bg-black text-[#A3E635] px-2 py-0.5 border border-black">
+                  {customLatexCode.length} ký tự
+                </span>
+              </div>
+
+              {/* Nút thực thi Rerender PDF */}
+              <div className="flex items-center justify-between flex-wrap gap-2 pt-1">
+                <div className="flex items-center gap-2">
+                  {progress.pdfUrl && (
+                    <a
+                      href={progress.pdfUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-1.5 px-3 py-2 bg-[#A3E635] text-black border-2 border-black text-xs font-black uppercase shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:bg-[#86EFAC] cursor-pointer"
+                    >
+                      <Eye className="w-4 h-4 stroke-[3]" />
+                      <span>👁️ Mở Xem PDF Vừa Xuất</span>
+                    </a>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  disabled={isRunning || !customLatexCode.trim()}
+                  onClick={() => handleRerenderLatexDirect()}
+                  className={`flex items-center gap-2 px-5 py-3 border-[3px] border-black text-xs font-black uppercase tracking-wider shadow-[4px_4px_0_0_rgba(0,0,0,1)] transition-all cursor-pointer ${
+                    isRunning || !customLatexCode.trim()
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed border-gray-400 shadow-none'
+                      : 'bg-[#A3E635] hover:bg-[#86EFAC] text-black active:translate-x-[2px] active:translate-y-[2px] active:shadow-none'
+                  }`}
+                >
+                  <Zap className="w-4 h-4 stroke-[3] fill-black" />
+                  <span>⚡ Bắt Đầu Rerender PDF Ngay (Biên Dịch Offline)</span>
+                </button>
+              </div>
             </div>
           )}
 
@@ -1706,6 +1956,60 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
                       />
                     </div>
                   )}
+
+                  {/* SECTION: CHỈNH SỬA MÃ LATEX & SỬA LỖI TÀI LIỆU (RE-PROMPT AGY) */}
+                  <div className="bg-[#E0F2FE] border-4 border-black p-4 shadow-[6px_6px_0_0_rgba(0,0,0,1)] space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Edit3 className="w-5 h-5 text-black stroke-[3]" />
+                        <h4 className="text-sm font-black uppercase text-black tracking-wider">
+                          ✏️ Chỉnh Sửa Mã LaTeX / Góp Ý Nội Dung Tài Liệu (Re-Prompt AGY)
+                        </h4>
+                      </div>
+                      <span className="text-[10px] font-black uppercase bg-black text-[#0284C7] px-2 py-0.5 border border-black font-mono">
+                        1-Click Refine
+                      </span>
+                    </div>
+                    <p className="text-xs font-bold text-black">
+                      Nhập các yêu cầu sửa đổi, thêm bớt bài tập, thay đổi đáp án hoặc sửa lỗi công thức:
+                    </p>
+                    <textarea
+                      value={revisionFeedback}
+                      onChange={(e) => setRevisionFeedback(e.target.value)}
+                      placeholder="Vd: 1. Bổ sung thêm 2 bài toán thực tế có hình vẽ TikZ minh họa&#10;2. Đổi đáp án câu 3 thành A&#10;3. Điều chỉnh khoảng cách các dòng kẻ tự luận rộng hơn..."
+                      className="w-full p-3 bg-white border-[3px] border-black text-xs font-bold text-black placeholder:text-gray-500 min-h-[80px] shadow-[3px_3px_0_0_rgba(0,0,0,1)] focus:outline-none"
+                    />
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => handleRerenderLatexDirect()}
+                        disabled={isRunning || (!customLatexCode.trim() && !progress.latexCode)}
+                        className={`flex items-center gap-1.5 px-4 py-2.5 border-[3px] border-black text-xs font-black uppercase shadow-[3px_3px_0_0_rgba(0,0,0,1)] transition-all cursor-pointer ${
+                          isRunning || (!customLatexCode.trim() && !progress.latexCode)
+                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed border-gray-400 shadow-none'
+                            : 'bg-[#00CECB] hover:bg-[#2DD4BF] text-black active:translate-x-[1px] active:translate-y-[1px] active:shadow-none'
+                        }`}
+                        title="Biên dịch lại file PDF trực tiếp bằng pdflatex mà không cần qua AI"
+                      >
+                        <Zap className="w-4 h-4 stroke-[3] fill-black" />
+                        <span>⚡ Rerender Offline (pdflatex)</span>
+                      </button>
+
+                      <button
+                        onClick={handleReGenerateWithFeedback}
+                        disabled={isRunning || !revisionFeedback.trim()}
+                        className={`flex items-center gap-2 px-4 py-2.5 border-[3px] border-black text-xs font-black uppercase shadow-[4px_4px_0_0_rgba(0,0,0,1)] transition-all cursor-pointer ${
+                          isRunning || !revisionFeedback.trim()
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed border-gray-400 shadow-none'
+                            : 'bg-[#A3E635] hover:bg-[#86EFAC] text-black active:translate-x-[2px] active:translate-y-[2px] active:shadow-none'
+                        }`}
+                        title="Tự động truyền phản hồi sửa đổi cho AI để viết lại mã LaTeX và xuất file PDF mới"
+                      >
+                        <Zap className="w-4 h-4 stroke-[3] fill-black" />
+                        <span>⚡ Gửi Phản Hồi & Tạo Lại Tài Liệu (1-Click)</span>
+                      </button>
+                    </div>
+                  </div>
                 </>
               )}
             </div>
@@ -1741,7 +2045,7 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
               </button>
             ) : (
               <div className="flex items-center gap-2 flex-wrap">
-                {isManimTask && (
+                {isManimTask ? (
                   <button
                     type="button"
                     onClick={() => handleRerenderDirect()}
@@ -1751,7 +2055,22 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
                     <Zap className="w-4 h-4 stroke-[3] fill-black" />
                     <span>⚡ RERENDER ({rerenderQuality.toUpperCase()})</span>
                   </button>
-                )}
+                ) : !isScriptTask ? (
+                  <button
+                    type="button"
+                    onClick={() => handleRerenderLatexDirect()}
+                    disabled={!customLatexCode.trim() && !progress.latexCode}
+                    className={`flex items-center gap-1.5 px-5 py-3 border-4 border-black text-xs font-black uppercase tracking-wider shadow-[4px_4px_0_0_rgba(0,0,0,1)] transition-all cursor-pointer ${
+                      !customLatexCode.trim() && !progress.latexCode
+                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed border-gray-400 shadow-none'
+                        : 'bg-[#00CECB] hover:bg-[#2DD4BF] text-black hover:translate-x-0.5 hover:translate-y-0.5'
+                    }`}
+                    title="Biên dịch lại file PDF trực tiếp từ mã LaTeX bằng pdflatex mà không cần qua AI (tiết kiệm 100% quota và thời gian)"
+                  >
+                    <Zap className="w-4 h-4 stroke-[3] fill-black" />
+                    <span>⚡ RERENDER PDF (~1S)</span>
+                  </button>
+                ) : null}
                 <button
                   onClick={() => handleStart()}
                   className="flex items-center gap-2 px-8 py-3 bg-[#A3E635] text-black border-4 border-black text-sm font-black uppercase tracking-widest shadow-[6px_6px_0_0_rgba(0,0,0,1)] hover:bg-[#86EFAC] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all cursor-pointer"

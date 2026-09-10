@@ -876,3 +876,52 @@ export const PRE_ALGEBRA_TEMPLATE = `
 `;
 
 export const WORKSHEET_TEMPLATE = PRE_ALGEBRA_TEMPLATE;
+
+export interface LatexRevisionConfig {
+  subject?: string;
+  topic?: string;
+  grade?: string;
+  documentType?: string;
+}
+
+export const generateLatexRevisionPrompt = (
+  config: LatexRevisionConfig | null | undefined,
+  existingCode: string,
+  userFeedback: string
+): string => {
+  const subjectStr = config?.subject ? `Môn học: "${config.subject}"` : 'Môn học: Toán học / Khoa học';
+  const topicStr = config?.topic ? `Chủ đề: "${config.topic}"` : '';
+  const gradeStr = config?.grade ? `Khối lớp/Trình độ: "${config.grade}"` : '';
+  const docTypeStr = config?.documentType ? `Loại tài liệu: "${config.documentType}"` : 'Loại tài liệu: Tài liệu học tập / Đề thi / Phiếu bài tập';
+
+  return `Đóng vai Chuyên gia Soạn thảo Tài liệu & Biên dịch LaTeX Chuyên nghiệp (pdflatex, TikZ, pgfplots, tcolorbox).
+Nhiệm vụ của bạn là đọc mã nguồn LaTeX (\`tailieu.tex\`) đã được tạo trước đó cùng danh sách CÁC LỖI VÀ YÊU CẦU ĐIỀU CHỈNH từ người dùng, sau đó VIẾT LẠI MÃ LATEX HOÀN CHỈNH TỪ ĐẦU để sửa triệt để các lỗi và biên dịch lại ra file PDF chuẩn mực.
+
+I. THÔNG TIN TÀI LIỆU:
+- ${subjectStr}
+- ${topicStr}
+- ${gradeStr}
+- ${docTypeStr}
+
+II. DANH SÁCH LỖI VÀ YÊU CẦU ĐIỀU CHỈNH TỪ NGƯỜI DÙNG:
+"""
+${userFeedback.trim()}
+"""
+
+III. MÃ NGUỒN LATEX HIỆN TẠI (CẦN KHẮC PHỤC):
+\`\`\`latex
+${existingCode.trim()}
+\`\`\`
+
+IV. YÊU CẦU THỰC THI BẮT BUỘC:
+1. Đọc kỹ từng góp ý, nội dung cần bổ sung/chỉnh sửa, hoặc lỗi bố cục được ghi trong mục II.
+2. Viết lại TOÀN BỘ file mã nguồn LaTeX (\`tailieu.tex\`) từ \\documentclass đến \\end{document}.
+3. TUÂN THỦ NGHIÊM NGẶT CÁC QUY TẮC LATEX ĐA MÔN:
+   - Header tinh gọn (Compact Visual Header), bắt đầu học tập ngay trang 1, không dùng \\maketitle hay trang bìa cồng kềnh.
+   - Bố cục trực quan cân đối: Dùng \\cauhoicohinh khi có sơ đồ/TikZ; dùng \\dongke cho câu hỏi tự luận đại số; dùng \\khungnhap cho hình học.
+   - Bắt buộc tương thích 100% với pdfLaTeX (\\usepackage{vietnam}, \\usepackage{amsmath,amssymb}, \\usepackage{tcolorbox}, \\usepackage{tikz}).
+   - QUY TẮC CHỐNG RÁC RAG: TUYỆT ĐỐI KHÔNG chèn số trang, [RAG], hay nhãn tài liệu nội bộ vào câu hỏi.
+   - QUY TẮC VIẾT HOA: Chỉ viết hoa toàn bộ cho Tiêu đề chính; tiêu đề dạng toán dùng Title Case (vd: \\dangtoan{Dạng 1. ...}); câu hỏi viết hoa chữ cái đầu bình thường.
+4. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ LATEX trong \`\`\`latex ... \`\`\`, không viết lời chào hay giải thích ngoài mã.
+5. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file). (Hệ thống máy chủ sẽ tự biên dịch mã bằng lệnh: \`pdflatex -interaction=nonstopmode tailieu.tex\`, AI không được tự chạy lệnh này).`;
+};

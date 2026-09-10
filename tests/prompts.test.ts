@@ -13,7 +13,8 @@ import {
   generateBatPrompt,
   generateManimRevisionPrompt,
   extractAttachedImageDirective,
-  generateProjectPrompt
+  generateProjectPrompt,
+  generateLatexRevisionPrompt
 } from '../services/gemini';
 
 import { ExamConfig, WorksheetConfig, VideoConfig, SimilarExerciseConfig, LearningConfig, RoadmapConfig, BatConfig, ProjectConfig } from '../types';
@@ -422,6 +423,7 @@ test("14. Manim: Standard Superscript/Subscript, VÍ DỤ MINH HỌA badge & Vis
 test("15. AutomationClient: Rerender Method & Direct Parameters Support", async () => {
   const { AutomationClient } = await import("../services/automationClient");
   assert.strictEqual(typeof AutomationClient.rerenderManim, "function");
+  assert.strictEqual(typeof AutomationClient.rerenderLatex, "function");
 });
 
 test("16. Manim Typography & Snappy Pacing Rules Verification", () => {
@@ -598,6 +600,39 @@ test("18. University Project & Thesis Generator Verification (1-Click & Clarity)
   assert.match(defensePrompt, /SONG NGỮ/);
   assert.match(defensePrompt, /Kịch bản thuyết trình, Slide outline/);
 });
+
+test("19. LaTeX On-Demand Rerender & AI Revision Prompt Verification", () => {
+  // 1. Kiểm tra với config đầy đủ
+  const fullConfig = {
+    subject: "Toán học",
+    topic: "Khảo sát sự biến thiên của hàm số bậc ba",
+    grade: "12",
+    documentType: "Phiếu bài tập nâng cao"
+  };
+  const existingLatex = "\\documentclass{article}\n\\begin{document}\n\\section{BÀI TẬP}\n\\end{document}";
+  const feedback = "1. Bổ sung thêm 3 câu hỏi trắc nghiệm dạng bảng biến thiên\n2. Sửa đáp án câu 2 thành C\n3. Thêm hình vẽ TikZ minh họa tiếp tuyến";
+
+  const promptWithConfig = generateLatexRevisionPrompt(fullConfig, existingLatex, feedback);
+
+  assert.match(promptWithConfig, /Môn học: "Toán học"/);
+  assert.match(promptWithConfig, /Chủ đề: "Khảo sát sự biến thiên của hàm số bậc ba"/);
+  assert.match(promptWithConfig, /Khối lớp\/Trình độ: "12"/);
+  assert.match(promptWithConfig, /Loại tài liệu: "Phiếu bài tập nâng cao"/);
+  assert.match(promptWithConfig, /DANH SÁCH LỖI VÀ YÊU CẦU ĐIỀU CHỈNH TỪ NGƯỜI DÙNG/);
+  assert.match(promptWithConfig, /Bổ sung thêm 3 câu hỏi trắc nghiệm/);
+  assert.match(promptWithConfig, /MÃ NGUỒN LATEX HIỆN TẠI/);
+  assert.match(promptWithConfig, /\\documentclass\{article\}/);
+  assert.match(promptWithConfig, /Compact Visual Header/);
+  assert.match(promptWithConfig, /pdflatex/);
+  assert.match(promptWithConfig, /QUY TẮC CHỐNG RÁC RAG/);
+  assert.match(promptWithConfig, /TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ LATEX/);
+
+  // 2. Kiểm tra fallback khi config null/undefined
+  const promptWithoutConfig = generateLatexRevisionPrompt(null, existingLatex, "Đổi font sang Be Vietnam Pro");
+  assert.match(promptWithoutConfig, /Môn học: Toán học \/ Khoa học/);
+  assert.match(promptWithoutConfig, /Đổi font sang Be Vietnam Pro/);
+});
+
 
 
 

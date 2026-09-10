@@ -13,6 +13,7 @@ import {
 import { generateVideoScriptPrompt } from "./prompts/script";
 import { generateBatPrompt } from "./prompts/bat";
 import { generateProjectPrompt } from "./prompts/project";
+import { generateLatexRevisionPrompt } from "./prompts/latex-rules";
 
 export {
   generateExamPrompt,
@@ -24,6 +25,7 @@ export {
   generateManimCodePrompt,
   generateVideoManimPrompt,
   generateManimRevisionPrompt,
+  generateLatexRevisionPrompt,
   generateVideoScriptPrompt,
   generateBatPrompt,
   generateProjectPrompt,

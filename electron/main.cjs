@@ -2112,6 +2112,178 @@ function startInternalServer(callback) {
               fs.mkdirSync(downloadsDir, { recursive: true });
             }
 
+            // --- PHÂN NHÁNH 1: RERENDER TÀI LIỆU PDF LATEX TRỰC TIẾP ---
+            if (options.contentType === 'latex' || Boolean(options.customLatexCode)) {
+              sendSSE({
+                step: 'COMPILING_LATEX',
+                progress: 10,
+                message: '⚡ Bắt đầu Rerender tài liệu PDF trực tiếp (Chế độ Offline pdflatex)...',
+                contentType: 'latex'
+              });
+
+              let rawLatex = options.customLatexCode || '';
+              const defaultTexPath = path.join(downloadsDir, 'tailieu.tex');
+              if (!rawLatex && fs.existsSync(defaultTexPath)) {
+                rawLatex = fs.readFileSync(defaultTexPath, 'utf-8');
+              }
+
+              if (!rawLatex || (!rawLatex.includes('\\begin{document}') && !rawLatex.includes('\\documentclass'))) {
+                sendSSE({
+                  step: 'ERROR',
+                  progress: 0,
+                  message: '⚠️ Không tìm thấy mã nguồn LaTeX hợp lệ để biên dịch. Vui lòng kiểm tra lại mã nguồn!',
+                  error: 'No valid LaTeX code',
+                  contentType: 'latex'
+                });
+                return;
+              }
+
+              let cleanLatex = rawLatex.replace(/```(?:latex)?/gi, '').replace(/```/g, '').trim();
+              let finalLatex = cleanLatex;
+              const timestamp = Date.now();
+              const texFileName = `tailieu_${timestamp}.tex`;
+              const pdfFileName = `tailieu_${timestamp}.pdf`;
+              const targetTexPath = path.join(downloadsDir, texFileName);
+              const targetPdfPath = path.join(downloadsDir, pdfFileName);
+
+              fs.writeFileSync(targetTexPath, finalLatex, 'utf-8');
+              fs.writeFileSync(defaultTexPath, finalLatex, 'utf-8');
+
+              const compileSh = `#!/bin/bash\npdflatex -interaction=nonstopmode "${texFileName}"\npdflatex -interaction=nonstopmode "${texFileName}"\nrm -f *.aux *.log *.out *.toc\n`;
+              const compileBat = `@echo off\nchcp 65001 >nul\npdflatex -interaction=nonstopmode "${texFileName}"\npdflatex -interaction=nonstopmode "${texFileName}"\ndel *.aux *.log *.out *.toc 2>nul\n`;
+              fs.writeFileSync(path.join(downloadsDir, 'compile_latex.sh'), compileSh, 'utf-8');
+              fs.writeFileSync(path.join(downloadsDir, 'compile_latex.bat'), compileBat, 'utf-8');
+
+              const pdflatexPathFound = getPdflatexPath();
+              const pdflatexBin = (pdflatexPathFound && (fs.existsSync(pdflatexPathFound) || pdflatexPathFound === 'pdflatex')) ? pdflatexPathFound : null;
+
+              let compiledPdfPath = null;
+              if (pdflatexBin) {
+                sendSSE({
+                  step: 'COMPILING_LATEX',
+                  progress: 30,
+                  message: '⚙️ Đang biên dịch tài liệu bằng pdflatex (Lần 1)...',
+                  contentType: 'latex',
+                  latexCode: finalLatex
+                });
+
+                for (let pass = 1; pass <= 2; pass++) {
+                  if (pass === 2) {
+                    sendSSE({
+                      step: 'COMPILING_LATEX',
+                      progress: 70,
+                      message: '⚙️ Đang biên dịch pdflatex lần 2 (Đồng bộ số trang, mục lục & TikZ)...',
+                      contentType: 'latex',
+                      latexCode: finalLatex
+                    });
+                  }
+                  await new Promise((resPass) => {
+                    const proc = spawn(pdflatexBin, [
+                      '-interaction=nonstopmode',
+                      `-output-directory=${downloadsDir}`,
+                      targetTexPath
+                    ], { cwd: downloadsDir });
+                    if (activeRunner) activeRunner.childProc = proc;
+                    proc.on('close', () => {
+                      if (activeRunner) activeRunner.childProc = null;
+                      resPass();
+                    });
+                    proc.on('error', () => {
+                      if (activeRunner) activeRunner.childProc = null;
+                      resPass();
+                    });
+                  });
+                }
+
+                if (fs.existsSync(targetPdfPath)) {
+                  compiledPdfPath = targetPdfPath;
+                } else {
+                  // Thử Auto-Healing nếu biên dịch lần đầu thất bại
+                  const logFile = path.join(downloadsDir, `tailieu_${timestamp}.log`);
+                  let logContent = '';
+                  if (fs.existsSync(logFile)) {
+                    try { logContent = fs.readFileSync(logFile, 'utf-8'); } catch {}
+                  }
+                  sendSSE({
+                    step: 'COMPILING_LATEX',
+                    progress: 85,
+                    message: '🔧 Kích hoạt LaTeX Auto-Healing: Đang tự động sửa lỗi cú pháp & ký tự đặc biệt...',
+                    contentType: 'latex',
+                    latexCode: finalLatex
+                  });
+                  const repaired = autoRepairLatexCode(finalLatex, logContent);
+                  if (repaired !== finalLatex) {
+                    finalLatex = repaired;
+                    fs.writeFileSync(targetTexPath, finalLatex, 'utf-8');
+                    fs.writeFileSync(defaultTexPath, finalLatex, 'utf-8');
+                    for (let pass = 1; pass <= 2; pass++) {
+                      await new Promise((resPass) => {
+                        const proc = spawn(pdflatexBin, [
+                          '-interaction=nonstopmode',
+                          `-output-directory=${downloadsDir}`,
+                          targetTexPath
+                        ], { cwd: downloadsDir });
+                        proc.on('close', () => resPass());
+                        proc.on('error', () => resPass());
+                      });
+                    }
+                    if (fs.existsSync(targetPdfPath)) {
+                      compiledPdfPath = targetPdfPath;
+                    }
+                  }
+                }
+
+                if (compiledPdfPath) {
+                  const auxExtensions = ['.aux', '.log', '.out', '.toc', '.nav', '.snm'];
+                  for (const ext of auxExtensions) {
+                    const auxFile = path.join(downloadsDir, `tailieu_${timestamp}${ext}`);
+                    if (fs.existsSync(auxFile)) {
+                      try { fs.unlinkSync(auxFile); } catch {}
+                    }
+                  }
+                }
+              }
+
+              if (!compiledPdfPath) {
+                const logFile = path.join(downloadsDir, `tailieu_${timestamp}.log`);
+                let errorDetails = '';
+                if (fs.existsSync(logFile)) {
+                  try {
+                    const logLines = fs.readFileSync(logFile, 'utf-8').split('\n');
+                    const errs = logLines.filter(l => l.startsWith('!') || l.includes('Error:')).slice(0, 4);
+                    if (errs.length > 0) errorDetails = errs.join(' | ');
+                  } catch {}
+                }
+
+                sendSSE({
+                  step: 'ERROR',
+                  progress: 0,
+                  message: `⚠️ Không thể xuất PDF: ${errorDetails || 'Chưa phát hiện trình biên dịch pdflatex hoặc mã nguồn bị lỗi cú pháp.'}`,
+                  error: errorDetails || 'Compilation failed',
+                  latexCode: finalLatex,
+                  filePath: targetTexPath,
+                  contentType: 'latex'
+                });
+                return;
+              }
+
+              const pdfPreviewUrl = generatePdfPreviewImage(compiledPdfPath, downloadsDir);
+
+              sendSSE({
+                step: 'COMPLETED',
+                progress: 100,
+                message: '🎉 Rerender tài liệu PDF thành công! [tailieu.pdf]',
+                latexCode: finalLatex,
+                pdfPath: compiledPdfPath,
+                pdfUrl: `/downloads/${pdfFileName}`,
+                previewImageUrl: pdfPreviewUrl,
+                filePath: targetTexPath,
+                contentType: 'latex'
+              });
+              return;
+            }
+
+            // --- PHÂN NHÁNH 2: RERENDER VIDEO MANIM TRỰC TIẾP ---
             const quality = options.renderQuality || '480p';
             const qualityFlag = quality === '4k' ? '-qk' : quality === '480p' ? '-ql' : quality === '720p' ? '-qm' : '-qh';
             const qualityLabel = quality === '480p' ? '480p (Kiểm thử siêu tốc)' : quality === '720p' ? '720p (HD Chuẩn)' : quality === '4k' ? '4K (Ultra HD)' : '1080p (Full HD Chuẩn nét)';

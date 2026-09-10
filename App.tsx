@@ -73,6 +73,7 @@ const App: React.FC = () => {
   const [promptContent, setPromptContent] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [isAutomationOpen, setIsAutomationOpen] = useState(false);
+  const [automationTabMode, setAutomationTabMode] = useState<'auto' | 'rerender'>('auto');
   const [headless, setHeadless] = useState<boolean>(
     localStorage.getItem('yuta_headless') === 'true'
   );
@@ -317,6 +318,7 @@ const App: React.FC = () => {
     setContextMetadata({ topic: metadata.topic, subject: metadata.subject, grade: metadata.grade || '12' });
     setLearningContext(`${label}: ${metadata.topic}`);
     setStatus(GenerationStatus.SUCCESS);
+    setAutomationTabMode('auto');
     setIsAutomationOpen(true);
   };
 
@@ -401,6 +403,7 @@ const App: React.FC = () => {
 
   const handleDirectProjectAutomate = (config: ProjectConfig) => {
     handleProjectGenerate(config);
+    setAutomationTabMode('auto');
     setIsAutomationOpen(true);
   };
 
@@ -426,6 +429,7 @@ const App: React.FC = () => {
       <AutomationModal 
         isOpen={isAutomationOpen} 
         onClose={() => setIsAutomationOpen(false)} 
+        initialTabMode={automationTabMode}
         promptContent={promptContent} 
         headless={headless}
         onToggleHeadless={handleHeadlessToggle}
@@ -760,7 +764,10 @@ const App: React.FC = () => {
               videoConfig={activeTab === 'video' ? currentVideoConfig : null}
               onSelectPrompt={(p) => setPromptContent(p)}
               onForwardContext={handleForwardContext}
-              onOpenAutomation={() => setIsAutomationOpen(true)}
+              onOpenAutomation={(tab) => {
+                setAutomationTabMode(tab || 'auto');
+                setIsAutomationOpen(true);
+              }}
             />
           </div>
 

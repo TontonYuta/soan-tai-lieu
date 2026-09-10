@@ -52,7 +52,9 @@ export interface AutomationRunParams {
   voiceName?: string;
   voiceSpeed?: string;
   rerenderOnly?: boolean;
+  contentType?: 'latex' | 'manim';
   customPythonCode?: string;
+  customLatexCode?: string;
   renderQuality?: '480p' | '720p' | '1080p' | '4k';
 }
 
@@ -307,8 +309,26 @@ export class AutomationClient {
       {
         prompt: 'RERENDER_MANIM_DIRECT',
         rerenderOnly: true,
+        contentType: 'manim',
         customPythonCode: code,
         renderQuality: quality,
+        ...options,
+      },
+      onProgress
+    );
+  }
+
+  public static async rerenderLatex(
+    code: string,
+    onProgress: (data: AutomationProgress) => void,
+    options?: Partial<AutomationRunParams>
+  ): Promise<void> {
+    return this.startPipeline(
+      {
+        prompt: 'RERENDER_LATEX_DIRECT',
+        rerenderOnly: true,
+        contentType: 'latex',
+        customLatexCode: code,
         ...options,
       },
       onProgress
