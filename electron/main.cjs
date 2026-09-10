@@ -2025,6 +2025,177 @@ function startInternalServer(callback) {
         };
 
         try {
+          // XỬ LÝ NHANH: CHẾ ĐỘ RERENDER TRỰC TIẾP (KHÔNG CẦN GỌI AI / PROMPT ENGINE)
+          if (options.rerenderOnly || options.action === 'rerender') {
+            activeRunner = {
+              cancel: () => {
+                if (activeRunner && activeRunner.childProc) {
+                  try { activeRunner.childProc.kill('SIGTERM'); } catch {}
+                }
+              },
+              childProc: null,
+            };
+
+            const downloadsDir = path.join(os.homedir(), 'Downloads');
+            if (!fs.existsSync(downloadsDir)) {
+              fs.mkdirSync(downloadsDir, { recursive: true });
+            }
+
+            const quality = options.renderQuality || '480p';
+            const qualityFlag = quality === '4k' ? '-qk' : quality === '480p' ? '-ql' : quality === '720p' ? '-qm' : '-qh';
+            const qualityLabel = quality === '480p' ? '480p (Kiểm thử siêu tốc)' : quality === '720p' ? '720p (HD Chuẩn)' : quality === '4k' ? '4K (Ultra HD)' : '1080p (Full HD Chuẩn nét)';
+
+            sendSSE({
+              step: 'RENDERING_VIDEO',
+              progress: 10,
+              message: `⚡ Bắt đầu Rerender Video Manim CE trực tiếp [Chất lượng: ${qualityLabel}]...`,
+              contentType: 'manim'
+            });
+
+            let rawPython = options.customPythonCode || '';
+            const sceneFilePath = path.join(downloadsDir, 'scene.py');
+            if (!rawPython && fs.existsSync(sceneFilePath)) {
+              rawPython = fs.readFileSync(sceneFilePath, 'utf-8');
+            }
+
+            if (!rawPython || (!rawPython.includes('class ') && !rawPython.includes('def construct'))) {
+              sendSSE({
+                step: 'ERROR',
+                progress: 0,
+                message: '⚠️ Không tìm thấy mã Python Manim (scene.py) hợp lệ để Rerender. Vui lòng kiểm tra lại mã nguồn!',
+                error: 'No valid Manim code',
+                contentType: 'manim'
+              });
+              return;
+            }
+
+            let finalPython = prepareManimPythonCode(rawPython);
+            fs.writeFileSync(sceneFilePath, finalPython, 'utf-8');
+
+            const renderSh = `#!/bin/bash\nmanim ${qualityFlag} scene.py MainScene\n`;
+            fs.writeFileSync(path.join(downloadsDir, 'render_manim.sh'), renderSh, 'utf-8');
+
+            const manimBin = await ensureManimEnvironment((msg) => {
+              sendSSE({ step: 'RENDERING_VIDEO', progress: 20, message: msg, contentType: 'manim' });
+            });
+
+            if (!manimBin) {
+              sendSSE({
+                step: 'ERROR',
+                progress: 0,
+                message: '⚠️ Không tìm thấy Manim CE trong môi trường Python. Vui lòng cài đặt qua pip install manim.',
+                error: 'Manim binary missing',
+                contentType: 'manim'
+              });
+              return;
+            }
+
+            let sceneClass = 'MainScene';
+            const sceneMatch = finalPython.match(/class\s+([A-Za-z0-9_]+)\s*\(\s*(?:ThreeDScene|MovingCameraScene|LinearTransformationScene|VectorScene|ZoomedScene|Scene)\s*\)/);
+            if (sceneMatch && sceneMatch[1]) sceneClass = sceneMatch[1];
+
+            sendSSE({
+              step: 'RENDERING_VIDEO',
+              progress: 30,
+              message: `⚙️ Đang thực thi Manim CE: manim ${qualityFlag} scene.py ${sceneClass}...`,
+              manimCode: finalPython,
+              filePath: sceneFilePath,
+              contentType: 'manim'
+            });
+
+            const mediaDir = path.join(downloadsDir, 'media');
+            const renderResult = await new Promise((resRender) => {
+              const proc = spawn(manimBin, [qualityFlag, '--media_dir', mediaDir, sceneFilePath, sceneClass], { cwd: downloadsDir });
+              if (activeRunner) activeRunner.childProc = proc;
+              let stderr = '';
+              let stdout = '';
+              proc.stdout.on('data', d => { stdout += d.toString(); });
+              proc.stderr.on('data', d => {
+                const s = d.toString();
+                stderr += s;
+                const match = s.match(/(\d+)%/);
+                if (match) {
+                  const pct = Math.min(95, 30 + Math.floor(parseInt(match[1], 10) * 0.65));
+                  sendSSE({
+                    step: 'RENDERING_VIDEO',
+                    progress: pct,
+                    message: `Đang render video Manim (${quality}): ${match[1]}%...`,
+                    manimCode: finalPython,
+                    contentType: 'manim'
+                  });
+                }
+              });
+              proc.on('close', code => {
+                if (activeRunner) activeRunner.childProc = null;
+                if (code === 0) {
+                  const newest = findNewestMp4(mediaDir);
+                  if (newest) return resRender({ success: true, mp4Path: newest });
+                }
+                const parsed = parseManimError(stderr, stdout, downloadsDir);
+                resRender({ success: false, error: parsed.summary, detailsForAI: parsed.detailsForAI });
+              });
+              proc.on('error', err => {
+                if (activeRunner) activeRunner.childProc = null;
+                resRender({ success: false, error: err.message, detailsForAI: err.message });
+              });
+            });
+
+            if (!renderResult.success || !renderResult.mp4Path) {
+              sendSSE({
+                step: 'ERROR',
+                progress: 0,
+                message: `⚠️ Lỗi render Manim: ${renderResult.error || 'Biên dịch thất bại'}`,
+                error: renderResult.error,
+                manimCode: finalPython,
+                filePath: sceneFilePath,
+                contentType: 'manim'
+              });
+              return;
+            }
+
+            let finalMp4Path = renderResult.mp4Path;
+            let audioPath = null;
+            let finalVideoWithAudio = finalMp4Path;
+
+            if (options.enableVoice === true) {
+              try {
+                sendSSE({ step: 'RENDERING_VIDEO', progress: 96, message: 'Đang tổng hợp thuyết minh giọng đọc AI (TTS)...', contentType: 'manim' });
+                const ttsRes = await generateVoiceoverAndMux({
+                  pythonCode: finalPython,
+                  mp4Path: finalMp4Path,
+                  workingDir: downloadsDir,
+                  voiceName: options.voiceName || 'vi-VN-HoaiMyNeural',
+                  voiceSpeed: options.voiceSpeed || '+0%',
+                  fallbackTopic: options.topic || options.subject || 'Toán học',
+                  onStatus: (msg) => {
+                    sendSSE({ step: 'RENDERING_VIDEO', progress: 98, message: msg, contentType: 'manim' });
+                  }
+                });
+                if (ttsRes && ttsRes.audioPath) audioPath = ttsRes.audioPath;
+                if (ttsRes && ttsRes.mp4Path) finalVideoWithAudio = ttsRes.mp4Path;
+              } catch (e) {
+                console.warn('Voiceover synthesis warning:', e.message);
+              }
+            }
+
+            const relMp4 = finalVideoWithAudio ? path.relative(downloadsDir, finalVideoWithAudio) : undefined;
+            const relAudio = audioPath ? path.relative(downloadsDir, audioPath) : undefined;
+
+            sendSSE({
+              step: 'COMPLETED',
+              progress: 100,
+              message: `🎉 Rerender video Manim (${quality}) thành công!${audioPath ? ' Đã ghép thuyết minh AI.' : ''}`,
+              manimCode: finalPython,
+              videoPath: finalVideoWithAudio || finalMp4Path,
+              videoUrl: relMp4 ? `/downloads/${relMp4}` : undefined,
+              audioPath: audioPath || undefined,
+              audioUrl: relAudio ? `/downloads/${relAudio}` : undefined,
+              filePath: sceneFilePath,
+              contentType: 'manim'
+            });
+            return;
+          }
+
           const rawProvider = (options.aiProvider || options.provider || (options.model && options.model.startsWith('chatgpt') ? 'chatgpt' : 'gemini')).toLowerCase();
           const providerKey = rawProvider;
 

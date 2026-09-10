@@ -126,7 +126,7 @@ export interface VideoConfig {
     | 'general' 
     | string;
   fontStyle?: 'serif' | 'sans';
-  renderQuality?: '480p' | '1080p' | '4k';
+  renderQuality?: '480p' | '720p' | '1080p' | '4k';
   fps?: 30 | 60;
   safeZoneShorts?: boolean;
   attachedPdf?: AttachedPdfData;

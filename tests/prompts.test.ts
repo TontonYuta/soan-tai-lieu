@@ -10,7 +10,8 @@ import {
   generateManimCodePrompt,
   generateVideoManimPrompt,
   generateVideoScriptPrompt,
-  generateBatPrompt
+  generateBatPrompt,
+  generateManimRevisionPrompt
 } from '../services/gemini';
 
 import { ExamConfig, WorksheetConfig, VideoConfig, SimilarExerciseConfig, LearningConfig, RoadmapConfig, BatConfig } from '../types';
@@ -371,4 +372,49 @@ test("13. Manim & Script: Balanced Intro, Non-overflowing Problem Titles, RAG Ac
   assert.doesNotMatch(scriptPrompt, /thần chú/i);
   assert.doesNotMatch(scriptPrompt, /sống còn/i);
 });
+
+test("14. Manim: Standard Superscript/Subscript, VÍ DỤ MINH HỌA badge & Visual Slow-down Pacing", () => {
+  const videoConfig: VideoConfig = {
+    subject: "Toán học",
+    topic: "Đơn điệu và cực trị hàm bậc ba",
+    duration: "60s",
+    tone: "academic",
+    audience: "Học sinh lớp 12",
+    format: "vertical",
+    renderQuality: "480p"
+  };
+
+  const manimCodePrompt = generateManimCodePrompt(videoConfig);
+  // 1. Kiểm tra không còn Pill Badge "VÍ DỤ GỐC", mà đã đổi thành "VÍ DỤ MINH HỌA"
+  assert.match(manimCodePrompt, /VÍ DỤ MINH HỌA/);
+  assert.doesNotMatch(manimCodePrompt, /pill_txt = Text\("VÍ DỤ GỐC"/);
+
+  // 2. Kiểm tra quy chuẩn chỉ số trên / chỉ số dưới và cấm unicode trong Text
+  assert.match(manimCodePrompt, /CHỈ SỐ TRÊN\/DƯỚI/);
+  assert.match(manimCodePrompt, /TUYỆT ĐỐI CẤM dùng ký tự unicode mũ/);
+  // Xác nhận code mẫu không dùng unicode mũ trong Text
+  assert.doesNotMatch(manimCodePrompt, /Text\(".*x³.*"\)/);
+  assert.doesNotMatch(manimCodePrompt, /Text\(".*x².*"\)/);
+
+  // 3. Kiểm tra quy chuẩn nhịp độ (Pacing) & làm chậm nhịp trực quan
+  assert.match(manimCodePrompt, /PACING & LÀM CHẬM NHỊP/);
+  assert.match(manimCodePrompt, /Dừng tại cực đại.*cực tiểu.*đổi màu tiếp tuyến/);
+  assert.match(manimCodePrompt, /self\.wait\(1\.5\)/);
+
+  // 4. Kiểm tra trong prompt tinh chỉnh sửa lỗi (Revision Prompt)
+  const revisionPrompt = generateManimRevisionPrompt(
+    videoConfig,
+    'class MainScene(Scene): pass',
+    'Sửa công thức và làm chậm tiếp tuyến'
+  );
+  assert.match(revisionPrompt, /VÍ DỤ MINH HỌA/);
+  assert.match(revisionPrompt, /CHỈ SỐ TRÊN\/DƯỚI/);
+  assert.match(revisionPrompt, /LÀM CHẬM NHỊP TRỰC QUAN/);
+});
+
+test("15. AutomationClient: Rerender Method & Direct Parameters Support", async () => {
+  const { AutomationClient } = await import("../services/automationClient");
+  assert.strictEqual(typeof AutomationClient.rerenderManim, "function");
+});
+
 

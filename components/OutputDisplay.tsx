@@ -508,6 +508,15 @@ pause
         <div className="flex items-center gap-2 flex-wrap">
           {isManim ? (
             <>
+              {onOpenAutomation && (
+                <button
+                  onClick={onOpenAutomation}
+                  className="flex items-center gap-1 text-[11px] font-black text-black bg-[#00CECB] px-2.5 py-1 border border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:bg-[#2DD4BF] cursor-pointer"
+                  title="Mở bảng điều khiển Rerender Video hoặc Tự động hóa 1-Click"
+                >
+                  <Zap className="w-3 h-3 stroke-[3] fill-black" /> ⚡ Rerender Video
+                </button>
+              )}
               <button
                 onClick={() => downloadFile('scene.py', extractCode(content, 'python'))}
                 className="flex items-center gap-1 text-[11px] font-black text-black bg-white px-2.5 py-1 border border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:bg-[#FFED66] cursor-pointer"

@@ -51,6 +51,9 @@ export interface AutomationRunParams {
   enableVoice?: boolean;
   voiceName?: string;
   voiceSpeed?: string;
+  rerenderOnly?: boolean;
+  customPythonCode?: string;
+  renderQuality?: '480p' | '720p' | '1080p' | '4k';
 }
 
 
@@ -79,7 +82,7 @@ export interface SharedAutomationState {
 
 export class AutomationClient {
   private static activeAbortController: AbortController | null = null;
-  private static savedPin: string = localStorage.getItem('yuta_security_pin') || '';
+  private static savedPin: string = typeof localStorage !== 'undefined' ? localStorage.getItem('yuta_security_pin') || '' : '';
 
   public static setSavedPin(pin: string) {
     this.savedPin = pin;
@@ -292,5 +295,23 @@ export class AutomationClient {
     } finally {
       this.activeAbortController = null;
     }
+  }
+
+  public static async rerenderManim(
+    code: string,
+    quality: '480p' | '720p' | '1080p' | '4k' = '480p',
+    onProgress: (data: AutomationProgress) => void,
+    options?: Partial<AutomationRunParams>
+  ): Promise<void> {
+    return this.startPipeline(
+      {
+        prompt: 'RERENDER_MANIM_DIRECT',
+        rerenderOnly: true,
+        customPythonCode: code,
+        renderQuality: quality,
+        ...options,
+      },
+      onProgress
+    );
   }
 }

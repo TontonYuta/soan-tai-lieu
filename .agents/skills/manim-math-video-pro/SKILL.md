@@ -49,20 +49,21 @@ Toàn bộ video có thời lượng lý tưởng 90 - 120 giây, chia thành đ
 ### Chương 2: Lý Thuyết Cốt Lõi - 2 Thẻ Màu Độc Lập (~14s)
 - Thay vì dùng thẻ cố định cứng nhắc, hãy sáng tạo 2 thẻ màu chuyên biệt theo bản chất toán học:
   - **Thẻ 1 (Đồng biến / Giá trị lớn nhất / Tính chất khẳng định)**: Viền \`GREEN_D\`, nền \`#064E3B\` (độ đục 0.35), \`height=4.0-4.2\`, \`width=8.4\`.
-  - **Thẻ 2 (Nghịch biến / Giá trị nhỏ nhất / Tính chất phủ định)**: Viền \`RED_D\`, nền \`#7F1D1D\` (độ đục 0.35), \`height=4.0-4.2\`, \`width=8.4\`.
-- Cả 2 thẻ xếp dọc: \`theory_stack = VGroup(card1, card2).arrange(DOWN, buff=0.4)\`.
-- Sau khi học sinh đọc xong lý thuyết: \`self.play(FadeOut(theory_all))\`.
+  - **Thẻ 1 (Đồng biến / Giá trị lớn nhất / Tính chất khẳng định)**: Viền `GREEN_D`, nền `#064E3B` (độ đục 0.35), `height=4.0-4.2`, `width=8.4`.
+  - **Thẻ 2 (Nghịch biến / Giá trị nhỏ nhất / Tính chất phủ định)**: Viền `RED_D`, nền `#7F1D1D` (độ đục 0.35), `height=4.0-4.2`, `width=8.4`.
+- Cả 2 thẻ xếp dọc: `theory_stack = VGroup(card1, card2).arrange(DOWN, buff=0.4)`.
+- Sau khi học sinh đọc xong lý thuyết: `self.play(FadeOut(theory_all))`.
 
 ### Chương 3: Dual-Zone Container Mô Phỏng Động Tương Tác (~38s)
 - **Top Header Bar cố định**:
-  - \`header_card = RoundedRectangle(width=8.4, height=1.1, color=BLUE_D, fill_color="#1E293B", fill_opacity=0.95).to_edge(UP, buff=0.35)\`
-  - Chứa Pill Badge ("VÍ DỤ GỐC") + Tiêu đề dạng toán ("HÀM SỐ y = x³ - 3x").
+  - `header_card = RoundedRectangle(width=8.4, height=1.1, color=BLUE_D, fill_color="#1E293B", fill_opacity=0.95).to_edge(UP, buff=0.35)`
+  - Chứa Pill Badge ("VÍ DỤ MINH HỌA") + Tiêu đề dạng toán kết hợp Text và MathTex(r"y = x^3 - 3x").
 - **Top Card (Visual Simulation, height=6.4, width=8.4)**:
-  - Tiêu đề thẻ: \`top_title.next_to(top_card.get_top(), DOWN, buff=0.18)\`
-  - Hệ trục: \`Axes(x_range=[-2.4, 2.4, 1], y_range=[-2.8, 2.8, 1], x_length=7.2, y_length=4.0)\`. (CHÚ Ý: \`y_length\` không vượt quá 4.0 để tránh đè tiêu đề thẻ và nhãn cực trị).
-  - Điểm cực trị: Gióng đường nét đứt về 2 trục bằng \`axes.get_lines_to_point(pt).set_color(YELLOW_B)\`.
+  - Tiêu đề thẻ: `top_title.next_to(top_card.get_top(), DOWN, buff=0.18)`
+  - Hệ trục: `Axes(x_range=[-2.4, 2.4, 1], y_range=[-2.8, 2.8, 1], x_length=7.2, y_length=4.0)`. (CHÚ Ý: `y_length` không vượt quá 4.0 để tránh đè tiêu đề thẻ và nhãn cực trị).
+  - Điểm cực trị: Gióng đường nét đứt về 2 trục bằng `axes.get_lines_to_point(pt).set_color(YELLOW_B)`.
   - **Diễn hoạt tiếp tuyến chuyển động (ValueTracker + always_redraw)**:
-\`\`\`python
+```python
 t_param = ValueTracker(-2.1)
 moving_dot = always_redraw(lambda: Dot(axes.c2p(t_param.get_value(), f_func(t_param.get_value())), color=GOLD, radius=0.09))
 
@@ -90,12 +91,10 @@ def get_status_badge():
     rect = RoundedRectangle(corner_radius=0.1, width=max(5.2, lbl.width + 0.5), height=0.52, color=b_col, fill_color=bg_col, fill_opacity=0.9, stroke_width=1.8).move_to(lbl)
     return VGroup(rect, lbl).next_to(top_card.get_bottom(), UP, buff=0.16)
 status_badge = always_redraw(get_status_badge)
-\`\`\`
+```
 - **Bottom Card (Mathematical Analysis, height=6.6, width=8.4)**:
-  - Đạo hàm: \`calc_deriv = MathTex(r"y' = 3x^2 - 3 = 0 \iff x = \pm 1", font_size=26)\`
-  - Bảng biến thiên 3 tầng LaTeX chuẩn SGK:
-\`\`\`latex
-\renewcommand{\arraystretch}{1.35}
+  - Bảng biến thiên 3 tầng LaTeX array chuẩn:
+```latex
 \begin{array}{|c|ccccccc|}
 \hline
 x & -\infty & & -1 & & 1 & & +\infty \\
@@ -107,53 +106,68 @@ y & & \nearrow & & \searrow & & \nearrow & \\
 & -\infty & & & & -2 & & \\
 \hline
 \end{array}
-\`\`\`
-  - Kết luận đóng khung \`SurroundingRectangle(conclusions, color=GREEN, buff=0.16, corner_radius=0.12)\`.
-  - Di chuyển \`t_param\`: \`self.play(t_param.animate.set_value(2.1), run_time=4.0, rate_func=smooth)\`.
-- Chuyển cảnh: \`self.play(FadeOut(sim_all))\` dọn sạch toàn bộ.
+```
+  - Kết luận đóng khung `SurroundingRectangle(conclusions, color=GREEN, buff=0.16, corner_radius=0.12)`.
+  - Di chuyển `t_param` với nhịp điệu chậm rãi tại các cực trị:
+```python
+self.play(t_param.animate.set_value(-1.0), run_time=1.8, rate_func=smooth)
+self.wait(1.5)  # Dừng quan sát tiếp tuyến ngang tại cực đại
+self.play(t_param.animate.set_value(1.0), run_time=2.0, rate_func=smooth)
+self.wait(1.5)  # Dừng quan sát tiếp tuyến ngang tại cực tiểu
+self.play(t_param.animate.set_value(2.1), run_time=1.6, rate_func=smooth)
+self.wait(2.0)  # Dừng quan sát tổng thể BBT và kết luận
+```
+- Chuyển cảnh: `self.play(FadeOut(sim_all))` dọn sạch toàn bộ.
 
 ### Chương 4: Chữa Đề Thi RAG Thực Chiến (~38s)
-- **Quy tắc vàng về khối lượng**: TỐI ĐA 2 CÂU TIÊU BIỂU (Top Card: Câu 1; Bottom Card: Câu 2). TUYỆT ĐỐI KHÔNG nhồi nhét 3-4 câu vào 1 video vì sẽ gây đè chữ và vỡ khung hình.
+- **Quy tắc về khối lượng**: TỐI ĐA 2 CÂU TIÊU BIỂU (Top Card: Câu 1; Bottom Card: Câu 2). TUYỆT ĐỐI KHÔNG nhồi nhét 3-4 câu vào 1 video vì sẽ gây đè chữ và vỡ khung hình.
 - **Top Card (Câu 1 - Đọc BBT / Đồ thị, height=6.4, width=8.4)**:
-  - Tiêu đề: \`CÂU 1: ĐỌC BẢNG BIẾN THIÊN\`
-  - Đề bài ngắn gọn + BBT LaTeX thu gọn (\`font_size=22\`)
-  - Câu hỏi + Hàng 4 đáp án A, B, C, D: \`VGroup(optA, optB, optC, optD).arrange(RIGHT, buff=0.35)\`
-  - Hộp bo xanh đáp án đúng: \`SurroundingRectangle(optD, color=GREEN, buff=0.14, corner_radius=0.1, stroke_width=2.5)\`
+  - Tiêu đề: `Câu 1: Đọc bảng biến thiên`
+  - Đề bài ngắn gọn + BBT LaTeX thu gọn (`font_size=22`)
+  - Câu hỏi + Hàng 4 đáp án A, B, C, D: `VGroup(optA, optB, optC, optD).arrange(RIGHT, buff=0.35)`
+  - Hộp bo xanh đáp án đúng: `SurroundingRectangle(optD, color=GREEN, buff=0.14, corner_radius=0.1, stroke_width=2.5)`
 - **Bottom Card (Câu 2 - Xét Dấu Đạo Hàm / Giải Tích, height=6.6, width=8.4)**:
-  - Tiêu đề: \`CÂU 2: XÉT DẤU ĐẠO HÀM\`
-  - Đề bài + 3 hoặc 4 phương án lựa chọn
+  - Tiêu đề: `Câu 2: Xét dấu đạo hàm`
+  - Đề bài viết bằng MathTex chuẩn cho công thức: `VGroup(Text("Cho hàm số", font=MAIN_FONT, font_size=22), MathTex(r"y = x^3 - 3x^2", font_size=24)).arrange(RIGHT, buff=0.15)`
   - Các bước giải ngắn gọn (Bước 1 tính đạo hàm, Bước 2 tìm nghiệm, Bước 3 xét dấu)
   - Kết luận và hộp bo xanh quanh đáp án đúng.
-- Chuyển cảnh: \`self.play(FadeOut(qz_all))\` dọn sạch.
+- Chuyển cảnh: `self.play(FadeOut(qz_all))` dọn sạch.
 
 ### Chương 5: Tổng Kết & Outro Thương Hiệu (~8s)
-- **Outro Card toàn màn hình**: \`RoundedRectangle(corner_radius=0.25, width=8.4, height=13.6, color=GOLD_E, fill_color="#0F172A", fill_opacity=0.96).move_to(ORIGIN)\`
-- Tiêu đề: \`TỔNG KẾT BÍ KÍP [TÊN CHUYÊN ĐỀ]\` (\`font_size=30, color=YELLOW, weight=BOLD\`)
-- 3 gạch đầu dòng cô đọng bí quyết (\`font_size=22-24, line_spacing=1.2\`)
+- **Outro Card toàn màn hình**: `RoundedRectangle(corner_radius=0.25, width=8.4, height=13.6, color=GOLD_E, fill_color="#0F172A", fill_opacity=0.96).move_to(ORIGIN)`
+- Tiêu đề: `Tổng kết bài học [Tên chuyên đề]` (`font_size=30, color=YELLOW, weight=BOLD`)
+- 3 gạch đầu dòng cô đọng bí quyết (`font_size=22-24, line_spacing=1.2`)
 - Badge thương hiệu kênh:
-  - Nền đỏ bo góc: \`RoundedRectangle(width=5.6, height=1.0, color=RED, fill_color=RED_E, fill_opacity=0.9)\`
-  - Chữ chính: \`Text("Học toán cùng Yuta", font_size=26, weight=BOLD, color=WHITE)\`
-  - Kêu gọi hành động: \`Text("Bấm Follow để nhận bài giảng mới mỗi ngày!", font_size=22, color=GRAY_B)\`
+  - Nền đỏ bo góc: `RoundedRectangle(width=5.6, height=1.0, color=RED, fill_color=RED_E, fill_opacity=0.9)`
+  - Chữ chính: `Text("Học toán cùng Yuta", font_size=26, weight=BOLD, color=WHITE)`
+  - Kêu gọi hành động: `Text("Bấm Follow để nhận bài giảng mới mỗi ngày!", font_size=22, color=GRAY_B)`
 - **QUY TẮC BẤT DI BẤT DỊCH CUỐI VIDEO**:
-  - Dùng \`self.wait(3.0)\` giữ nguyên màn hình Outro.
-  - TUYỆT ĐỐI KHÔNG dùng \`FadeOut\` toàn bộ màn hình ở cuối video!
+  - Dùng `self.wait(3.0)` giữ nguyên màn hình Outro.
+  - TUYỆT ĐỐI KHÔNG dùng `FadeOut` toàn bộ màn hình ở cuối video!
 
 ---
 
-## 3. Quy Chuẩn Typography & Bảng Màu Studio
+## 3. Quy Chuẩn Typography, Công Thức Toán & Nhịp Độ Pacing
 
-1. **Font Chữ**:
-   - Tiếng Việt: \`MAIN_FONT = "Times New Roman"\` (hoặc \`Liberation Serif\`).
-   - Kích thước chữ an toàn:
-     - Tiêu đề chính / Intro: \`30 - 34\`
-     - Tiêu đề Card: \`22 - 24\` (BOLD)
-     - Công thức MathTex: \`26 - 32\`
+1. **Chỉ số trên / Chỉ số dưới & Công thức Toán Học (Superscript & Subscript)**:
+   - 100% công thức chứa số mũ ($x^2, x^3, e^{2x}$), chỉ số dưới ($x_0, x_1, y_0, \Delta_x$) hoặc đạo hàm ($y', f''(x)$) **BẮT BUỘC dùng `MathTex(r"...")`** với raw string `r"..."`.
+   - **TUYỆT ĐỐI CẤM** sử dụng ký tự unicode (như $x^2$ viết thành `x²`, $x^3$ thành `x³`, $x_1$ thành `x₁`) trong `Text(...)`. Việc dùng unicode trong `Text` sẽ gây lỗi font, thiếu glyph (missing glyphs), biến dạng ô vuông trên Linux/Windows.
+   - Khi viết văn bản tiếng Việt có chứa công thức toán, hãy tách rời và ghép qua `VGroup`:
+     `VGroup(Text("Hàm số:", font=MAIN_FONT, font_size=22), MathTex(r"y = x^3 - 3x^2", font_size=24)).arrange(RIGHT, buff=0.15)`
+2. **Quy Chuẩn Nhịp Độ Diễn Hoạt (Pacing & Slow-down Trực Quan)**:
+   - Tại các điểm mấu chốt: tiếp tuyến đạt cực trị $y'=0$ đổi màu, bảng biến thiên 3 tầng xuất hiện, đóng khung kết luận: **BẮT BUỘC CHẬM LẠI** bằng `self.wait(1.5)` đến `self.wait(2.5)`.
+   - Diễn hoạt `ValueTracker` chuyển động tiếp tuyến: Dùng `rate_func=smooth` với thời gian đủ chậm (3.5s - 4.5s) để học sinh kịp quan sát trạng thái đổi màu và bảng biến thiên.
+3. **Tiêu Đề Pill Badge**:
+   - Dùng `"VÍ DỤ MINH HỌA"` hoặc `"VÍ DỤ"`, TUYỆT ĐỐI KHÔNG dùng `"VÍ DỤ GỐC"`.
+4. **Font Chữ & Cỡ Chữ**:
+   - Tiếng Việt: `MAIN_FONT = "Times New Roman"` (hoặc `Liberation Serif`).
+   - Cỡ chữ an toàn:
      - Tiêu đề chính / Intro: `30 - 34`
      - Tiêu đề Card: `22 - 24` (BOLD)
      - Công thức MathTex: `26 - 32`
      - Chữ diễn giải tiếng Việt: `22 - 24`
      - CẤM dùng `font_size < 22` trên video dọc 9:16.
-2. **Bảng Màu Sư Phạm Hiện Đại**:
+5. **Bảng Màu Sư Phạm Hiện Đại**:
    - Nền chính: `#0B1120` (Midnight Navy)
    - Thẻ Card 1: `#0F172A` (Slate 900)
    - Thẻ Card 2: `#1E293B` (Slate 800)

@@ -3,7 +3,7 @@ import {
   X, Play, Square, CheckCircle2, AlertTriangle, Loader2, 
   FileText, ExternalLink, Download, Settings, Copy, Check, Eye,
   FolderOpen, Monitor, Sparkles, Code, Subtitles, Film, ListVideo,
-  Clock, Cpu, Volume2, Mic, Zap, Edit3, RefreshCw, Terminal
+  Clock, Cpu, Volume2, Mic, Zap, Edit3, RefreshCw, Terminal, Bot
 } from 'lucide-react';
 import { AutomationClient, AutomationProgress } from '../services/automationClient';
 import { generateManimRevisionPrompt } from '../services/prompts/manim';
@@ -66,6 +66,12 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
   const [showCodePreview, setShowCodePreview] = useState(false);
   const [selectedPlaylistIndex, setSelectedPlaylistIndex] = useState<number>(0);
   const [revisionFeedback, setRevisionFeedback] = useState<string>('');
+
+  // Rerender Video State (Tự sửa code, import file .py và chỉnh chất lượng 480p/720p/1080p)
+  const [rerenderQuality, setRerenderQuality] = useState<'480p' | '720p' | '1080p'>('480p');
+  const [customPythonCode, setCustomPythonCode] = useState<string>('');
+  const [activeTabMode, setActiveTabMode] = useState<'auto' | 'rerender'>('auto');
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Quota & Limit State (Antigravity Dynamic Quota)
   const [quotaWeekly, setQuotaWeekly] = useState<number>(98);
@@ -439,6 +445,78 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
     await handleStart(revPrompt);
   };
 
+  // Đồng bộ mã nguồn Python khi nhận được từ AI hoặc từ prompt
+  useEffect(() => {
+    if (progress.manimCode && !customPythonCode) {
+      setCustomPythonCode(progress.manimCode);
+    } else if (!customPythonCode && promptContent) {
+      const match = promptContent.match(/```(?:python)?\s*([\s\S]*?from manim[\s\S]*?)```/i);
+      if (match && match[1]) {
+        setCustomPythonCode(match[1].trim());
+      }
+    }
+  }, [progress.manimCode, promptContent]);
+
+  const handleRerenderDirect = async (overrideQuality?: '480p' | '720p' | '1080p') => {
+    const codeToRun = customPythonCode.trim() || progress.manimCode || '';
+    if (!codeToRun) {
+      alert('Vui lòng nhập, dán hoặc tải file mã nguồn Python Manim (scene.py) để Rerender!');
+      return;
+    }
+    const q = overrideQuality || rerenderQuality;
+    startTimer();
+    setIsRunning(true);
+    setLogs([]);
+    addLog(`⚡ Kích hoạt RERENDER MANIM CE TRỰC TIẾP [Chất lượng: ${q.toUpperCase()}]...`);
+    addLog(`✓ Chế độ Offline/Direct: Bỏ qua AI prompt -> Tiết kiệm 100% thời gian chờ và quota.`);
+
+    await AutomationClient.rerenderManim(
+      codeToRun,
+      q,
+      (update) => {
+        setProgress(update);
+        addLog(update.message);
+        if (update.step === 'COMPLETED' || update.step === 'ERROR') {
+          setIsRunning(false);
+          stopTimer();
+        }
+      },
+      {
+        topic: topic,
+        subject: subject,
+        enableVoice: enableVoice,
+        voiceName: voiceName,
+        voiceSpeed: voiceSpeed,
+      }
+    );
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const content = ev.target?.result as string;
+      if (content) {
+        setCustomPythonCode(content);
+        addLog(`✓ Đã import thành công file mã nguồn: ${file.name} (${content.length} ký tự).`);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handlePasteClipboard = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        setCustomPythonCode(text);
+        addLog(`✓ Đã dán mã từ Clipboard (${text.length} ký tự).`);
+      }
+    } catch {
+      alert('Không thể đọc Clipboard. Vui lòng dán thủ công bằng Ctrl+V vào khung soạn thảo.');
+    }
+  };
+
   const handleStop = async () => {
     addLog('Đang gửi lệnh dừng quy trình...');
     await AutomationClient.stop();
@@ -726,6 +804,175 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
             </div>
           )}
 
+          {/* Hidden File Input cho việc import file .py */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept=".py,.txt"
+            className="hidden"
+            onChange={handleFileUpload}
+          />
+
+          {/* Chế độ Làm Việc: 1-Click Tự Động AI vs ⚡ Rerender Video Nhanh */}
+          {isManimTask && (
+            <div className="p-1 bg-black border-2 border-black grid grid-cols-2 gap-1 text-xs font-black uppercase shadow-[3px_3px_0_0_rgba(0,0,0,1)]">
+              <button
+                type="button"
+                onClick={() => setActiveTabMode('auto')}
+                className={`py-2 px-3 flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  activeTabMode === 'auto'
+                    ? 'bg-[#FFED66] text-black shadow-none translate-x-[1px] translate-y-[1px]'
+                    : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                }`}
+              >
+                <Bot className="w-4 h-4" />
+                <span>1. Tự Động Hóa AI Agent (2 Lượt Kịch Bản + Mã)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTabMode('rerender')}
+                className={`py-2 px-3 flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  activeTabMode === 'rerender'
+                    ? 'bg-[#00CECB] text-black shadow-none translate-x-[1px] translate-y-[1px]'
+                    : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                }`}
+              >
+                <Zap className="w-4 h-4 fill-current" />
+                <span>2. ⚡ Rerender Video Nhanh (Import / Sửa Code)</span>
+              </button>
+            </div>
+          )}
+
+          {/* KHỐI RERENDER NHANH ĐỘC LẬP KHI CHỌN TAB RERENDER */}
+          {isManimTask && activeTabMode === 'rerender' && (
+            <div className="bg-[#00CECB]/15 border-4 border-black p-4 shadow-[6px_6px_0_0_rgba(0,0,0,1)] space-y-3 animate-in fade-in">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-black stroke-[3] fill-black" />
+                  <h4 className="text-sm font-black uppercase text-black tracking-wider">
+                    ⚡ Rerender Video Manim Trực Tiếp (Tối Ưu Thời Gian Kiểm Thử)
+                  </h4>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black uppercase bg-black text-[#00CECB] px-2 py-0.5 border border-black font-mono">
+                    Local Offline Render • Không tốn Quota AI
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-xs font-bold text-black">
+                Dán mã Manim Python đã sửa bằng tay hoặc tải file <code>scene.py</code> từ máy tính lên. Chọn chất lượng <strong>480p</strong> để render siêu tốc trong 15-30 giây kiểm tra nhanh bố cục trước khi xuất bản 1080p.
+              </p>
+
+              {/* Thanh chọn chất lượng Render */}
+              <div className="flex items-center justify-between flex-wrap gap-2 p-2 bg-white border-2 border-black">
+                <div className="flex items-center gap-1.5 text-xs font-black uppercase text-black">
+                  <span>🎬 Chọn chất lượng render:</span>
+                </div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    disabled={isRunning}
+                    onClick={() => setRerenderQuality('480p')}
+                    className={`px-3 py-1.5 border-2 border-black text-xs font-black uppercase transition-all cursor-pointer flex items-center gap-1 ${
+                      rerenderQuality === '480p'
+                        ? 'bg-[#A3E635] text-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]'
+                        : 'bg-gray-100 text-gray-700 hover:bg-white'
+                    }`}
+                    title="Render cực nhanh (-ql: 480p 15fps), khuyên dùng để kiểm thử nhanh chuyển động và bố cục"
+                  >
+                    <span>⚡ 480p (Rất nhanh ~15s - Test)</span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isRunning}
+                    onClick={() => setRerenderQuality('720p')}
+                    className={`px-3 py-1.5 border-2 border-black text-xs font-black uppercase transition-all cursor-pointer flex items-center gap-1 ${
+                      rerenderQuality === '720p'
+                        ? 'bg-[#FFED66] text-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]'
+                        : 'bg-gray-100 text-gray-700 hover:bg-white'
+                    }`}
+                    title="Render chuẩn HD (-qm: 720p 30fps)"
+                  >
+                    <span>🎬 720p (HD Chuẩn)</span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isRunning}
+                    onClick={() => setRerenderQuality('1080p')}
+                    className={`px-3 py-1.5 border-2 border-black text-xs font-black uppercase transition-all cursor-pointer flex items-center gap-1 ${
+                      rerenderQuality === '1080p'
+                        ? 'bg-[#9333EA] text-white shadow-[2px_2px_0_0_rgba(0,0,0,1)]'
+                        : 'bg-gray-100 text-gray-700 hover:bg-white'
+                    }`}
+                    title="Render độ nét cao (-qh: 1080p 60fps), dành cho video chính thức"
+                  >
+                    <span>🌟 1080p (Full HD Chuẩn Nét)</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Nút thao tác nhanh với Code */}
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <span className="text-[11px] font-black uppercase font-mono text-gray-700">
+                  Mã Python Manim (scene.py) - {customPythonCode.length} ký tự
+                </span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={handlePasteClipboard}
+                    className="px-2.5 py-1 bg-white hover:bg-[#FFED66] border border-black text-[11px] font-black uppercase cursor-pointer shadow-[1px_1px_0_0_rgba(0,0,0,1)]"
+                  >
+                    📋 Dán Từ Clipboard
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-2.5 py-1 bg-white hover:bg-[#FFED66] border border-black text-[11px] font-black uppercase cursor-pointer shadow-[1px_1px_0_0_rgba(0,0,0,1)]"
+                  >
+                    📂 Tải File .py Lên
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (progress.manimCode) {
+                        setCustomPythonCode(progress.manimCode);
+                      }
+                    }}
+                    disabled={!progress.manimCode}
+                    className="px-2.5 py-1 bg-white hover:bg-[#FFED66] border border-black text-[11px] font-black uppercase cursor-pointer disabled:opacity-40"
+                  >
+                    🔄 Lấy Code Gốc
+                  </button>
+                </div>
+              </div>
+
+              {/* Trình soạn thảo Code Python */}
+              <textarea
+                value={customPythonCode}
+                onChange={(e) => setCustomPythonCode(e.target.value)}
+                placeholder="Dán hoặc viết mã nguồn Manim Python (scene.py) tại đây... Bắt đầu bằng: from manim import *"
+                className="w-full h-64 p-3 bg-[#0f172a] text-[#38bdf8] font-mono text-xs border-2 border-black focus:outline-none selection:bg-[#FFED66] selection:text-black resize-y leading-relaxed"
+                spellCheck={false}
+              />
+
+              <div className="flex items-center justify-end gap-2 pt-1">
+                <button
+                  type="button"
+                  disabled={isRunning || !customPythonCode.trim()}
+                  onClick={() => handleRerenderDirect()}
+                  className={`flex items-center gap-2 px-5 py-3 border-[3px] border-black text-xs font-black uppercase tracking-wider shadow-[4px_4px_0_0_rgba(0,0,0,1)] transition-all cursor-pointer ${
+                    isRunning || !customPythonCode.trim()
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed border-gray-400 shadow-none'
+                      : 'bg-[#A3E635] hover:bg-[#86EFAC] text-black active:translate-x-[2px] active:translate-y-[2px] active:shadow-none'
+                  }`}
+                >
+                  <Zap className="w-4 h-4 stroke-[3] fill-black" />
+                  <span>⚡ Bắt Đầu Rerender Ngay ({rerenderQuality.toUpperCase()})</span>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Stepper Visualization */}
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
@@ -1170,14 +1417,111 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
                     </div>
                   )}
 
-                  {/* Code Preview: hiển thị nếu không có video hoặc khi người dùng bật xem */}
+                  {/* Code Editor & Rerender Section: cho phép người dùng tự sửa mã hoặc đổi chất lượng */}
                   {(!progress.videoUrl || showCodePreview) && (
-                    <div className="border-4 border-black shadow-[6px_6px_0_0_rgba(0,0,0,1)] bg-[#0f172a] text-[#38bdf8] font-mono text-xs p-4 max-h-96 overflow-y-auto">
-                      <div className="flex justify-between items-center mb-2 pb-1 border-b border-gray-700 text-gray-400 text-[11px]">
-                        <span>Mã nguồn Manim CE (Python):</span>
-                        <span className="text-green-400">scene.py</span>
+                    <div className="border-4 border-black shadow-[6px_6px_0_0_rgba(0,0,0,1)] bg-[#0f172a] text-[#38bdf8] font-mono text-xs p-4 space-y-3">
+                      <div className="flex justify-between items-center pb-2 border-b border-gray-700 text-gray-300 text-xs flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          <Code className="w-4 h-4 text-[#00CECB]" />
+                          <span className="font-bold text-white">Mã nguồn Manim CE (scene.py):</span>
+                          <span className="text-gray-400 font-normal">{(customPythonCode || progress.manimCode || '').length} ký tự</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <button
+                            type="button"
+                            onClick={handlePasteClipboard}
+                            className="px-2 py-0.5 bg-zinc-800 hover:bg-zinc-700 text-white border border-gray-600 text-[10px] font-sans font-bold uppercase transition-colors cursor-pointer"
+                          >
+                            📋 Dán Code
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="px-2 py-0.5 bg-zinc-800 hover:bg-zinc-700 text-white border border-gray-600 text-[10px] font-sans font-bold uppercase transition-colors cursor-pointer"
+                          >
+                            📂 Import .py
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(customPythonCode || progress.manimCode || '');
+                              setCopied(true);
+                              setTimeout(() => setCopied(false), 2000);
+                            }}
+                            className="px-2 py-0.5 bg-zinc-800 hover:bg-zinc-700 text-white border border-gray-600 text-[10px] font-sans font-bold uppercase transition-colors cursor-pointer"
+                          >
+                            {copied ? '✓ Đã Chép' : 'Copy'}
+                          </button>
+                        </div>
                       </div>
-                      <pre>{progress.manimCode || progress.latexCode}</pre>
+
+                      {/* Editor Textarea có thể chỉnh sửa tự do */}
+                      <textarea
+                        value={customPythonCode || progress.manimCode || ''}
+                        onChange={(e) => setCustomPythonCode(e.target.value)}
+                        placeholder="Mã nguồn Manim Python (scene.py)..."
+                        className="w-full h-64 p-3 bg-zinc-950 text-[#38bdf8] font-mono text-xs border border-gray-700 focus:outline-none focus:border-[#00CECB] selection:bg-[#FFED66] selection:text-black resize-y leading-relaxed"
+                        spellCheck={false}
+                      />
+
+                      {/* Toolbar Rerender & Chọn chất lượng */}
+                      <div className="flex items-center justify-between flex-wrap gap-2 pt-1 border-t border-gray-800 font-sans">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[11px] font-black uppercase text-gray-300">Chất lượng:</span>
+                          <button
+                            type="button"
+                            disabled={isRunning}
+                            onClick={() => setRerenderQuality('480p')}
+                            className={`px-2 py-1 border text-[10px] font-black uppercase transition-all cursor-pointer ${
+                              rerenderQuality === '480p'
+                                ? 'bg-[#A3E635] text-black border-black font-black shadow-[1px_1px_0_0_rgba(0,0,0,1)]'
+                                : 'bg-zinc-800 text-gray-300 border-zinc-700 hover:bg-zinc-700'
+                            }`}
+                            title="480p 15fps: Rất nhanh ~15s để kiểm thử nhanh"
+                          >
+                            ⚡ 480p (Kiểm thử)
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isRunning}
+                            onClick={() => setRerenderQuality('720p')}
+                            className={`px-2 py-1 border text-[10px] font-black uppercase transition-all cursor-pointer ${
+                              rerenderQuality === '720p'
+                                ? 'bg-[#FFED66] text-black border-black font-black shadow-[1px_1px_0_0_rgba(0,0,0,1)]'
+                                : 'bg-zinc-800 text-gray-300 border-zinc-700 hover:bg-zinc-700'
+                            }`}
+                          >
+                            🎬 720p (HD)
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isRunning}
+                            onClick={() => setRerenderQuality('1080p')}
+                            className={`px-2 py-1 border text-[10px] font-black uppercase transition-all cursor-pointer ${
+                              rerenderQuality === '1080p'
+                                ? 'bg-[#9333EA] text-white border-black font-black shadow-[1px_1px_0_0_rgba(0,0,0,1)]'
+                                : 'bg-zinc-800 text-gray-300 border-zinc-700 hover:bg-zinc-700'
+                            }`}
+                          >
+                            🌟 1080p (Full HD)
+                          </button>
+                        </div>
+
+                        <button
+                          type="button"
+                          disabled={isRunning || !(customPythonCode || progress.manimCode)}
+                          onClick={() => handleRerenderDirect()}
+                          className={`flex items-center gap-1.5 px-4 py-2 border-2 border-black text-xs font-black uppercase transition-all cursor-pointer shadow-[2px_2px_0_0_rgba(0,0,0,1)] ${
+                            isRunning || !(customPythonCode || progress.manimCode)
+                              ? 'bg-gray-500 text-gray-300 cursor-not-allowed border-gray-600 shadow-none'
+                              : 'bg-[#00CECB] hover:bg-[#2DD4BF] text-black active:translate-x-[1px] active:translate-y-[1px]'
+                          }`}
+                          title="Rerender video trực tiếp từ code Python trên mà không qua AI (tiết kiệm thời gian & quota)"
+                        >
+                          <Zap className="w-3.5 h-3.5 stroke-[3] fill-black" />
+                          <span>⚡ Rerender Video ({rerenderQuality.toUpperCase()})</span>
+                        </button>
+                      </div>
                     </div>
                   )}
 
@@ -1397,12 +1741,25 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
                 <Square className="w-4 h-4 stroke-[3]" /> Dừng Tiến Trình
               </button>
             ) : (
-              <button
-                onClick={() => handleStart()}
-                className="flex items-center gap-2 px-8 py-3 bg-[#A3E635] text-black border-4 border-black text-sm font-black uppercase tracking-widest shadow-[6px_6px_0_0_rgba(0,0,0,1)] hover:bg-[#86EFAC] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all cursor-pointer"
-              >
-                <Play className="w-5 h-5 text-black stroke-[3]" /> BẮT ĐẦU CHẠY 1-CLICK
-              </button>
+              <div className="flex items-center gap-2 flex-wrap">
+                {isManimTask && (
+                  <button
+                    type="button"
+                    onClick={() => handleRerenderDirect()}
+                    className="flex items-center gap-1.5 px-5 py-3 bg-[#00CECB] hover:bg-[#2DD4BF] text-black border-4 border-black text-xs font-black uppercase tracking-wider shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all cursor-pointer"
+                    title="Render lại video Manim trực tiếp từ code Python scene.py mà không qua AI (tiết kiệm thời gian & quota)"
+                  >
+                    <Zap className="w-4 h-4 stroke-[3] fill-black" />
+                    <span>⚡ RERENDER ({rerenderQuality.toUpperCase()})</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => handleStart()}
+                  className="flex items-center gap-2 px-8 py-3 bg-[#A3E635] text-black border-4 border-black text-sm font-black uppercase tracking-widest shadow-[6px_6px_0_0_rgba(0,0,0,1)] hover:bg-[#86EFAC] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all cursor-pointer"
+                >
+                  <Play className="w-5 h-5 text-black stroke-[3]" /> BẮT ĐẦU CHẠY 1-CLICK
+                </button>
+              </div>
             )}
           </div>
         </div>

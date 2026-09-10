@@ -45,7 +45,7 @@ export const MANIM_SKILLS_GUIDE = `
        Header đỉnh + 2 Thẻ màu độc lập xếp dọc (Card 1 Xanh Emerald #064E3B cho tính chất khẳng định/đồng biến;
        Card 2 Đỏ Ruby #7F1D1D cho tính chất phủ định/nghịch biến, height=4.0-4.2 mỗi thẻ, width=8.4). FadeOut toàn bộ.
      * CHƯƠNG 3 - DUAL-ZONE CONTAINER MÔ PHỎNG ĐỘNG TƯƠNG TÁC (Visual Simulation, ~38s):
-       - Header Bar cố định (height=1.1-1.3, width=8.4) với Pill Badge ("VÍ DỤ GỐC").
+       - Header Bar cố định (height=1.1-1.3, width=8.4) với Pill Badge ("VÍ DỤ MINH HỌA" hoặc "VÍ DỤ").
        - Top Card (height=6.4, width=8.4): Đồ thị Axes (x_length=7.2, y_length=4.0), đường cong axes.plot, cực trị gióng nét đứt.
          TIẾP TUYẾN CHUYỂN ĐỘNG VỚI ValueTracker + always_redraw: Tiếp tuyến tự động đổi màu theo hệ số góc (GREEN khi dốc lên, RED khi dốc xuống, YELLOW khi đi ngang)
          + THANH TRẠNG THÁI REAL-TIME (status_badge = always_redraw(...)) hiển thị trực tiếp y' > 0 / y' < 0 / y' = 0!
@@ -103,12 +103,21 @@ export const MANIM_SKILLS_GUIDE = `
      \\hline
      \\end{array}""", font_size=24)
 
-6. 100% CÔNG THỨC LATEX HOÀN HẢO (PERFECT LATEX):
-   - MỌI công thức toán dùng MathTex(r"...") với raw string.
+6. 100% CÔNG THỨC LATEX & CHỈ SỐ TRÊN/DƯỚI CHUẨN XÁC (SUPERSCRIPT & SUBSCRIPT):
+   - 100% chỉ số trên (số mũ x^2, x^3, e^{2x}) và chỉ số dưới (x_0, x_1, y_0, \\Delta_x) hoặc đạo hàm (y', f''(x)) BẮT BUỘC dùng MathTex(r"...") với raw string r"...".
+   - TUYỆT ĐỐI CẤM sử dụng ký tự unicode (như x², x³, x₁, x₀, y') bên trong Text("..."). Pango/Cairo trên Linux/Windows sẽ bị lỗi font, vỡ glyph ô vuông hoặc lệch dòng.
+   - Khi kết hợp tiếng Việt và công thức toán: BẮT BUỘC tách thành Text và MathTex rồi ghép bằng VGroup:
+     VGroup(Text("Hàm số:", font=MAIN_FONT, font_size=22), MathTex(r"y = x^3 - 3x^2", font_size=24)).arrange(RIGHT, buff=0.15)
    - Đóng khung nổi bật đáp số / kết luận: SurroundingRectangle(conclusion, color=GREEN, buff=0.16, corner_radius=0.12, stroke_width=2.5).
-   - Tách biệt tiếng Việt và công thức: Text("...", font=MAIN_FONT) ghép với MathTex(...) qua VGroup(...).arrange(RIGHT, buff=0.2).
 
-7. BẢN ĐỒ CHIẾN LƯỢC TRỰC QUAN ĐA MÔN (MULTI-SUBJECT VISUAL BLUEPRINT):
+7. QUY TẮC NHỊP ĐỘ DIỄN HOẠT (PACING & LÀM CHẬM NHỊP TẠI CÁC ĐIỂM TRỰC QUAN MẤU CHỐT):
+   - Tại các điểm mấu chốt mang tính trực quan sư phạm cao:
+     * Khi tiếp tuyến chuyển động chạm cực trị (y' = 0 đổi màu vàng / đi ngang): Dừng self.wait(1.5) đến self.wait(2.0) để người xem kịp quan sát và đối chiếu.
+     * Khi bảng biến thiên 3 tầng xuất hiện đầy đủ: Dừng self.wait(2.0) đến self.wait(2.5).
+     * Khi đóng khung hộp kết luận hoặc đáp án đúng: Dừng self.wait(2.0) đến self.wait(2.5).
+   - Diễn hoạt ValueTracker tiếp tuyến: Dùng rate_func=smooth với thời lượng run_time đủ chậm (3.5s - 4.5s) để chuyển động trực quan mượt mà, không giật cục.
+
+8. BẢN ĐỒ CHIẾN LƯỢC TRỰC QUAN ĐA MÔN (MULTI-SUBJECT VISUAL BLUEPRINT):
    - Toán học: Đồ thị hàm số, tiếp tuyến trượt đổi màu ValueTracker, Bảng biến thiên 3 tầng, Hình học không gian gióng nét đứt.
    - Vật lý: Quỹ đạo chuyển động, dao động điều hòa axes.plot(lambda t: np.sin(t)), sơ đồ mạch điện, vector lực, đường sức từ trường. Khung thẻ dưới hiển thị công thức định luật và các bước thay số.
    - Hóa học: Mô hình nguyên tử/phân tử, phương trình phản ứng hóa học cân bằng có mũi tên trạng thái/nhiệt độ, bảng biến thiên nồng độ/pH theo thời gian.
@@ -117,12 +126,11 @@ export const MANIM_SKILLS_GUIDE = `
    - Tin học / Thuật toán: Trực quan hóa mảng (Array bars đổi màu), duyệt cây nhị phân (Binary Tree), các bước thuật toán sắp xếp/tìm kiếm, đồ thị độ phức tạp thời gian O(1) đến O(n^2).
    - Lịch sử / Địa lý / GDCD: Trục thời gian tiến trình sự kiện (Chronological Timeline), sơ đồ tư duy nguyên nhân - hệ quả, biểu đồ cột/tròn đối chiếu số liệu.
 
-8. QUY TẮC VĂN PHONG SƯ PHẠM (LOẠI BỎ TỪ NGỮ AI HÓA):
+9. QUY TẮC VĂN PHONG SƯ PHẠM (LOẠI BỎ TỪ NGỮ AI HÓA):
    - Tuyệt đối KHÔNG sử dụng các từ ngữ giật gân, sáo rỗng hay cường điệu phong cách AI. Sử dụng các thuật ngữ sư phạm chuẩn mực, trong sáng: "định lý cốt lõi", "quy tắc trọng tâm", "phương pháp giải", "lưu ý quan trọng", "kết luận ghi nhớ".
-   - Sử dụng các thuật ngữ sư phạm chuẩn mực, trong sáng: "định lý cốt lõi", "quy tắc trọng tâm", "phương pháp giải", "lưu ý quan trọng", "kết luận ghi nhớ".
    - Mọi khái niệm, lý thuyết, công thức phải được đối chiếu và bám sát chính xác tài liệu PDF đính kèm (RAG).
 
-9. QUY TẮC ĐỒNG BỘ THỜI GIAN ÂM THANH (TTS) & HOẠT HỌA MANIM (TTS-ANIMATION SYNC):
+10. QUY TẮC ĐỒNG BỘ THỜI GIAN ÂM THANH (TTS) & HOẠT HỌA MANIM (TTS-ANIMATION SYNC):
    - Tốc độ đọc tự nhiên của giọng đọc AI: ~2.8 - 3.0 từ/giây (160 - 180 từ/phút).
    - Dung lượng kịch bản VOICEOVER_SCRIPT phải tương ứng: Số từ ≈ Thời lượng (giây) × 2.85.
      * Video 60s: ~170 từ.
@@ -268,18 +276,22 @@ YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ BỘ NGUYÊN TẮC c1_HamSo_Do
    - Tuyệt đối KHÔNG dùng từ ngữ giật gân, sáo rỗng hay cường điệu phong cách AI.
 5. ZERO-OVERLAP & WATERMARK SAFETY:
    - TUYỆT ĐỐI KHÔNG để biểu tượng Intro co nhỏ rồi to_corner(UL) làm watermark trôi nổi (tránh va chạm đè chữ tiêu đề)! Dọn sạch từng cảnh trước khi qua cảnh sau.
-5. QUY CHUẨN TYPOGRAPHY CỠ CHỮ LỚN RÕ RÀNG TRÊN ĐIỆN THOẠI:
+6. QUY CHUẨN TYPOGRAPHY CỠ CHỮ LỚN RÕ RÀNG TRÊN ĐIỆN THOẠI:
    - Sử dụng font="${chosenFont}" cho mọi đối tượng Text.
    - Tiêu đề 30-34 BOLD, Tiêu đề Thẻ 22-24 BOLD, Công thức MathTex 26-32, Chú thích tiếng Việt 22-24. CẤM font_size < 22!
    - line_spacing=1.2 cho các đoạn Text nhiều dòng.
-6. MÔ PHỎNG TIẾP TUYẾN ĐỘNG & BẢNG BIẾN THIÊN 3 TẦNG:
+7. QUY TẮC CHỈ SỐ TRÊN/DƯỚI & TIÊU ĐỀ PILL BADGE:
+   - 100% công thức chứa số mũ (x^2, x^3), chỉ số dưới (x_0, x_1), đạo hàm (y') BẮT BUỘC dùng MathTex(r"..."). TUYỆT ĐỐI CẤM dùng ký tự unicode mũ (x², x³, x₁, x₀) trong Text(...).
+   - Tiêu đề Pill Badge: Dùng "VÍ DỤ MINH HỌA" hoặc "VÍ DỤ", TUYỆT ĐỐI KHÔNG dùng "VÍ DỤ GỐC".
+8. MÔ PHỎNG TIẾP TUYẾN ĐỘNG, BẢNG BIẾN THIÊN 3 TẦNG & PACING LÀM CHẬM NHỊP:
    - ValueTracker + always_redraw cho tiếp tuyến đổi màu (Xanh/Đỏ/Vàng) và thanh trạng thái status_badge real-time.
+   - PACING & LÀM CHẬM NHỊP TRỰC QUAN: Dừng tại cực đại, cực tiểu khi đổi màu tiếp tuyến (self.wait(1.5)), xuất hiện BBT (self.wait(2.0)), đóng khung đáp án (self.wait(2.5)) để người xem kịp quan sát và hiểu bản chất.
    - Bảng Biến Thiên 3 tầng chuẩn mực SGK Việt Nam: MathTex(r"\\begin{array}{|c|ccccccc|} ... \\end{array}", font_size=24).
-7. 100% CÔNG THỨC LATEX HOÀN HẢO (PERFECT LATEX):
+9. 100% CÔNG THỨC LATEX HOÀN HẢO (PERFECT LATEX):
    - MỌI công thức dùng MathTex(r"...") với raw string. Đóng khung đáp số: SurroundingRectangle(result, color=GREEN, buff=0.16).
-8. Màu nền: "#0B1120".
-9. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, không viết bất kỳ lời chào hay giải thích ngoài mã.
-10. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file). (Hệ thống máy chủ sẽ tự biên dịch mã bằng lệnh: \`manim \${qualityFlag} scene.py MainScene\`, AI không được tự chạy lệnh này).`;
+10. Màu nền: "#0B1120".
+11. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, không viết bất kỳ lời chào hay giải thích ngoài mã.
+12. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file). (Hệ thống máy chủ sẽ tự biên dịch mã bằng lệnh: \`manim \${qualityFlag} scene.py MainScene\`, AI không được tự chạy lệnh này).`;
 };
 
 // =========================================================================
@@ -429,11 +441,13 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         # PHẦN 3: DUAL-ZONE CONTAINER: ĐỒ THỊ & BẢNG BIẾN THIÊN 3 TẦNG (~38s)
         # ======================================================================
         header_card = RoundedRectangle(corner_radius=0.15, width=8.4, height=1.1, color=BLUE_D, fill_color="#1E293B", fill_opacity=0.95).to_edge(UP, buff=0.35)
-        pill = RoundedRectangle(corner_radius=0.1, width=2.2, height=0.55, color=TEAL, fill_color=TEAL_E, fill_opacity=0.85)
-        pill_txt = Text("VÍ DỤ GỐC", font=MAIN_FONT, font_size=22, weight=BOLD, color=WHITE).move_to(pill)
+        pill = RoundedRectangle(corner_radius=0.1, width=2.4, height=0.55, color=TEAL, fill_color=TEAL_E, fill_opacity=0.85)
+        pill_txt = Text("VÍ DỤ MINH HỌA", font=MAIN_FONT, font_size=20, weight=BOLD, color=WHITE).move_to(pill)
         pill_group = VGroup(pill, pill_txt)
-        title_txt = Text("HÀM BẬC BA: y = x³ - 3x", font=MAIN_FONT, font_size=24, weight=BOLD, color=YELLOW)
-        header_content = VGroup(pill_group, title_txt).arrange(RIGHT, buff=0.25).move_to(header_card)
+        title_lbl = Text("HÀM BẬC BA:", font=MAIN_FONT, font_size=22, weight=BOLD, color=YELLOW)
+        title_math = MathTex(r"y = x^3 - 3x", font_size=24, color=YELLOW)
+        title_txt = VGroup(title_lbl, title_math).arrange(RIGHT, buff=0.15)
+        header_content = VGroup(pill_group, title_txt).arrange(RIGHT, buff=0.22).move_to(header_card)
         self.play(FadeIn(header_card), FadeIn(header_content), run_time=0.6)
 
         # 1. TOP CARD: MÔ PHỎNG ĐỒ THỊ & TIẾP TUYẾN CHUYỂN ĐỘNG
@@ -534,7 +548,12 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         self.play(Create(bottom_card), FadeIn(bot_title), run_time=0.5)
         self.play(Write(calc_deriv), run_time=0.8)
         self.play(FadeIn(bbt), run_time=1.1)
-        self.play(t_param.animate.set_value(2.1), run_time=4.0, rate_func=smooth)
+        # Nhịp điệu trực quan chậm rãi: Dừng tại cực đại x=-1 và cực tiểu x=1 để học sinh quan sát đổi màu tiếp tuyến và dấu y'
+        self.play(t_param.animate.set_value(-1.0), run_time=1.8, rate_func=smooth)
+        self.wait(1.5)
+        self.play(t_param.animate.set_value(1.0), run_time=2.0, rate_func=smooth)
+        self.wait(1.5)
+        self.play(t_param.animate.set_value(2.1), run_time=1.6, rate_func=smooth)
         self.play(FadeIn(conclusions), Create(box_conclusion), run_time=1.1)
         self.wait(2.5)
 
@@ -602,7 +621,10 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         # 2. KHUNG DƯỚI: CÂU 2 (XÉT DẤU ĐẠO HÀM)
         c2_card = RoundedRectangle(corner_radius=0.2, width=8.4, height=6.6, color="#334155", fill_color="#1E293B", fill_opacity=0.95).next_to(c1_card, DOWN, buff=0.2)
         c2_title = Text("CÂU 2: XÉT DẤU ĐẠO HÀM", font=MAIN_FONT, font_size=22, weight=BOLD, color=YELLOW).next_to(c2_card.get_top(), DOWN, buff=0.18)
-        c2_quest = Text("Cho hàm số y = x³ - 3x². Mệnh đề nào dưới đây đúng?", font=MAIN_FONT, font_size=22, color=WHITE)
+        c2_q1 = Text("Cho hàm số", font=MAIN_FONT, font_size=22, color=WHITE)
+        c2_qm = MathTex(r"y = x^3 - 3x^2.", font_size=24, color=WHITE)
+        c2_q2 = Text("Mệnh đề nào dưới đây đúng?", font=MAIN_FONT, font_size=22, color=WHITE)
+        c2_quest = VGroup(VGroup(c2_q1, c2_qm).arrange(RIGHT, buff=0.15), c2_q2).arrange(DOWN, aligned_edge=LEFT, buff=0.1)
 
         c2_optA = MathTex(r"A.\; \text{Đồng biến trên } (0; 2)", font_size=22, color=WHITE)
         c2_optB = MathTex(r"B.\; \text{Nghịch biến trên } (0; 2)", font_size=22, color=GREEN_B)
@@ -681,8 +703,11 @@ IV. HƯỚNG DẪN RENDER VÀ QUY TẮC BẮT BUỘC:
 2. TUYỆT ĐỐI KHÔNG viết lời chào, lời dẫn hay giải thích ngoài mã để không làm tràn token hệ thống.
 3. TUYỆT ĐỐI KHÔNG FadeOut toàn bộ màn hình ở cuối video. Giữ nguyên thẻ Outro "Học toán cùng Yuta".
 4. TUÂN THỦ NGUYÊN TẮC CHỐNG ĐÈ CHỮ (ZERO OVERLAP): Bố cục Khung Thẻ Container Dual-Zone chuẩn xác, dãn hàng line_spacing=1.2, gọi fit_width(group, 7.8) cho mọi khối nội dung.
-5. Đóng đầy đủ ngoặc và lệnh construct(self). (Hệ thống máy chủ sẽ tự biên dịch mã bằng lệnh: \`manim \${qualityFlag} scene.py MainScene\`, AI tuyệt đối không tự chạy lệnh render này).
-6. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file, không view_file). CHỈ xuất mã nguồn văn bản trực tiếp.`;
+5. QUY TẮC CHỈ SỐ TRÊN/DƯỚI & CÔNG THỨC TOÁN HỌC: BẮT BUỘC 100% các chỉ số trên (số mũ x^2, x^3), chỉ số dưới (x_0, x_1), đạo hàm (y') phải dùng MathTex(r"..."). TUYỆT ĐỐI CẤM dùng ký tự unicode mũ (x², x³, x₁, x₀) trong Text(...) để tránh lỗi font vỡ glyph.
+6. TIÊU ĐỀ PILL BADGE: Sử dụng "VÍ DỤ MINH HỌA" hoặc "VÍ DỤ", TUYỆT ĐỐI KHÔNG dùng "VÍ DỤ GỐC".
+7. QUY TẮC NHỊP ĐỘ DIỄN HOẠT (PACING TRỰC QUAN): Tại các điểm quan sát mấu chốt (tiếp tuyến đạt cực trị y'=0 đổi màu, bảng biến thiên xuất hiện, đóng khung kết luận), video BẮT BUỘC CHẬM LẠI bằng self.wait(1.5) đến self.wait(2.5) và rate_func=smooth với run_time đủ dài để học sinh theo kịp.
+8. Đóng đầy đủ ngoặc và lệnh construct(self). (Hệ thống máy chủ sẽ tự biên dịch mã bằng lệnh: \`manim \${qualityFlag} scene.py MainScene\`, AI tuyệt đối không tự chạy lệnh render này).
+9. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file, không view_file). CHỈ xuất mã nguồn văn bản trực tiếp.`;
 };
 
 export const generatePlaylistSeriesOutlinePrompt = (config: VideoConfig): string => {
@@ -758,6 +783,8 @@ IV. YÊU CẦU THỰC THI BẮT BUỘC:
 2. Viết lại TOÀN BỘ file mã nguồn Manim Python (\`scene.py\`) từ đầu, kế thừa cấu trúc 5 PHÂN CẢNH CHUẨN MỰC:
    - Intro -> Lý thuyết 2 thẻ màu -> Dual-Zone Mô phỏng động tiếp tuyến đổi màu & BBT 3 tầng -> Chữa đề RAG (TỐI ĐA 2 CÂU) -> Thẻ Outro thương hiệu (giữ nguyên self.wait(3.0)).
 3. Giữ vững quy chuẩn CHỐNG ĐÈ CHỮ (ZERO OVERLAP), áp dụng Khung Thẻ Container Dual-Zone lấp đầy 93% màn hình, dãn dòng \`line_spacing=1.2\`, gọi fit_width(group, 7.8) cho mọi khối nội dung trong thẻ, font_size lớn rõ nét (Tiêu đề 30-34, Thẻ 22-24, MathTex 26-32, Text tiếng Việt 22-24, TUYỆT ĐỐI KHÔNG DÙNG FONT_SIZE DƯỚI 22).
-4. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, không viết lời chào hay giải thích ngoài mã.
-5. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file). (Hệ thống máy chủ sẽ tự biên dịch mã bằng lệnh: \`manim \${qualityFlag} scene.py MainScene\`, AI không được tự chạy lệnh này).`;
+4. QUY TẮC CHỈ SỐ TRÊN/DƯỚI & PILL BADGE: 100% chỉ số trên/dưới dùng MathTex(r"..."), CẤM dùng unicode trong Text. Dùng "VÍ DỤ MINH HỌA" thay cho "VÍ DỤ GỐC".
+5. LÀM CHẬM NHỊP TRỰC QUAN: Tại các điểm mấu chốt, bẫy thi, tiếp tuyến đổi màu và BBT, dừng self.wait(1.5) - self.wait(2.5).
+6. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, không viết lời chào hay giải thích ngoài mã.
+7. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file). (Hệ thống máy chủ sẽ tự biên dịch mã bằng lệnh: \`manim \${qualityFlag} scene.py MainScene\`, AI không được tự chạy lệnh này).`;
 };
