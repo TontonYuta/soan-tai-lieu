@@ -8,6 +8,7 @@ import {
   generateWorksheetPrompt,
   generateSimilarPrompt,
   generateManimCodePrompt,
+  generateVideoManimPrompt,
   generateVideoScriptPrompt,
   generateBatPrompt
 } from '../services/gemini';
@@ -333,5 +334,41 @@ test("12. Compact Visual Header in Worksheet & Learning (No bulky titlepage)", (
   assert.match(learnPrompt, /\\hopkienthuc/);
   assert.match(learnPrompt, /\\phuongphap/);
   assert.match(learnPrompt, /\\luuy/);
+});
+test("13. Manim & Script: Balanced Intro, Non-overflowing Problem Titles, RAG Accuracy, No AI Cliches", () => {
+  const videoConfig: VideoConfig = {
+    subject: "Toán học",
+    topic: "Cực trị của hàm số bậc ba chứa tham số m",
+    duration: "90s",
+    tone: "academic",
+    audience: "Học sinh lớp 12",
+    format: "vertical",
+    attachedPdf: {
+      fileName: "Chuyen_De_Cuc_Tri.pdf",
+      numPages: 4,
+      text: "Định nghĩa: Điểm x0 được gọi là điểm cực đại của hàm số f(x) nếu f(x) <= f(x0)."
+    }
+  };
+
+  const manimCodePrompt = generateManimCodePrompt(videoConfig);
+  // Xác nhận chỉ thị dàn đều tiêu đề intro và chống tràn box cho đề bài
+  assert.match(manimCodePrompt, /TIÊU ĐỀ INTRO DÀN ĐỀU & ĐỀ BÀI CHỐNG TRÀN BOX/);
+  assert.match(manimCodePrompt, /Trình bày chuẩn xác theo tài liệu PDF đính kèm/);
+
+  const fullVideoPrompt = generateVideoManimPrompt(videoConfig);
+  assert.match(fullVideoPrompt, /KHÁI NIỆM & LÝ THUYẾT CHUẨN MỰC/);
+  assert.match(fullVideoPrompt, /TÊN ĐỀ BÀI & CÂU HỎI/);
+  // Xác nhận tuyệt đối không còn từ ngữ AI sáo rỗng giật gân
+  assert.doesNotMatch(fullVideoPrompt, /5 PHÂN CẢNH VÀNG/i);
+  assert.doesNotMatch(fullVideoPrompt, /2 quy tắc vàng/i);
+  assert.doesNotMatch(fullVideoPrompt, /thần chú/i);
+  assert.doesNotMatch(fullVideoPrompt, /sinh tử/i);
+  assert.doesNotMatch(fullVideoPrompt, /sống còn/i);
+
+  const scriptPrompt = generateVideoScriptPrompt(videoConfig);
+  assert.match(scriptPrompt, /MỞ ĐẦU THU HÚT & TRỰC DIỆN/);
+  assert.doesNotMatch(scriptPrompt, /HOOK 3 GIÂY ĐẦU \(SINH TỬ\)/i);
+  assert.doesNotMatch(scriptPrompt, /thần chú/i);
+  assert.doesNotMatch(scriptPrompt, /sống còn/i);
 });
 

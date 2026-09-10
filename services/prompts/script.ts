@@ -6,24 +6,24 @@ export const generateVideoScriptPrompt = (config: VideoConfig): string => {
   let hookGuide = "";
   if (config.hookType === 'trap') {
     hookGuide = `
-- **CHIẾN LƯỢC HOOK BẪY ĐỀ THI & CẢNH BÁO SAI LẦM:**
-  * Bắt đầu bằng lỗi sai kinh điển mà 90% học sinh thường mắc phải trong phòng thi (ví dụ: quên điều kiện xác định, nhầm dấu khi đổi biến, ngộ nhận tính đồng biến).
-  * Câu thoại mở đầu: Cảnh báo giật mình ("Dừng lại ngay! Nếu bạn giải bài này thế này thì mất trắng 0.2 điểm!").`;
+- **CHIẾN LƯỢC ĐẶT VẤN ĐỀ VỀ SAI LẦM THƯỜNG GẶP:**
+  * Bắt đầu bằng lỗi sai phổ biến mà nhiều học sinh hay mắc phải trong bài thi (ví dụ: quên điều kiện xác định, nhầm dấu khi đổi biến, ngộ nhận tính đơn điệu).
+  * Câu thoại mở đầu: Cảnh báo trực diện, đi thẳng vào trọng tâm ("Chú ý lỗi sai này! Rất nhiều bạn mất điểm đáng tiếc ở bước xét điều kiện sau đây!").`;
   } else if (config.hookType === 'fast_trick') {
     hookGuide = `
-- **CHIẾN LƯỢC HOOK BÍ QUYẾT GIẢI NHANH 30S:**
-  * Bắt đầu bằng bài toán dài ngoằng khiến học sinh nản chí, rồi lật mở mẹo giải siêu tốc trong 30 giây (kỹ thuật bấm máy Casio, loại trừ đáp án, dùng hình học hóa).
-  * Câu thoại mở đầu: Đầy tự tin và kích thích tò mò ("Câu 48 đề chuyên nhưng xử lý chỉ trong 30 giây mà không cần đặt bút tính!").`;
+- **CHIẾN LƯỢC MỞ ĐẦU BẰNG PHƯƠNG PHÁP GIẢI NHANH 30S:**
+  * Bắt đầu bằng bài toán có vẻ phức tạp khiến học sinh nản lòng, rồi mở ra hướng tư duy ngắn gọn trong 30 giây (kỹ thuật bấm máy tính, loại trừ đáp án, phương pháp hình học hóa).
+  * Câu thoại mở đầu: Tự tin và khơi gợi tư duy ("Bài toán này trông dài nhưng nếu nhìn theo bản chất hình học, ta xử lý được ngay chỉ trong 30 giây!").`;
   } else if (config.hookType === 'real_world') {
     hookGuide = `
-- **CHIẾN LƯỢC HOOK TOÁN HỌC KỲ DIỆU & THỰC TẾ:**
-  * Mở đầu bằng một hiện tượng thực tế, kiến trúc hoặc bí mật tự nhiên được vận hành bởi toán học.
-  * Câu thoại mở đầu: Truyền cảm hứng ("Bạn có biết vì sao cây cầu này không sập? Bí mật nằm ở đồ thị parabol này!").`;
+- **CHIẾN LƯỢC MỞ ĐẦU BẰNG ỨNG DỤNG THỰC TẾ & HIỆN TƯỢNG:**
+  * Mở đầu bằng một hiện tượng đời sống, công trình kiến trúc hoặc quy luật tự nhiên gắn liền với bài học.
+  * Câu thoại mở đầu: Truyền cảm hứng và gắn với thực tiễn ("Tại sao nhịp cầu treo lại có dạng đường cong parabol? Bản chất toán học nằm ngay ở đây!").`;
   } else {
     hookGuide = `
-- **CHIẾN LƯỢC HOOK TRỰC QUAN HÓA BẢN CHẤT TỪ SỐ 0:**
-  * Mở đầu bằng nghịch lý trực giác hoặc câu hỏi đánh thức tư duy ("Tại sao đạo hàm lại là hệ số góc tiếp tuyến? Hãy nhìn chuyển động này!").
-  * Dẫn dắt người xem từ con số 0 đến giác ngộ bản chất.`;
+- **CHIẾN LƯỢC MỞ ĐẦU TRỰC QUAN HÓA BẢN CHẤT TỪ ĐẦU:**
+  * Mở đầu bằng hình ảnh trực quan hoặc câu hỏi kích thích tư duy ("Ý nghĩa hình học thực sự của đạo hàm là gì? Hãy quan sát tiếp tuyến chuyển động trên đồ thị này!").
+  * Dẫn dắt người học từ trực quan sinh động đến nhận thức lý thuyết vững vàng.`;
   }
 
   let pdfPromptChunk = "";
@@ -35,13 +35,16 @@ Nội dung bài toán / đề bài trong file PDF:
 """
 ${config.attachedPdf.text.slice(0, 8000)}
 """
-YÊU CẦU ĐẶC BIỆT: Hãy bám sát chính xác câu hỏi hoặc nội dung trong file PDF trên để xây dựng kịch bản video phân cảnh và lời thoại giải thích. TUYỆT ĐỐI KHÔNG ghi chú nhãn RAG hay số trang (ví dụ CẤM: "Câu 1 (RAG trang 2)").
+YÊU CẦU ĐẶC BIỆT THEO TÀI LIỆU GỐC:
+- BẮT BUỘC bám sát chính xác câu hỏi, giả thiết, số liệu và định nghĩa trong file PDF trên để xây dựng kịch bản và lời thoại giải thích.
+- Trình bày khái niệm, lý thuyết chuẩn mực đúng theo nội dung tài liệu PDF, không tự bịa đặt.
+- TUYỆT ĐỐI KHÔNG ghi chú nhãn RAG hay số trang (ví dụ CẤM: "Câu 1 (RAG trang 2)").
 `;
   }
 
-  return `Đóng vai Nhà sáng tạo Nội dung Giáo dục Toán học triệu view trên nền tảng ${isVertical ? 'TikTok / Shorts / Reels (Video Dọc)' : 'YouTube / Bài giảng (Video Ngang)'}.
+  return `Đóng vai Nhà sáng tạo Nội dung Giáo dục chuyên nghiệp trên nền tảng ${isVertical ? 'TikTok / Shorts / Reels (Video Dọc)' : 'YouTube / Bài giảng (Video Ngang)'}.
 
-Nhiệm vụ: Viết Kịch bản Lời thoại & Bảng Phân cảnh (Storyboard Script) chi tiết từng giây cho chủ đề toán học dưới đây, ăn khớp hoàn hảo với diễn hoạt Manim.
+Nhiệm vụ: Viết Kịch bản Lời thoại & Bảng Phân cảnh (Storyboard Script) chi tiết từng giây cho chủ đề dưới đây, ăn khớp hoàn hảo với diễn hoạt Manim.
 
 [THÔNG TIN VIDEO]
 - Môn học / Chủ đề: ${config.subject} - ${config.topic}
@@ -53,17 +56,19 @@ Nhiệm vụ: Viết Kịch bản Lời thoại & Bảng Phân cảnh (Storyboar
 - Ghi chú: ${config.details || "Đi thẳng vào vấn đề, thực chiến toán học"}
 ${pdfPromptChunk}
 
-[CÁC NGUYÊN TẮC GIỮ CHÂN NGƯỜI XEM (RETENTION RULES)]
-1. **HOOK 3 GIÂY ĐẦU (SINH TỬ):**
-   - Không chào hỏi lan man ("Xin chào các bạn...").
-   - Vào thẳng câu hỏi hóc búa, nghịch lý toán học hoặc bẫy sai lầm 99% học sinh dính.
+[CÁC NGUYÊN TẮC BIÊN SOẠN SƯ PHẠM & GIỮ CHÂN NGƯỜI XEM]
+1. **MỞ ĐẦU THU HÚT & TRỰC DIỆN (3 - 5 GIÂY ĐẦU):**
+   - Không chào hỏi rườm rà dài dòng.
+   - Đi thẳng vào bài toán trọng tâm, câu hỏi cốt lõi hoặc tình huống thường gặp.
 ${hookGuide}
 2. **KẾT HỢP VISUAL & AUDIO:**
-   - Mỗi câu thoại đều phải có hình ảnh hoặc hiệu ứng Manim tương ứng (đồ thị chuyển động, biến đổi công thức, phóng to điểm cực trị).
+   - Mỗi câu thoại đều phải có hình ảnh hoặc hiệu ứng Manim tương ứng (đồ thị chuyển động, biến đổi công thức, làm nổi bật điểm cực trị).
 3. **LOGIC TĂNG DẦN ĐỘ KHÓ & TÍNH ỨNG DỤNG:**
-   - Từ trực quan hình ảnh -> Công thức giải nhanh -> 1 ví dụ thực chiến -> Đúc kết bí quyết.
-4. **VĂN PHONG SÚC TÍCH:**
-   - Ngắn gọn, nhịp điệu nhanh, dễ tiếp thu, có điểm nhấn cảm xúc.
+   - Từ trực quan hình ảnh -> Công thức nền tảng -> 1 ví dụ thực chiến -> Đúc kết phương pháp.
+4. **VĂN PHONG SƯ PHẠM CHUẨN MỰC, KHÔNG DÙNG TỪ NGỮ AI HÓA:**
+   - Ngắn gọn, nhịp điệu vừa phải, dễ tiếp thu, truyền cảm hứng.
+   - TUYỆT ĐỐI KHÔNG sử dụng các từ ngữ giật gân, sáo rỗng hay cường điệu phong cách AI. Thay vào đó, sử dụng các thuật ngữ sư phạm chuẩn mực: "định lý cốt lõi", "quy tắc trọng tâm", "phương pháp giải", "lưu ý quan trọng".
+   - Tên đề bài và bài tập trình bày vừa vặn, không viết hoa toàn bộ, xuống dòng tự nhiên theo nhịp câu.
 
 [CẤU TRÚC KỊCH BẢN - BẢNG PHÂN CẢNH CHI TIẾT]
 
@@ -74,16 +79,16 @@ ${hookGuide}
 
 | Thời gian | Hình ảnh diễn hoạt (Manim Visual) | Lời thoại thuyết minh (Audio / Voiceover) | Chữ & Công thức trên màn hình |
 | :--- | :--- | :--- | :--- |
-| **00:00 - 00:05** *(Hook)* | [Mô tả hình ảnh đồ thị / câu hỏi giật gân] | "[Câu thoại mở đầu trực diện]" | [Tiêu đề / Công thức giật gân] |
-| **00:05 - 00:20** *(Bản chất)* | [Mô tả diễn hoạt trực quan hóa khái niệm] | "[Giải thích trực quan, dễ hiểu]" | [Khái niệm / Định lý chính] |
-| **00:20 - 00:50** *(Ví dụ)* | [Mô tả từng bước biến đổi Manim] | "[Hướng dẫn mẹo giải và lưu ý bẫy đề thi]" | [Từng bước tính toán] |
-| **00:50 - Cuối** *(Call to action)*| [Logo Yuta!LaTeX & Mũi tên đăng ký] | "[Tóm tắt 1 câu thần chú & kêu gọi follow]"| [Thần chú ghi nhớ] |
+| **00:00 - 00:05** *(Mở đầu)* | [Mô tả hình ảnh đồ thị / tình huống bài toán] | "[Câu thoại mở đầu trực diện, đi vào trọng tâm]" | [Tiêu đề chủ đề dàn đều, cân đối] |
+| **00:05 - 00:20** *(Lý thuyết cốt lõi)* | [Mô tả diễn hoạt trực quan hóa khái niệm theo tài liệu] | "[Giải thích khái niệm rõ ràng, mạch lạc]" | [Định nghĩa / Định lý theo tài liệu PDF] |
+| **00:20 - 00:50** *(Bài tập thực chiến)* | [Mô tả từng bước biến đổi Manim, đề bài xuống dòng vừa vặn] | "[Hướng dẫn phương pháp giải và phân tích lưu ý]" | [Đề bài ngắn gọn + Các bước tính toán] |
+| **00:50 - Cuối** *(Tổng kết & Kêu gọi)*| [Logo thương hiệu & Mũi tên đăng ký] | "[Tóm tắt 1 câu cốt lõi của bài học & kêu gọi theo dõi]"| [Ghi nhớ phương pháp] |
 
 ---
 
 ### Danh sách Lời thoại Thuyết minh Liền mạch (Full Voiceover Script):
 *(Đoạn văn này được tối ưu sẵn để copy vào các công cụ TTS hoặc đọc thu âm trực tiếp)*
-"[Toàn bộ lời thoại đọc liền mạch từ 00:00 đến kết thúc, có chấm phẩy ngắt nhịp tự nhiên...]"
+"[Toàn bộ lời thoại đọc liền mạch từ 00:00 đến kết thúc, có chấm phẩy ngắt nhịp tự nhiên, giọng điệu tự tin, đúng thuật ngữ sư phạm...]"
 
 ---
 

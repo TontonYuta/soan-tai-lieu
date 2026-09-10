@@ -23,6 +23,8 @@ Nội dung trích xuất:
 ${chunk}
 """
 CHỈ THỊ SƯ PHẠM RAG BẮT BUỘC CHO VIDEO:
+1. KHÁI NIỆM & LÝ THUYẾT CHUẨN MỰC: Các khái niệm, định nghĩa, định lý, công thức và ví dụ minh họa BẮT BUỘC phải trích xuất chính xác theo tài liệu PDF đính kèm. Tuyệt đối không tự bịa đặt hay viết chung chung làm lệch kiến thức gốc trong tài liệu.
+2. TÊN ĐỀ BÀI & CÂU HỎI: Không nhất thiết phải viết hoa toàn bộ (ALL CAPS). Đề bài cần được xuống dòng \n bình thường theo nhịp ngữ nghĩa tự nhiên (mỗi dòng tối đa 7-9 từ) để không bị to tràn box hay vỡ khung hình.
 1. BẮT BUỘC trích xuất chính xác bài toán, câu hỏi, định nghĩa, định lý, hiện tượng hoặc dữ liệu từ tài liệu RAG trên.
 2. NGUYÊN TẮC MẬT ĐỘ: Chọn ĐÚNG 2 BÀI/CÂU TIÊU BIỂU NHẤT từ tài liệu để đưa vào Phần Thực Chiến (Top Card = Câu 1, Bottom Card = Câu 2). TUYỆT ĐỐI KHÔNG tham lam nhồi nhét 3-4 câu gây vỡ khung hình!
 3. Bám sát 100% câu từ, số liệu, giả thiết và kết luận trong tài liệu gốc. TUYỆT ĐỐI KHÔNG tự bịa nội dung khác!
@@ -31,13 +33,13 @@ CHỈ THỊ SƯ PHẠM RAG BẮT BUỘC CHO VIDEO:
 
 export const MANIM_SKILLS_GUIDE = `
 ★★★ BỘ NGUYÊN TẮC MANIM CE TOÁN HỌC & VISUAL ENGINEERING CHUẨN STUDIO ★XX
-(Kế thừa Kiến trúc 5 Phân Cảnh Vàng từ c1_HamSo_DonDieu.py, Hệ Thống Khung Thẻ Container Dual-Zone,
+(Kế thừa Cấu trúc 5 Phân Cảnh Chuẩn Mực từ c1_HamSo_DonDieu.py, Hệ Thống Khung Thẻ Container Dual-Zone,
  Mô Phỏng Động ValueTracker + Tiếp Tuyến Đổi Màu, Bảng Biến Thiên 3 Tầng & Chống Đè Chữ Tuyệt Đối)
 
-1. KIẾN TRÚC 5 PHÂN CẢNH VÀNG (5-CHAPTER CINEMATIC FLOW, ~100-120S):
+1. CẤU TRÚC 5 PHÂN CẢNH CHUẨN MỰC (5-CHAPTER CINEMATIC FLOW, ~100-120S):
    - Mọi video bài giảng toán học chuẩn studio BẮT BUỘC chia thành đúng 5 chương mạch lạc:
      * CHƯƠNG 1 - MỞ ĐẦU ẤN TƯỢNG (Intro, ~7s):
-       Pill Badge tên chuyên đề + Khung bao tiêu đề SurroundingRectangle + Phụ đề + Xem trước 2 công thức cốt lõi.
+       Pill Badge tên chuyên đề + Khung bao tiêu đề SurroundingRectangle + Phụ đề + Xem trước các công thức cốt lõi.
        Chuyển cảnh: FadeOut toàn bộ Intro để tránh đè chữ. TUYỆT ĐỐI KHÔNG đưa biểu tượng lên góc UL làm watermark!
      * CHƯƠNG 2 - LÝ THUYẾT CỐT LÕI VỚI 2 THẺ MÀU TƯƠNG PHẢN (Theory Cards, ~14s):
        Header đỉnh + 2 Thẻ màu độc lập xếp dọc (Card 1 Xanh Emerald #064E3B cho tính chất khẳng định/đồng biến;
@@ -115,7 +117,12 @@ export const MANIM_SKILLS_GUIDE = `
    - Tin học / Thuật toán: Trực quan hóa mảng (Array bars đổi màu), duyệt cây nhị phân (Binary Tree), các bước thuật toán sắp xếp/tìm kiếm, đồ thị độ phức tạp thời gian O(1) đến O(n^2).
    - Lịch sử / Địa lý / GDCD: Trục thời gian tiến trình sự kiện (Chronological Timeline), sơ đồ tư duy nguyên nhân - hệ quả, biểu đồ cột/tròn đối chiếu số liệu.
 
-8. QUY TẮC ĐỒNG BỘ THỜI GIAN ÂM THANH (TTS) & HOẠT HỌA MANIM (TTS-ANIMATION SYNC):
+8. QUY TẮC VĂN PHONG SƯ PHẠM (LOẠI BỎ TỪ NGỮ AI HÓA):
+   - Tuyệt đối KHÔNG sử dụng các từ ngữ giật gân, sáo rỗng hay cường điệu phong cách AI. Sử dụng các thuật ngữ sư phạm chuẩn mực, trong sáng: "định lý cốt lõi", "quy tắc trọng tâm", "phương pháp giải", "lưu ý quan trọng", "kết luận ghi nhớ".
+   - Sử dụng các thuật ngữ sư phạm chuẩn mực, trong sáng: "định lý cốt lõi", "quy tắc trọng tâm", "phương pháp giải", "lưu ý quan trọng", "kết luận ghi nhớ".
+   - Mọi khái niệm, lý thuyết, công thức phải được đối chiếu và bám sát chính xác tài liệu PDF đính kèm (RAG).
+
+9. QUY TẮC ĐỒNG BỘ THỜI GIAN ÂM THANH (TTS) & HOẠT HỌA MANIM (TTS-ANIMATION SYNC):
    - Tốc độ đọc tự nhiên của giọng đọc AI: ~2.8 - 3.0 từ/giây (160 - 180 từ/phút).
    - Dung lượng kịch bản VOICEOVER_SCRIPT phải tương ứng: Số từ ≈ Thời lượng (giây) × 2.85.
      * Video 60s: ~170 từ.
@@ -199,7 +206,7 @@ THỜI LƯỢNG MỤC TIÊU: ${targetDurationStr}.
 ${simDesc}
 ${ragSection}
 
-YÊU CẦU LẬP DÀN Ý 5 PHÂN CẢNH VÀNG VÀ SOẠN LỜI THOẠI TRÔI CHẢY, TRUYỀN CẢM, CÓ NGẮT NGHỈ MẠCH LẠC PHÙ HỢP VỚI THỜI LƯỢNG ${targetDurationStr} (ĐỘ DÀI KỊCH BẢN KHOẢNG ${targetWords} TỪ - TỐC ĐỘ ĐỌC 2.85 TỪ/GIÂY):
+YÊU CẦU LẬP DÀN Ý 5 PHÂN CẢNH CHUẨN MỰC VÀ SOẠN LỜI THOẠI TRÔI CHẢY, TRUYỀN CẢM, CÓ NGẮT NGHỈ MẠCH LẠC PHÙ HỢP VỚI THỜI LƯỢNG ${targetDurationStr} (ĐỘ DÀI KỊCH BẢN KHOẢNG ${targetWords} TỪ - TỐC ĐỘ ĐỌC 2.85 TỪ/GIÂY):
 
 1. PHÂN CẢNH 1 - MỞ ĐẦU ẤN TƯỢNG (INTRO, ~7S, ~20 TỪ):
    - Khung thẻ Intro với Tên bài học, Pill badge môn học "${config.subject.toUpperCase()}" và Ký hiệu/khái niệm cốt lõi.
@@ -245,7 +252,7 @@ export const generateManimCodePrompt = (config: VideoConfig): string => {
   return `Tuyệt vời! Dựa trên kịch bản sư phạm và khối lời thoại VOICEOVER_SCRIPT vừa thống nhất ở trên, hãy viết TOÀN BỘ file mã nguồn Manim Python (\`scene.py\`) hoàn chỉnh 100% để render video bài giảng này.
 
 YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ BỘ NGUYÊN TẮC c1_HamSo_DonDieu.py & DUAL-ZONE CONTAINER CARDS):
-1. Kế thừa chính xác biến VOICEOVER_SCRIPT và cấu trúc 5 PHÂN CẢNH VÀNG:
+1. Kế thừa chính xác biến VOICEOVER_SCRIPT và cấu trúc 5 PHÂN CẢNH CHUẨN MỰC:
    - Phần 1: Mở đầu (Intro, ~7s) - FadeOut toàn bộ.
    - Phần 2: Lý thuyết 2 thẻ màu tương phản (Xanh & Đỏ, ~14s) - FadeOut toàn bộ.
    - Phần 3: Dual-Zone Container Mô phỏng động tiếp tuyến đổi màu + BBT 3 tầng (~38s) - FadeOut toàn bộ.
@@ -254,7 +261,12 @@ YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ BỘ NGUYÊN TẮC c1_HamSo_Do
 2. Cấu hình ${isVertical ? 'Khung hình DỌC 9:16 (config.pixel_width=1080, config.pixel_height=1920, config.frame_width=9.0, config.frame_height=16.0)' : 'Khung hình NGANG 16:9 (1920x1080)'}.
 3. BỐ CỤC KHUNG THẺ CONTAINER (DUAL-ZONE) LẤP ĐẦY 93% MÀN HÌNH - TRIỆT TIÊU KHOẢNG TRỐNG ĐEN:
    - ${isVertical ? 'Top Header Bar (y ~ 7.05, height=1.1-1.3, width=8.4); Top Card (y ~ 3.15, height=6.4, width=8.4); Bottom Card (y ~ -3.75, height=6.6, width=8.4); Outro Card (height=13.6, width=8.4). BẮT BUỘC gọi fit_width(group, 7.8) cho mọi khối nội dung trong thẻ!' : 'Header đỉnh, Cột Trái Mô phỏng (width=7.2, height=6.2), Cột Phải Công thức (width=5.8, height=6.2).'}
-4. ZERO-OVERLAP & WATERMARK SAFETY:
+4. TIÊU ĐỀ INTRO DÀN ĐỀU & ĐỀ BÀI CHỐNG TRÀN BOX:
+   - Tên chủ đề Intro: Không bắt buộc viết hoa toàn bộ, ngắt dòng \n cân đối nếu dài, dùng alignment="CENTER", sau arrange BẮT BUỘC gọi for item in intro_group: item.set_x(0) để căn giữa đối xứng tuyệt đối trục X=0.
+   - Khái niệm, lý thuyết: Trình bày chuẩn xác theo tài liệu PDF đính kèm (RAG), không tự ý suy diễn hay viết chung chung.
+   - Tên đề bài và câu hỏi: Không viết hoa toàn bộ, xuống dòng \n tự nhiên (7-9 từ/dòng), font_size=20-22 để không bao giờ bị to tràn box.
+   - Tuyệt đối KHÔNG dùng từ ngữ giật gân, sáo rỗng hay cường điệu phong cách AI.
+5. ZERO-OVERLAP & WATERMARK SAFETY:
    - TUYỆT ĐỐI KHÔNG để biểu tượng Intro co nhỏ rồi to_corner(UL) làm watermark trôi nổi (tránh va chạm đè chữ tiêu đề)! Dọn sạch từng cảnh trước khi qua cảnh sau.
 5. QUY CHUẨN TYPOGRAPHY CỠ CHỮ LỚN RÕ RÀNG TRÊN ĐIỆN THOẠI:
    - Sử dụng font="${chosenFont}" cho mọi đối tượng Text.
@@ -315,14 +327,14 @@ ${ragPromptChunk}
 II. BỘ KỸ NĂNG BẮT BUỘC TUÂN THỦ:
 ${MANIM_SKILLS_GUIDE}
 
-III. BỘ KHUNG CODE PYTHON MẪU KIẾN TRÚC SƯ PHẠM (KIẾN TRÚC 5 PHÂN CẢNH VÀNG ĐÃ KIỂM ĐỊNH 100%):
+III. BỘ KHUNG CODE PYTHON MẪU KIẾN TRÚC SƯ PHẠM (CẤU TRÚC 5 PHÂN CẢNH CHUẨN MỰC ĐÃ KIỂM ĐỊNH 100%):
 \`\`\`python
 from manim import *
 
 # 0. KỊCH BẢN THUYẾT MINH ĐỒNG BỘ CHUẨN SHORTS (~100-120 GIÂY, ~${targetWords} TỪ)
 VOICEOVER_SCRIPT = """
 Chào mừng các bạn đến với bài giảng về ${config.topic} môn ${config.subject}! Hôm nay chúng ta sẽ cùng nắm trọn lý thuyết nền tảng và phương pháp giải các dạng bài thực chiến kinh điển nhất.
-Về phần lý thuyết cốt lõi, hãy ghi nhớ thật kỹ 2 quy tắc vàng tương ứng với hai khía cạnh then chốt được đóng khung rõ ràng trên màn hình.
+Về phần lý thuyết cốt lõi, hãy ghi nhớ thật kỹ các nguyên tắc cốt lõi tương ứng với hai khía cạnh then chốt được đóng khung rõ ràng trên màn hình.
 Ở phần mô phỏng thực tế, hãy quan sát chuyển động và sự biến thiên trực quan theo thời gian thực, hoàn toàn ăn khớp với các công thức và phân tích logic bên dưới.
 Bây giờ chúng ta cùng bước vào phần thực chiến chữa bài tập điển hình. Ở Câu 1 dạng nhận biết và đọc dữ liệu, ta dễ dàng chốt ngay đáp án chính xác. Ở Câu 2 dạng vận dụng và suy luận, chỉ cần tuân thủ đúng các bước giải ngắn gọn.
 Đừng quên lưu lại video và bấm theo dõi kênh ${brandName} để cùng nhau bứt phá điểm số mỗi ngày nhé!
@@ -358,8 +370,10 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         ).move_to(badge_text)
         intro_badge = VGroup(badge_intro, badge_text)
 
-        intro_title = Text("${config.topic.toUpperCase()}", font_size=32, weight=BOLD, color=YELLOW, line_spacing=1.2, font=MAIN_FONT)
-        intro_box = SurroundingRectangle(intro_title, buff=0.28, color=BLUE_C, corner_radius=0.18, stroke_width=2.5)
+        # Tiêu đề chủ đề: Dàn đều, ngắt dòng nếu dài, căn giữa trục tọa độ X=0
+        clean_topic = "${config.topic}"
+        intro_title = Text(clean_topic, font_size=28, weight=BOLD, color=YELLOW, line_spacing=1.2, font=MAIN_FONT, alignment="CENTER")
+        intro_box = SurroundingRectangle(intro_title, buff=0.25, color=BLUE_C, corner_radius=0.15, stroke_width=2.5)
 
         intro_sub = Text("Lý thuyết trọng tâm • Mô phỏng trực quan • Chữa đề thực chiến", font_size=22, font=MAIN_FONT, color=GRAY_B)
 
@@ -368,8 +382,10 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
             MathTex(r"y' < 0 \;\Longrightarrow\; \text{Nghịch biến } (\searrow)", font_size=28, color=RED_B)
         ).arrange(DOWN, buff=0.22)
 
-        intro_group = VGroup(intro_badge, VGroup(intro_title, intro_box), intro_sub, intro_core_rule).arrange(DOWN, buff=0.45).move_to(ORIGIN)
-        fit_width(intro_group, 8.2)
+        intro_group = VGroup(intro_badge, VGroup(intro_title, intro_box), intro_sub, intro_core_rule).arrange(DOWN, buff=0.4).move_to(ORIGIN)
+        for item in intro_group:
+            item.set_x(0)
+        fit_width(intro_group, 8.0)
 
         self.play(FadeIn(intro_badge, shift=DOWN * 0.3), run_time=0.7)
         self.play(Write(intro_title), Create(intro_box), run_time=1.2)
@@ -381,7 +397,7 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         # PHẦN 2: LÝ THUYẾT CỐT LÕI - 2 THẺ MÀU ĐỘC LẬP (~14s)
         # ======================================================================
         th_header = Text("ĐỊNH LÝ DẤU ĐẠO HÀM & ĐƠN ĐIỆU", font_size=26, font=MAIN_FONT, weight=BOLD, color=YELLOW).to_edge(UP, buff=0.6)
-        th_sub = Text("Quy tắc vàng liên hệ dấu y' và dáng điệu hàm số", font_size=22, font=MAIN_FONT, color=GRAY_B).next_to(th_header, DOWN, buff=0.18)
+        th_sub = Text("Định lý liên hệ dấu y' và dáng điệu hàm số", font_size=22, font=MAIN_FONT, color=GRAY_B).next_to(th_header, DOWN, buff=0.18)
 
         card_inc = RoundedRectangle(corner_radius=0.2, width=8.4, height=4.2, color=GREEN_D, fill_color="#064E3B", fill_opacity=0.35, stroke_width=2.5)
         t_inc_title = Text("1. HÀM SỐ ĐỒNG BIẾN (TĂNG)", font_size=24, font=MAIN_FONT, weight=BOLD, color=GREEN_B)
@@ -739,7 +755,7 @@ ${existingCode.trim()}
 
 IV. YÊU CẦU THỰC THI BẮT BUỘC:
 1. Đọc kỹ từng góp ý, câu từ cần sửa, hoặc lỗi bố cục được ghi trong mục II.
-2. Viết lại TOÀN BỘ file mã nguồn Manim Python (\`scene.py\`) từ đầu, kế thừa cấu trúc 5 PHÂN CẢNH VÀNG:
+2. Viết lại TOÀN BỘ file mã nguồn Manim Python (\`scene.py\`) từ đầu, kế thừa cấu trúc 5 PHÂN CẢNH CHUẨN MỰC:
    - Intro -> Lý thuyết 2 thẻ màu -> Dual-Zone Mô phỏng động tiếp tuyến đổi màu & BBT 3 tầng -> Chữa đề RAG (TỐI ĐA 2 CÂU) -> Thẻ Outro thương hiệu (giữ nguyên self.wait(3.0)).
 3. Giữ vững quy chuẩn CHỐNG ĐÈ CHỮ (ZERO OVERLAP), áp dụng Khung Thẻ Container Dual-Zone lấp đầy 93% màn hình, dãn dòng \`line_spacing=1.2\`, gọi fit_width(group, 7.8) cho mọi khối nội dung trong thẻ, font_size lớn rõ nét (Tiêu đề 30-34, Thẻ 22-24, MathTex 26-32, Text tiếng Việt 22-24, TUYỆT ĐỐI KHÔNG DÙNG FONT_SIZE DƯỚI 22).
 4. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, không viết lời chào hay giải thích ngoài mã.
