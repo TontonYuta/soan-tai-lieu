@@ -5,9 +5,10 @@ import { LATEX_TECHNICAL_RULES, ROADMAP_TEMPLATE } from "./latex-rules";
 const sanitizeAndExtractRag = (attachedPdf?: { fileName: string; numPages: number; text: string }): string => {
   if (!attachedPdf?.text) return "";
   const rawText = attachedPdf.text.replace(/\r/g, "");
-  // Lọc sạch watermark, số điện thoại rác và số trang lặp
+  // Lọc sạch watermark, số điện thoại rác, link web và số trang lặp
   const cleaned = rawText
-    .replace(/(?:Trang\s+\d+\/\d+|SĐT:?\s*\d{8,12}|Hotline:?\s*\d{8,12}|Website:?\s*\S+)/gi, "")
+    .replace(/(?:-?\s*Trang\s*:?\s*\d+(?:\/\d+)?\s*-?|-?\s*Page\s*:?\s*\d+(?:\/\d+)?\s*-?|SĐT:?\s*\d{8,12}|Hotline:?\s*\d{8,12}|Website:?\s*\S+)/gi, "")
+    .replace(/^(?:Trang|Page)\s+\d+.*$/gim, "")
     .trim();
 
   let chunk = "";
@@ -17,7 +18,7 @@ const sanitizeAndExtractRag = (attachedPdf?: { fileName: string; numPages: numbe
     // Smart RAG: Lấy 4.000 ký tự đầu (Mục lục, tổng quan) + 11.000 ký tự trọng tâm bài tập ở các trang sau
     const head = cleaned.slice(0, 4000);
     const tail = cleaned.slice(-11000);
-    chunk = `${head}\n\n[... CẮT LƯỢC TRANG GIỮA, NỐI PHẦN BÀI TẬP VÀ ĐÁP ÁN TRỌNG TÂM TRANG SAU ...]\n\n${tail}`;
+    chunk = `${head}\n\n[... CẮT LƯỢC PHẦN GIỮA, NỐI PHẦN BÀI TẬP VÀ ĐÁP ÁN TRỌNG TÂM TRANG SAU ...]\n\n${tail}`;
   }
 
   return `\n====================================================
@@ -27,7 +28,10 @@ TÀI LIỆU PDF ĐÍNH KÈM THAM KHẢO (RAG CONTEXT):
 """
 ${chunk}
 """
-- CHỈ THỊ RAG (QUAN TRỌNG): BẮT BUỘC chắt lọc các câu hỏi, dữ kiện và cấu trúc bài từ tài liệu PDF đính kèm trên để biên soạn nội dung sát nhất.
+- CHỈ THỊ RAG (BẮT BUỘC TUÂN THỦ TUYỆT ĐỐI):
+  * Chắt lọc các câu hỏi, dữ kiện, hàm số, cấu trúc bài toán và phong cách sư phạm từ tài liệu trên để biên soạn nội dung sát nhất.
+  * TUYỆT ĐỐI KHÔNG chèn bất kỳ nhãn trích dẫn nguồn, số trang hay từ khóa nội bộ nào vào đề bài hay lời giải (VÍ DỤ CẤM VIẾT: 'Câu 1 (RAG trang 2)', 'Câu 1 (RAG)', '[RAG]', '(Nguồn: ...)', '(Tham khảo trang X)').
+  * Toàn bộ câu hỏi phải được hiển thị tự nhiên, chuẩn mực: \\cauhoi{1}, \\cauhoi{2}... hoặc \\textbf{Câu 1.}, \\textbf{Câu 2.}... như một đề thi chính thức chuẩn quốc gia.
 ====================================================\n`;
 };
 

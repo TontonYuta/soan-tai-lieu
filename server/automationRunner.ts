@@ -3024,6 +3024,20 @@ YÊU CẦU CHO TẬP ${ep}:
       let finalLatex = extractedLatex || options.prompt;
       finalLatex = finalLatex.replace(/^```(?:latex|tex)?\s*/i, '').replace(/\s*```$/i, '').trim();
 
+      // Loại bỏ các nhãn rác RAG / số trang và chuẩn hóa tiêu đề
+      finalLatex = finalLatex.replace(/\\cauhoi\{(\d+)\s*\(?[^}]*(?:rag|trang|page|nguồn)[^}]*\}/gi, '\\cauhoi{$1}');
+      finalLatex = finalLatex.replace(/(\\cauhoi\{\d+\})\s*\(?(?:rag|nguồn|tham khảo)\s*(?:trang|page)?\s*\d*\)?[:.-]?\s*/gi, '$1 ');
+      finalLatex = finalLatex.replace(/(\\textbf\{\s*(?:Câu|Bài)\s*\d+)\s*\(?[^}:.]*(?:rag|trang|page|nguồn)[^}:.]*\)?(\s*[:.]?\s*\})/gi, '$1$2');
+      finalLatex = finalLatex.replace(/(\\textbf\{\s*(?:Câu|Bài)\s*\d+[^}]*\})\s*\(?(?:rag|nguồn|tham khảo)\s*(?:trang|page)?\s*\d*\)?[:.-]?\s*/gi, '$1 ');
+      finalLatex = finalLatex.replace(/(\b(?:Câu|Bài)\s*\d+[:.]?)\s*\(?(?:rag|nguồn|tham khảo)\s*(?:trang|page)?\s*\d*\)?[:.-]?\s*/gi, '$1 ');
+      finalLatex = finalLatex.replace(/\s*\[(?:RAG|rag)[^\]]*\]/gi, '');
+      finalLatex = finalLatex.replace(/\s*\((?:RAG|rag)\s*(?:trang|Trang|page|Page)?\s*\d+\)/gi, '');
+      finalLatex = finalLatex.replace(/\s*\((?:trang|Trang|page|Page)\s*\d+\)/gi, '');
+      finalLatex = finalLatex.replace(/\\subsection\*\{BẢNG ĐÁP ÁN PHẦN I\}/g, '\\subsection*{Bảng đáp án Phần I}');
+      finalLatex = finalLatex.replace(/\\subsection\*\{BẢNG ĐÁP ÁN PHẦN II\}/g, '\\subsection*{Bảng đáp án Phần II}');
+      finalLatex = finalLatex.replace(/\\subsection\*\{BẢNG ĐÁP ÁN PHẦN III\}/g, '\\subsection*{Bảng đáp án Phần III}');
+      finalLatex = finalLatex.replace(/\\subsection\*\{LỜI GIẢI CHI TIẾT TỪNG CÂU\}/g, '\\subsection*{Lời giải chi tiết từng câu}');
+
       const timestamp = Date.now();
       const texFileName = `tailieu_${timestamp}.tex`;
       const localPdfFileName = `tailieu_${timestamp}.pdf`;

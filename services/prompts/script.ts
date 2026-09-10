@@ -35,7 +35,7 @@ Nội dung bài toán / đề bài trong file PDF:
 """
 ${config.attachedPdf.text.slice(0, 8000)}
 """
-YÊU CẦU ĐẶC BIỆT: Hãy bám sát chính xác câu hỏi toán học hoặc nội dung trong file PDF trên để xây dựng kịch bản video phân cảnh và lời thoại giải thích.
+YÊU CẦU ĐẶC BIỆT: Hãy bám sát chính xác câu hỏi hoặc nội dung trong file PDF trên để xây dựng kịch bản video phân cảnh và lời thoại giải thích. TUYỆT ĐỐI KHÔNG ghi chú nhãn RAG hay số trang (ví dụ CẤM: "Câu 1 (RAG trang 2)").
 `;
   }
 
@@ -67,7 +67,7 @@ ${hookGuide}
 
 [CẤU TRÚC KỊCH BẢN - BẢNG PHÂN CẢNH CHI TIẾT]
 
-# KỊCH BẢN VIDEO: ${config.topic.toUpperCase()}
+# Kịch bản video: ${config.topic}
 **Định dạng:** ${isVertical ? 'Video Dọc 9:16 (Shorts/TikTok)' : 'Video Ngang 16:9 (YouTube)'} | **Thời lượng:** ${config.duration}
 
 ---

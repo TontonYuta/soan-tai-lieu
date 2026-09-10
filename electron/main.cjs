@@ -406,6 +406,27 @@ function autoRepairLatexCode(latexCode, logContent = '') {
   repaired = repaired.replace(/GD&ĐT/g, 'GD\\&ĐT');
   repaired = repaired.replace(/(\d+)\s*%/g, '$1\\%');
 
+  // 5. Loại bỏ triệt để các nhãn rác RAG / trích dẫn số trang nội bộ trong câu hỏi & đề bài
+  repaired = repaired.replace(/\\cauhoi\{(\d+)\s*\(?[^}]*(?:rag|trang|page|nguồn)[^}]*\}/gi, '\\cauhoi{$1}');
+  repaired = repaired.replace(/(\\cauhoi\{\d+\})\s*\(?(?:rag|nguồn|tham khảo)\s*(?:trang|page)?\s*\d*\)?[:.-]?\s*/gi, '$1 ');
+  repaired = repaired.replace(/(\\textbf\{\s*(?:Câu|Bài)\s*\d+)\s*\(?[^}:.]*(?:rag|trang|page|nguồn)[^}:.]*\)?(\s*[:.]?\s*\})/gi, '$1$2');
+  repaired = repaired.replace(/(\\textbf\{\s*(?:Câu|Bài)\s*\d+[^}]*\})\s*\(?(?:rag|nguồn|tham khảo)\s*(?:trang|page)?\s*\d*\)?[:.-]?\s*/gi, '$1 ');
+  repaired = repaired.replace(/(\b(?:Câu|Bài)\s*\d+[:.]?)\s*\(?(?:rag|nguồn|tham khảo)\s*(?:trang|page)?\s*\d*\)?[:.-]?\s*/gi, '$1 ');
+  repaired = repaired.replace(/\s*\[(?:RAG|rag)[^\]]*\]/gi, '');
+  repaired = repaired.replace(/\s*\((?:RAG|rag)\s*(?:trang|Trang|page|Page)?\s*\d+\)/gi, '');
+  repaired = repaired.replace(/\s*\((?:trang|Trang|page|Page)\s*\d+\)/gi, '');
+
+  // 6. Chuẩn hóa tiêu đề mục phụ chống viết HOA TOÀN BỘ (ALL CAPS)
+  repaired = repaired.replace(/\\subsection\*\{BẢNG ĐÁP ÁN PHẦN I\}/g, '\\subsection*{Bảng đáp án Phần I}');
+  repaired = repaired.replace(/\\subsection\*\{BẢNG ĐÁP ÁN PHẦN II\}/g, '\\subsection*{Bảng đáp án Phần II}');
+  repaired = repaired.replace(/\\subsection\*\{BẢNG ĐÁP ÁN PHẦN III\}/g, '\\subsection*{Bảng đáp án Phần III}');
+  repaired = repaired.replace(/\\subsection\*\{LỜI GIẢI CHI TIẾT TỪNG CÂU\}/g, '\\subsection*{Lời giải chi tiết từng câu}');
+  repaired = repaired.replace(/\\section\*\{I\. PHẦN TRẮC NGHIỆM\}/g, '\\section*{Phần I. Trắc nghiệm}');
+  repaired = repaired.replace(/\\section\*\{II\. PHẦN TỰ LUẬN\}/g, '\\section*{Phần II. Tự luận}');
+  repaired = repaired.replace(/\\section\*\{I\. TÓM TẮT LÝ THUYẾT TRỌNG TÂM\}/g, '\\section*{Phần I. Tóm tắt lý thuyết trọng tâm}');
+  repaired = repaired.replace(/\\section\*\{II\. CÁC DẠNG BÀI TẬP VÀ PHƯƠNG PHÁP GIẢI\}/g, '\\section*{Phần II. Các dạng bài tập và phương pháp giải}');
+  repaired = repaired.replace(/\\section\*\{III\. BÀI TẬP TỰ LUYỆN\}/g, '\\section*{Phần III. Bài tập tự luyện}');
+
   return repaired;
 }
 
@@ -2060,7 +2081,8 @@ function startInternalServer(callback) {
                   });
                   const cleanedRag = ragText
                     .replace(/\r/g, "")
-                    .replace(/(?:Trang\s+\d+\/\d+|SĐT:?\s*\d{8,12}|Hotline:?\s*\d{8,12}|Website:?\s*\S+)/gi, "")
+                    .replace(/(?:-?\s*Trang\s*:?\s*\d+(?:\/\d+)?\s*-?|-?\s*Page\s*:?\s*\d+(?:\/\d+)?\s*-?|SĐT:?\s*\d{8,12}|Hotline:?\s*\d{8,12}|Website:?\s*\S+)/gi, "")
+                    .replace(/^(?:Trang|Page)\s+\d+.*$/gim, "")
                     .trim();
                   let trimmedRag = "";
                   if (cleanedRag.length <= 15000) {
@@ -2070,7 +2092,7 @@ function startInternalServer(callback) {
                     const tail = cleanedRag.slice(-11000);
                     trimmedRag = `${head}\n\n[... CẮT LƯỢC PHẦN GIỮA, NỐI PHẦN BÀI TẬP VÀ ĐÁP ÁN TRỌNG TÂM TRANG SAU ...]\n\n${tail}`;
                   }
-                  ragDirectiveBlock = `\n\n[TÀI LIỆU RAG NGUỒN BẮT BUỘC BÁM SÁT (${ragFileName})]:\n"""\n${trimmedRag}\n"""\n\nCHỈ THỊ SƯ PHẠM RAG BẮT BUỘC KHÔNG ĐƯỢC BỎ QUA:\n1. BẮT BUỘC TRÍCH XUẤT CHÍNH XÁC BÀI TOÁN / CÂU HỎI / ĐỊNH LÝ / DỮ KIỆN TỪ TÀI LIỆU TRÊN để dựng video bài giảng hoặc tài liệu. Nếu là đề ôn tập gồm nhiều câu, chọn bài tiêu biểu nhất (ví dụ Dạng 1 / Câu 1) và giải chi tiết từng bước.\n2. BÁM SÁT 100% CÂU TỪ, DỮ KIỆN, HÀM SỐ, HÌNH VẼ, PHƯƠNG TRÌNH, BƯỚC GIẢI TRONG TÀI LIỆU. TUYỆT ĐỐI KHÔNG BỊA BÀI KHÁC!\n3. DIỄN ĐẠT ĐÚNG VÀ ĐỦ Ý CHÍNH: Lời giải, biến đổi đại số, sơ đồ và bảng biến thiên/đồ thị phải phản ánh trung thực bài toán trong tài liệu.`;
+                  ragDirectiveBlock = `\n\n[TÀI LIỆU RAG NGUỒN BẮT BUỘC BÁM SÁT (${ragFileName})]:\n"""\n${trimmedRag}\n"""\n\nCHỈ THỊ SƯ PHẠM RAG BẮT BUỘC KHÔNG ĐƯỢC BỎ QUA:\n1. BẮT BUỘC TRÍCH XUẤT CHÍNH XÁC BÀI TOÁN / CÂU HỎI / ĐỊNH LÝ / DỮ KIỆN TỪ TÀI LIỆU TRÊN để dựng video bài giảng hoặc tài liệu. Nếu là đề ôn tập gồm nhiều câu, chọn bài tiêu biểu nhất (ví dụ Dạng 1 / Câu 1) và giải chi tiết từng bước.\n2. BÁM SÁT 100% CÂU TỪ, DỮ KIỆN, HÀM SỐ, HÌNH VẼ, PHƯƠNG TRÌNH, BƯỚC GIẢI TRONG TÀI LIỆU. TUYỆT ĐỐI KHÔNG BỊA BÀI KHÁC!\n3. DIỄN ĐẠT ĐÚNG VÀ ĐỦ Ý CHÍNH: Lời giải, biến đổi đại số, sơ đồ và bảng biến thiên/đồ thị phải phản ánh trung thực bài toán trong tài liệu.\n4. TUYỆT ĐỐI KHÔNG ghi chú nhãn RAG hay số trang vào câu hỏi hoặc đề bài (VÍ DỤ CẤM: 'Câu 1 (RAG trang 2)', 'Câu 1 (RAG)', '[RAG]'). Toàn bộ câu hỏi phải được hiển thị tự nhiên như đề thi chính thức.\n5. QUY TẮC VIẾT HOA: CHỈ VIẾT HOA TIÊU ĐỀ CHÍNH ĐẦU TRANG. Tuyệt đối không viết HOA TOÀN BỘ (ALL CAPS) ở tiêu đề con, tên bài toán hoặc nội dung câu hỏi.\n6. QUY TẮC IN ĐẬM: Chỉ in đậm số hiệu câu và từ khóa quan trọng tránh bẫy. Tuyệt đối không in đậm toàn bộ câu hỏi.`;
                   if (!promptToSend.includes('[TÀI LIỆU RAG NGUỒN ĐÍNH KÈM / GHIM]')) {
                     promptToSend = ragDirectiveBlock + '\n\n' + promptToSend;
                   }

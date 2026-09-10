@@ -1,16 +1,54 @@
 export const LATEX_TECHNICAL_RULES = `
-QUY TẮC KỸ THUẬT LATEX ĐA MÔN HỌC (BẮT BUỘC ĐỂ BIÊN DỊCH 100% THÀNH CÔNG VỚI PDFLATEX TRÊN OVERLEAF & MÁY CỤC BỘ):
+QUY TẮC KỸ THUẬT & TRÌNH BÀY LATEX ĐA MÔN HỌC (BẮT BUỘC ĐỂ BIÊN DỊCH 100% THÀNH CÔNG VỚI PDFLATEX TRÊN OVERLEAF & MÁY CỤC BỘ):
 1. QUY TẮC ĐẦU RA (OUTPUT FORMAT - BẮT BUỘC TUYỆT ĐỐI):
    - BẮT BUỘC chỉ xuất ra duy nhất 1 khối mã nguồn LaTeX hoàn chỉnh bắt đầu bằng \`\`\`latex và kết thúc bằng \`\`\`.
    - TUYỆT ĐỐI KHÔNG xuất bất kỳ câu chào hỏi, lời dẫn, chú thích hay thẻ nào bên ngoài khối \`\`\`latex ... \`\`\`.
    - Mã nguồn phải chứa đầy đủ từ \\documentclass đến \\end{document}, sẵn sàng biên dịch trực tiếp không thiếu sót.
    - ĐIỀU PHỐI DUNG LƯỢNG CHỐNG CẮT CỤT TOKEN (TOKEN SAFETY): Khi biên soạn tài liệu/đề thi dài, phần hướng dẫn giải chi tiết phải cô đọng, đi thẳng vào bước biến đổi/mẹo chốt chặn quan trọng, TUYỆT ĐỐI KHÔNG diễn giải lan man khiến file bị cắt cụt token và mất thẻ \\end{document}.
 
-2. KHÔNG DÙNG CÚ PHÁP MARKDOWN TRONG CODE:
+2. QUY TẮC VIẾT HOA (CAPITALIZATION - BẮT BUỘC TUÂN THỦ):
+   - CHỈ VIẾT HOA TOÀN BỘ (ALL CAPS) duy nhất cho TIÊU ĐỀ CHÍNH ĐẦU TRANG của tài liệu (Ví dụ: KỲ THI ĐÁNH GIÁ NĂNG LỰC, ĐÁP ÁN VÀ HƯỚNG DẪN GIẢI CHI TIẾT).
+   - TUYỆT ĐỐI KHÔNG VIẾT HOA TOÀN BỘ ở các tiêu đề con, tên bài toán, đề mục bài tập hay nội dung câu hỏi.
+     (CẤM: \\section{DẠNG 1. KHẢO SÁT HÀM SỐ BẬC BA}, CẤM: \\textbf{CHO HÀM SỐ Y = F(X)...}, CẤM: \\subsection*{BẢNG ĐÁP ÁN PHẦN I}).
+   - Các tiêu đề mục phụ, dạng toán: Dùng Title Case hoặc Sentence case thanh lịch, trang nhã:
+     * \\subsection*{Bảng đáp án Phần I} (thay vì Bảng đáp án Phần I).
+     * \\subsection*{Bảng đáp án Phần II}, \\subsection*{Bảng đáp án Phần III}.
+     * \\subsection*{Lời giải chi tiết từng câu} (thay vì Lời giải chi tiết từng câu).
+     * \\section*{Phần I. Câu trắc nghiệm nhiều phương án lựa chọn}.
+     * \\dangtoan{Dạng 1. Tìm tập xác định và sự biến thiên của hàm số}.
+   - Nội dung câu hỏi và đề bài: Chỉ viết hoa chữ cái đầu câu, sau dấu chấm và danh từ riêng (Việt Nam, Newton, Oxyz...) theo chuẩn ngữ pháp tiếng Việt. Tuyệt đối không viết hoa toàn bộ đề bài!
+
+3. QUY TẮC IN ĐẬM (BOLD FORMATTING - TRÁNH LẠM DỤNG):
+   - Chỉ in đậm định danh câu hỏi: \\textbf{Câu 1.}, \\textbf{Bài 1.}.
+   - Chỉ in đậm các từ khóa khẳng định/phủ định quan trọng nhằm giúp học sinh tránh bẫy đề thi: \\textbf{đúng}, \\textbf{sai}, \\textbf{không}, \\textbf{nghịch biến}, \\textbf{đồng biến}, \\textbf{giá trị lớn nhất}, \\textbf{giá trị nhỏ nhất}.
+   - Chữ cái phương án trắc nghiệm: \\textbf{A.}, \\textbf{B.}, \\textbf{C.}, \\textbf{D.} (phần nội dung phương án KHÔNG in đậm).
+   - TUYỆT ĐỐI KHÔNG in đậm nguyên cả đoạn văn bản dài, nguyên câu hỏi hoặc toàn bộ lời giải, tránh gây chói mắt và làm mất cấu trúc phân tầng thị giác.
+
+4. QUY TẮC KÝ HIỆU TOÁN HỌC & KHOA HỌC CHUẨN MỰC:
+   - 100% công thức, biến số, hàm số, điểm, đường thẳng, mặt phẳng phải nằm trong $...$ hoặc \\[ ... \\]: điểm $A$, đường thẳng $d$, mặt phẳng $(P)$, đoạn thẳng $AB$, biến $x, y$. Tuyệt đối không viết chữ x, y cộc lốc ngoài môi trường toán.
+   - Phân số: Luôn dùng \\dfrac{a}{b} trong dòng công thức hiển thị và câu hỏi để tử và mẫu rõ nét, không bị teo nhỏ như \\frac.
+   - Dấu nhân: Dùng \\cdot ($2 \\cdot 3$), TUYỆT ĐỐI KHÔNG dùng dấu * hoặc chữ x làm phép nhân toán học.
+   - Tập hợp số: Dùng \\mathbb{R}, \\mathbb{Z}, \\mathbb{N}, \\mathbb{Q}, \\mathbb{C}.
+   - Vector: Dùng \\vec{u}, \\vec{v} hoặc \\overrightarrow{AB}.
+   - Góc: Dùng \\widehat{ABC} hoặc \\angle ABC.
+   - Số đo độ: Dùng 30^\\circ, 45^\\circ (không viết $30o$ hay $30^0$).
+   - Dấu ngoặc co giãn: Dùng \\left( ... \\right), \\left[ ... \\right] khi bên trong chứa phân số hoặc biểu thức nhiều tầng.
+   - Hệ phương trình & Tuyển: Dùng \\begin{cases} ... \\end{cases} cho hệ ngoặc nhọn, hoặc \\left[ \\begin{aligned} ... \\end{aligned} \\right. cho tuyển nghiệm ngoặc vuông.
+   - Vi phân & Tích phân: \\int_{a}^{b} f(x)\\,\\mathrm{d}x, chữ \\mathrm{d}x đứng thẳng và có khoảng cách mỏng \\,.
+   - Giới hạn: \\lim_{x \\to x_0} f(x) hoặc \\lim\\limits_{x \\to x_0} f(x).
+   - Đơn vị đo (Lý, Hóa, Toán ứng dụng): Bọc trong \\mathrm{...} có dấu cách mỏng: $10\\,\\mathrm{m/s}$, $50\\,\\mathrm{cm}^3$, $100\\,\\mathrm{g}$, $220\\,\\mathrm{V}$.
+   - Hóa học: $2\\mathrm{H}_2 + \\mathrm{O}_2 \\rightarrow 2\\mathrm{H}_2\\mathrm{O}$.
+
+5. QUY TẮC CHỐNG RÁC NỘI BỘ & KHÔNG GHI NHÃN RAG (TUYỆT ĐỐI BẮT BUỘC):
+   - TUYỆT ĐỐI KHÔNG chèn bất kỳ nhãn nguồn, số trang hay từ khóa nội bộ nào vào đề bài hoặc lời giải.
+   - CẤM VIẾT: "Câu 1 (RAG trang 2)", "Câu 1 (RAG)", "[RAG]", "(Nguồn: ...)", "(Tham khảo trang X)".
+   - Toàn bộ câu hỏi phải được hiển thị tự nhiên, chuẩn mực: \\cauhoi{1}, \\cauhoi{2}, \\cauhoi{3}... hoặc \\textbf{Câu 1.}, \\textbf{Câu 2.}... như một đề thi chính thức được in ấn từ Sở/Bộ Giáo dục.
+
+6. KHÔNG DÙNG CÚ PHÁP MARKDOWN TRONG CODE:
    - Tuyệt đối không dùng **, *, #, - bên trong mã LaTeX.
    - Dùng \\textbf{}, \\textit{}, \\section{}, \\begin{itemize}, \\begin{enumerate}.
 
-3. TIẾNG VIỆT, UNICODE & TRÌNH BIÊN DỊCH:
+7. TIẾNG VIỆT, UNICODE & TRÌNH BIÊN DỊCH:
    - Bắt buộc tương thích hoàn toàn với pdfLaTeX. Sử dụng gói lệnh:
      \\usepackage[utf8]{inputenc}
      \\usepackage[T1]{fontenc}
@@ -36,32 +74,25 @@ QUY TẮC KỸ THUẬT LATEX ĐA MÔN HỌC (BẮT BUỘC ĐỂ BIÊN DỊCH 100
      \\newunicodechar{°}{\\ensuremath{^\\circ}}
      \\newunicodechar{℃}{\\ensuremath{^\\circ\\mathrm{C}}}
 
-4. CHUẨN HÓA CÔNG THỨC TOÁN & KÝ HIỆU ĐA MÔN HỌC:
-   - Mọi biểu thức toán học, biến số, hàm số, phương trình phải nằm trong $...$ hoặc \\[ ... \\].
-   - TUYỆT ĐỐI KHÔNG viết tiếng Việt có dấu trực tiếp trong $...$ mà không có \\text{...} (Ví dụ: $S_{\\text{đáy}}$ thay vì $S_{đáy}$, $V_{\\text{chóp}}$ thay vì $V_{chóp}$).
-   - Ký hiệu môn Vật lý / Hóa học:
-     * Đơn vị đo bọc trong \\mathrm{...}: $v = 20\\,\\mathrm{m/s}$, $m = 5\\,\\mathrm{kg}$, $R = 10\\,\\Omega$, $p = 10^5\\,\\mathrm{Pa}$.
-     * Phản ứng hóa học: dùng mũi tên $\\rightarrow$ hoặc $\\rightleftharpoons$ (Ví dụ: $2\\mathrm{H}_2 + \\mathrm{O}_2 \\rightarrow 2\\mathrm{H}_2\\mathrm{O}$).
-
-5. MÔN NGÔN NGỮ (TIẾNG ANH / NGOẠI NGỮ / NGỮ VĂN) & KHOA HỌC XÃ HỘI:
+8. MÔN NGÔN NGỮ (TIẾNG ANH / NGOẠI NGỮ / NGỮ VĂN) & KHOA HỌC XÃ HỘI:
    - Đoạn văn đọc hiểu (Reading Comprehension / Tình huống thực tế): Sử dụng môi trường \\doanvan{Tiêu đề đoạn văn}{Nội dung bài đọc...} có khung viền trang nhã.
    - Đáp án trắc nghiệm linh hoạt:
      * Đáp án ngắn (từ đơn, số, ký hiệu): Dùng macro \\dapan{A}{B}{C}{D} (4 cột).
      * Đáp án trung bình (cụm từ, mệnh đề ngắn): Dùng macro \\dapanHaiCot{A}{B}{C}{D} (2 cột).
      * Đáp án dài (nguyên câu văn, lời giải thích): Dùng macro \\dapanMotCot{A}{B}{C}{D} (1 cột).
 
-6. KÝ TỰ ĐẶC BIỆT & ESCAPE:
+9. KÝ TỰ ĐẶC BIỆT & ESCAPE:
    - Bắt buộc escape: \\% (phần trăm), \\& (và), \\_ (gạch dưới), \\$ (đô la), \\{ \\} (ngoặc nhọn khi in chữ).
 
-7. VẼ HÌNH HỌC, ĐỒ THỊ TIKZ & SƠ ĐỒ ĐA MÔN:
-   - Sử dụng \\usepackage{tikz}, \\usepackage{pgfplots}, \\pgfplotsset{compat=1.18}.
-   - Thư viện TikZ: \\usetikzlibrary{arrows.meta, positioning, calc, angles, quotes, patterns}.
-   - Môn Toán & Hình học: Nét đứt [dashed] cho cạnh khuất, nét liền [thick] cho cạnh nhìn thấy, góc vuông dùng \\pic [draw, angle radius=2mm] {right angle = ...}.
-   - Môn Vật lý & Hóa học & Tin học: Sơ đồ khối, sơ đồ mạch điện, vector lực có mũi tên [-{Latex[length=2.5mm]}]. Luôn bọc trong \\centering và [scale=0.85, baseline=(current bounding box.center)] để hình không tràn lề giấy A4.
+10. VẼ HÌNH HỌC, ĐỒ THỊ TIKZ & SƠ ĐỒ ĐA MÔN:
+    - Sử dụng \\usepackage{tikz}, \\usepackage{pgfplots}, \\pgfplotsset{compat=1.18}.
+    - Thư viện TikZ: \\usetikzlibrary{arrows.meta, positioning, calc, angles, quotes, patterns}.
+    - Môn Toán & Hình học: Nét đứt [dashed] cho cạnh khuất, nét liền [thick] cho cạnh nhìn thấy, góc vuông dùng \\pic [draw, angle radius=2mm] {right angle = ...}.
+    - Môn Vật lý & Hóa học & Tin học: Sơ đồ khối, sơ đồ mạch điện, vector lực có mũi tên [-{Latex[length=2.5mm]}]. Luôn bọc trong \\centering và [scale=0.85, baseline=(current bounding box.center)] để hình không tràn lề giấy A4.
 
-8. THIẾT KẾ UI & KHUNG VIỀN:
-   - Dùng tcolorbox với [sharp corners] để viền sắc nét, hiện đại chuẩn in ấn đề thi.
-   - Màu chủ đạo: Xanh dương dịu (\\definecolor{myblue}{RGB}{0,102,204}), Xanh lá đậm (\\definecolor{darkgreen}{RGB}{0,128,0}).
+11. THIẾT KẾ UI & KHUNG VIỀN:
+    - Dùng tcolorbox với [sharp corners] để viền sắc nét, hiện đại chuẩn in ấn đề thi.
+    - Màu chủ đạo: Xanh dương dịu (\\definecolor{myblue}{RGB}{0,102,204}), Xanh lá đậm (\\definecolor{darkgreen}{RGB}{0,128,0}).
 `;
 
 export const EXAM_TEMPLATE_2025 = `
@@ -240,14 +271,14 @@ export const EXAM_TEMPLATE_2025 = `
 \\subsection*{\\color{myblue}BẢNG ĐÁP ÁN PHẦN I}
 % Bảng đáp án Phần I dạng ma trận cột
 
-\\subsection*{\\color{myblue}BẢNG ĐÁP ÁN PHẦN II}
+\\subsection*{\\color{myblue}Bảng đáp án Phần II}
 % Bảng đáp án Phần II dạng a: Đ/S, b: Đ/S, c: Đ/S, d: Đ/S
 
-\\subsection*{\\color{myblue}BẢNG ĐÁP ÁN PHẦN III}
+\\subsection*{\\color{myblue}Bảng đáp án Phần III}
 % Bảng đáp số Phần III dạng số/phân số/kết quả ngắn
 
 \\vspace{10pt}
-\\subsection*{\\color{myblue}LỜI GIẢI CHI TIẾT TỪNG CÂU}
+\\subsection*{\\color{myblue}Lời giải chi tiết từng câu}
 % Lời giải cô đọng, súc tích từng câu hỏi, đảm bảo kết thúc bằng \\end{document}
 
 \\end{document}
@@ -355,10 +386,10 @@ export const EXAM_TEMPLATE_CLASSIC = `
 \\noindent\\rule{\\linewidth}{0.8pt}
 \\vspace{10pt}
 
-\\section*{\\color{myblue}I. PHẦN TRẮC NGHIỆM}
+\\section*{\\color{myblue}Phần I. Trắc nghiệm}
 % Điền các câu hỏi trắc nghiệm
 
-\\section*{\\color{myblue}II. PHẦN TỰ LUẬN}
+\\section*{\\color{myblue}Phần II. Tự luận}
 % Điền các câu hỏi tự luận
 
 \\newpage
@@ -367,10 +398,10 @@ export const EXAM_TEMPLATE_CLASSIC = `
 \\end{center}
 \\vspace{10pt}
 
-\\section*{\\color{myblue}I. PHẦN TRẮC NGHIỆM}
+\\section*{\\color{myblue}Phần I. Bảng đáp án trắc nghiệm}
 % Bảng đáp án trắc nghiệm
 
-\\section*{\\color{myblue}II. PHẦN TỰ LUẬN}
+\\section*{\\color{myblue}Phần II. Lời giải chi tiết}
 % Lời giải tự luận phân tích từng bước
 
 \\end{document}
@@ -469,13 +500,13 @@ export const LEARNING_TEMPLATE = `
 \\noindent\\rule{\\linewidth}{0.8pt}
 \\vspace{10pt}
 
-\\section*{\\color{myblue}I. TÓM TẮT LÝ THUYẾT TRỌNG TÂM}
+\\section*{\\color{myblue}Phần I. Tóm tắt lý thuyết trọng tâm}
 % Trình bày lý thuyết dùng \\hopkienthuc hoặc \\dinhly
 
-\\section*{\\color{myblue}II. CÁC DẠNG BÀI TẬP VÀ PHƯƠNG PHÁP GIẢI}
+\\section*{\\color{myblue}Phần II. Các dạng bài tập và phương pháp giải}
 % Trình bày các dạng bài dùng \\dangtoan, \\vidu, \\loigiai
 
-\\section*{\\color{myblue}III. BÀI TẬP TỰ LUYỆN}
+\\section*{\\color{myblue}Phần III. Bài tập tự luyện}
 % Trình bày bài tập tự luyện
 
 \\end{document}
@@ -552,13 +583,13 @@ export const ROADMAP_TEMPLATE = `
 \\noindent\\rule{\\linewidth}{0.8pt}
 \\vspace{10pt}
 
-\\section*{\\color{myblue}I. TỔNG QUAN VÀ ĐỊNH HƯỚNG TƯ DUY}
+\\section*{\\color{myblue}Phần I. Tổng quan và định hướng tư duy}
 % Mindset và phương pháp học
 
-\\section*{\\color{myblue}II. CHI TIẾT CÁC GIAI ĐOẠN HỌC TẬP}
+\\section*{\\color{myblue}Phần II. Chi tiết các giai đoạn học tập}
 % Dùng \\giaidoan{1}{Tên giai đoạn} ... \\endgiaidoan
 
-\\section*{\\color{myblue}III. TIÊU CHÍ ĐÁNH GIÁ VÀ CHECKPOINT}
+\\section*{\\color{myblue}Phần III. Tiêu chí đánh giá và các mốc kiểm tra}
 % Bảng tiêu chí và bài test đánh giá
 
 \\end{document}
