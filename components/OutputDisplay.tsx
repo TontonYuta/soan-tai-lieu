@@ -35,6 +35,7 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({
   const [downloaded, setDownloaded] = useState<string | null>(null);
   const [isPlayingTTS, setIsPlayingTTS] = useState(false);
   const [revisionFeedback, setRevisionFeedback] = useState('');
+  const [manimTab, setManimTab] = useState<'turn1' | 'turn2' | 'combined'>('turn1');
 
   useEffect(() => {
     // Dừng âm thanh nếu nội dung đổi hoặc unmount
@@ -99,7 +100,6 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({
   const isBat = content.includes('@echo off') || content.includes('chcp 65001');
 
   // Quản lý các chế độ sub-tab prompt cho video Manim
-  const [manimTab, setManimTab] = useState<'turn1' | 'turn2' | 'combined'>('turn1');
   const turn1Prompt = videoConfig ? generateManimStoryboardPrompt(videoConfig) : '';
   const turn2Prompt = videoConfig ? generateManimCodePrompt(videoConfig) : '';
   const combinedPrompt = videoConfig ? generateVideoManimPrompt(videoConfig) : '';

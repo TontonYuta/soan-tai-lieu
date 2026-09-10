@@ -93,6 +93,20 @@ const App: React.FC = () => {
     return localStorage.getItem('yuta_global_rag_active') !== 'false';
   });
 
+  const [videoExtraConfig, setVideoExtraConfig] = useState<{
+    isSeries?: boolean;
+    seriesCount?: number;
+    seriesOutline?: string;
+    enableVoice?: boolean;
+    voiceName?: string;
+    voiceSpeed?: string;
+  }>({});
+  const [currentVideoConfig, setCurrentVideoConfig] = useState<VideoConfig | null>(null);
+  const [geminiLink, setGeminiLink] = useState<string>(localStorage.getItem('gemini_fixed_link') || '');
+  const [isEditingLink, setIsEditingLink] = useState(false);
+  const [learningContext, setLearningContext] = useState<string | null>(null);
+  const [contextMetadata, setContextMetadata] = useState<{topic: string, subject: string, grade: string} | null>(null);
+
   const handleSetGlobalPinnedPdf = (pdf: AttachedPdfData | null) => {
     setGlobalPinnedPdf(pdf);
     if (pdf) {
@@ -119,19 +133,6 @@ const App: React.FC = () => {
       setActiveAttachedPdf({ path: globalPinnedPdf.tempPath, name: globalPinnedPdf.fileName });
     }
   }, [globalPinnedPdf, isGlobalRagActive]);
-  const [videoExtraConfig, setVideoExtraConfig] = useState<{
-    isSeries?: boolean;
-    seriesCount?: number;
-    seriesOutline?: string;
-    enableVoice?: boolean;
-    voiceName?: string;
-    voiceSpeed?: string;
-  }>({});
-  const [currentVideoConfig, setCurrentVideoConfig] = useState<VideoConfig | null>(null);
-  const [geminiLink, setGeminiLink] = useState<string>(localStorage.getItem('gemini_fixed_link') || '');
-  const [isEditingLink, setIsEditingLink] = useState(false);
-  const [learningContext, setLearningContext] = useState<string | null>(null);
-  const [contextMetadata, setContextMetadata] = useState<{topic: string, subject: string, grade: string} | null>(null);
 
   const isMobileUserAgent = typeof window !== 'undefined' && (
     /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||

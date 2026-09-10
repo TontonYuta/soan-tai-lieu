@@ -84,6 +84,47 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
   const startTimeRef = useRef<number | null>(null);
   const terminalRef = useRef<HTMLDivElement | null>(null);
 
+  // Settings
+  const [browserType, setBrowserType] = useState<'chrome' | 'firefox' | 'edge'>(
+    (localStorage.getItem('yuta_browser_type') as any) || 'chrome'
+  );
+  const [overleafUrl, setOverleafUrl] = useState<string>(
+    localStorage.getItem('yuta_overleaf_url') || 'https://www.overleaf.com/project/695bb729a951d226e9078147'
+  );
+  const [headless, setHeadlessState] = useState<boolean>(() => {
+    if (externalHeadless !== undefined) return externalHeadless;
+    return localStorage.getItem('yuta_headless') === 'true';
+  });
+  const [renderMode, setRenderMode] = useState<'local' | 'overleaf'>(() => {
+    return (localStorage.getItem('yuta_render_mode') as 'local' | 'overleaf') || 'local';
+  });
+  const [selectedAi, setSelectedAi] = useState<string>(() => {
+    return localStorage.getItem('yuta_ai_provider') || 'antigravity';
+  });
+  const [enableCreditOverages, setEnableCreditOverages] = useState(false);
+
+  const currentAi = AI_PROVIDERS.find((p) => p.id === selectedAi) || AI_PROVIDERS[0];
+
+  const [selectedModel, setSelectedModel] = useState<string>(() => {
+    const saved = localStorage.getItem(`yuta_ai_model_${selectedAi}`);
+    if (saved && currentAi.models.some(m => m.id === saved)) return saved;
+    return currentAi.models[0]?.id || '';
+  });
+
+  const currentModel = currentAi.models.find((m) => m.id === selectedModel) || currentAi.models[0];
+
+  const [aiUrl, setAiUrl] = useState<string>(() => {
+    return getProviderUrl(selectedAi, selectedModel);
+  });
+
+  const setHeadless = (val: boolean) => {
+    setHeadlessState(val);
+    localStorage.setItem('yuta_headless', String(val));
+    if (onToggleHeadless) {
+      onToggleHeadless(val);
+    }
+  };
+
   // Live log & progress synchronization across Mobile and Desktop
   useEffect(() => {
     let interval: any = null;
@@ -165,53 +206,11 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
     };
   }, []);
 
-  // Settings
-  const [browserType, setBrowserType] = useState<'chrome' | 'firefox' | 'edge'>(
-    (localStorage.getItem('yuta_browser_type') as any) || 'chrome'
-  );
-  const [overleafUrl, setOverleafUrl] = useState<string>(
-    localStorage.getItem('yuta_overleaf_url') || 'https://www.overleaf.com/project/695bb729a951d226e9078147'
-  );
-  const [headless, setHeadlessState] = useState<boolean>(() => {
-    if (externalHeadless !== undefined) return externalHeadless;
-    return localStorage.getItem('yuta_headless') === 'true';
-  });
-  const [renderMode, setRenderMode] = useState<'local' | 'overleaf'>(() => {
-    return (localStorage.getItem('yuta_render_mode') as 'local' | 'overleaf') || 'local';
-  });
-
   useEffect(() => {
     if (externalHeadless !== undefined) {
       setHeadlessState(externalHeadless);
     }
   }, [externalHeadless]);
-
-  const setHeadless = (val: boolean) => {
-    setHeadlessState(val);
-    localStorage.setItem('yuta_headless', String(val));
-    if (onToggleHeadless) {
-      onToggleHeadless(val);
-    }
-  };
-
-  const [selectedAi, setSelectedAi] = useState<string>(() => {
-    return localStorage.getItem('yuta_ai_provider') || 'antigravity';
-  });
-  const [enableCreditOverages, setEnableCreditOverages] = useState(false);
-
-  const currentAi = AI_PROVIDERS.find((p) => p.id === selectedAi) || AI_PROVIDERS[0];
-
-  const [selectedModel, setSelectedModel] = useState<string>(() => {
-    const saved = localStorage.getItem(`yuta_ai_model_${selectedAi}`);
-    if (saved && currentAi.models.some(m => m.id === saved)) return saved;
-    return currentAi.models[0]?.id || '';
-  });
-
-  const currentModel = currentAi.models.find((m) => m.id === selectedModel) || currentAi.models[0];
-
-  const [aiUrl, setAiUrl] = useState<string>(() => {
-    return getProviderUrl(selectedAi, selectedModel);
-  });
 
   // Đồng bộ nhà cung cấp AI và Quota mỗi khi mở Modal
   useEffect(() => {

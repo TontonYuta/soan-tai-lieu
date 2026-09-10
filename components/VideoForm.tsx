@@ -57,6 +57,16 @@ const VideoForm: React.FC<VideoFormProps> = ({
     voiceSpeed: '+0%'
   });
 
+  const [selectedAi, setSelectedAi] = useState<string>(
+    () => localStorage.getItem('yuta_ai_provider') || 'antigravity'
+  );
+  const currentAi = AI_PROVIDERS.find(p => p.id === selectedAi) || AI_PROVIDERS[0];
+  const [selectedModel, setSelectedModel] = useState<string>(() => {
+    const saved = localStorage.getItem(`yuta_ai_model_${selectedAi}`);
+    if (saved && currentAi.models.some(m => m.id === saved)) return saved;
+    return currentAi.models[0]?.id || '';
+  });
+
   useEffect(() => {
     if (contextTopic || contextSubject) {
       setConfig(prev => ({
@@ -70,16 +80,6 @@ const VideoForm: React.FC<VideoFormProps> = ({
   const isLoading = status === GenerationStatus.LOADING;
   const isVertical = config.format === 'vertical';
   const isSeries = Boolean(config.isSeries);
-
-  const [selectedAi, setSelectedAi] = useState<string>(
-    () => localStorage.getItem('yuta_ai_provider') || 'antigravity'
-  );
-  const currentAi = AI_PROVIDERS.find(p => p.id === selectedAi) || AI_PROVIDERS[0];
-  const [selectedModel, setSelectedModel] = useState<string>(() => {
-    const saved = localStorage.getItem(`yuta_ai_model_${selectedAi}`);
-    if (saved && currentAi.models.some(m => m.id === saved)) return saved;
-    return currentAi.models[0]?.id || '';
-  });
 
   const handleAiChange = (newAi: string) => {
     setSelectedAi(newAi);
