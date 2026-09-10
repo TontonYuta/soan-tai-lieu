@@ -86,14 +86,25 @@ def get_status_badge():
     elif m < -0.1:
         txt, b_col, bg_col = "y' < 0 ➜ NGHỊCH BIẾN (↘)", RED_B, "#7F1D1D"
     else:
-        txt, b_col, bg_col = "y' = 0 ➜ TIẾP TUYẾN NGANG", YELLOW, "#78350F"
-    lbl = Text(txt, font=MAIN_FONT, font_size=22, weight=BOLD, color=WHITE)
+- **Top Card (height=6.4, width=8.4)**:
+  - Hệ trục Oxy (`Axes`) gọn gàng: `x_length=7.2, y_length=4.0` (CẤM vượt quá `4.0` để không đè lên header và tiêu đề thẻ).
+  - Đồ thị đường cong toán học: `axes.plot(...)`.
+  - Cực trị và đường gióng nét đứt: `DashedLine`.
+  - **TIẾP TUYẾN CHUYỂN ĐỘNG VỚI `ValueTracker` + `always_redraw`**:
+    - Tiếp tuyến tự động đổi màu theo dấu hệ số góc $k = y'$:
+      * $k > 0$: Đổi màu `GREEN` (đồng biến, dốc lên).
+      * $k < 0$: Đổi màu `RED` (nghịch biến, dốc xuống).
+      * $k = 0$: Đổi màu `YELLOW` (tiếp tuyến nằm ngang tại cực trị).
+    - **Thanh trạng thái thời gian thực (`status_badge`)**: Khung bo góc nhỏ hiển thị trực tiếp giá trị $y'$ và trạng thái đơn điệu.
+```python
+    lbl = Text(txt, font=MAIN_FONT, font_size=22, color=WHITE)
     rect = RoundedRectangle(corner_radius=0.1, width=max(5.2, lbl.width + 0.5), height=0.52, color=b_col, fill_color=bg_col, fill_opacity=0.9, stroke_width=1.8).move_to(lbl)
     return VGroup(rect, lbl).next_to(top_card.get_bottom(), UP, buff=0.16)
 status_badge = always_redraw(get_status_badge)
 ```
-- **Bottom Card (Mathematical Analysis, height=6.6, width=8.4)**:
-  - Bảng biến thiên 3 tầng LaTeX array chuẩn:
+- **Bottom Card (height=6.6, width=8.4)**:
+  - Đạo hàm: `MathTex(r"y' = 3x^2 - 3 = 0 \iff x = \pm 1")`.
+  - **BẢNG BIẾN THIÊN 3 TẦNG LATEX CHUẨN MỰC**:
 ```latex
 \begin{array}{|c|ccccccc|}
 \hline
@@ -108,14 +119,14 @@ y & & \nearrow & & \searrow & & \nearrow & \\
 \end{array}
 ```
   - Kết luận đóng khung `SurroundingRectangle(conclusions, color=GREEN, buff=0.16, corner_radius=0.12)`.
-  - Di chuyển `t_param` với nhịp điệu chậm rãi tại các cực trị:
+  - Di chuyển `t_param` với nhịp điệu vừa vặn tại các cực trị:
 ```python
 self.play(t_param.animate.set_value(-1.0), run_time=1.8, rate_func=smooth)
-self.wait(1.5)  # Dừng quan sát tiếp tuyến ngang tại cực đại
+self.wait(0.8)  # Dừng quan sát tiếp tuyến ngang tại cực đại
 self.play(t_param.animate.set_value(1.0), run_time=2.0, rate_func=smooth)
-self.wait(1.5)  # Dừng quan sát tiếp tuyến ngang tại cực tiểu
+self.wait(0.8)  # Dừng quan sát tiếp tuyến ngang tại cực tiểu
 self.play(t_param.animate.set_value(2.1), run_time=1.6, rate_func=smooth)
-self.wait(2.0)  # Dừng quan sát tổng thể BBT và kết luận
+self.wait(1.0)  # Dừng quan sát tổng thể BBT và kết luận
 ```
 - Chuyển cảnh: `self.play(FadeOut(sim_all))` dọn sạch toàn bộ.
 
@@ -136,14 +147,14 @@ self.wait(2.0)  # Dừng quan sát tổng thể BBT và kết luận
 ### Chương 5: Tổng Kết & Outro Thương Hiệu (~8s)
 - **Outro Card toàn màn hình**: `RoundedRectangle(corner_radius=0.25, width=8.4, height=13.6, color=GOLD_E, fill_color="#0F172A", fill_opacity=0.96).move_to(ORIGIN)`
 - Tiêu đề: `Tổng kết bài học [Tên chuyên đề]` (`font_size=30, color=YELLOW, weight=BOLD`)
-- 3 gạch đầu dòng cô đọng bí quyết (`font_size=22-24, line_spacing=1.2`)
+- 3 gạch đầu dòng cô đọng phương pháp (`font_size=22-24, line_spacing=1.2`)
 - Badge thương hiệu kênh:
-  - Nền đỏ bo góc: `RoundedRectangle(width=5.6, height=1.0, color=RED, fill_color=RED_E, fill_opacity=0.9)`
-  - Chữ chính: `Text("Học toán cùng Yuta", font_size=26, weight=BOLD, color=WHITE)`
-  - Kêu gọi hành động: `Text("Bấm Follow để nhận bài giảng mới mỗi ngày!", font_size=22, color=GRAY_B)`
+  * Nền đỏ bo góc: `RoundedRectangle(width=5.6, height=1.0, color=RED, fill_color=RED_E, fill_opacity=0.9)`
+  * Chữ chính: `Text("Học toán cùng Yuta", font_size=26, weight=BOLD, color=WHITE)`
+  * Kêu gọi hành động: `Text("Bấm Follow để nhận bài giảng mới mỗi ngày!", font_size=22, color=GRAY_B)`
 - **QUY TẮC BẤT DI BẤT DỊCH CUỐI VIDEO**:
-  - Dùng `self.wait(3.0)` giữ nguyên màn hình Outro.
-  - TUYỆT ĐỐI KHÔNG dùng `FadeOut` toàn bộ màn hình ở cuối video!
+  * Dùng `self.wait(1.5)` giữ nguyên màn hình Outro.
+  * TUYỆT ĐỐI KHÔNG dùng `FadeOut` toàn bộ màn hình ở cuối video!
 
 ---
 
@@ -154,19 +165,24 @@ self.wait(2.0)  # Dừng quan sát tổng thể BBT và kết luận
    - **TUYỆT ĐỐI CẤM** sử dụng ký tự unicode (như $x^2$ viết thành `x²`, $x^3$ thành `x³`, $x_1$ thành `x₁`) trong `Text(...)`. Việc dùng unicode trong `Text` sẽ gây lỗi font, thiếu glyph (missing glyphs), biến dạng ô vuông trên Linux/Windows.
    - Khi viết văn bản tiếng Việt có chứa công thức toán, hãy tách rời và ghép qua `VGroup`:
      `VGroup(Text("Hàm số:", font=MAIN_FONT, font_size=22), MathTex(r"y = x^3 - 3x^2", font_size=24)).arrange(RIGHT, buff=0.15)`
-2. **Quy Chuẩn Nhịp Độ Diễn Hoạt (Pacing & Slow-down Trực Quan)**:
-   - Tại các điểm mấu chốt: tiếp tuyến đạt cực trị $y'=0$ đổi màu, bảng biến thiên 3 tầng xuất hiện, đóng khung kết luận: **BẮT BUỘC CHẬM LẠI** bằng `self.wait(1.5)` đến `self.wait(2.5)`.
-   - Diễn hoạt `ValueTracker` chuyển động tiếp tuyến: Dùng `rate_func=smooth` với thời gian đủ chậm (3.5s - 4.5s) để học sinh kịp quan sát trạng thái đổi màu và bảng biến thiên.
+2. **Quy Chuẩn Nhịp Độ Diễn Hoạt (Pacing Vừa Phải, Mượt Mà & Không Để Khoảng Chờ Quá Lâu)**:
+   - Nhịp điệu diễn hoạt phải sinh động, dứt khoát và liên tục (Snappy & Engaging), TUYỆT ĐỐI KHÔNG dừng chết video quá lâu (>1.2s - 1.5s) gây cảm giác màn hình bị đơ hoặc kéo dài lê thê:
+     * Chuyển cảnh / Xuất hiện nội dung thông thường: `self.wait(0.5)` đến `self.wait(0.8)`.
+     * Tại các điểm mấu chốt: tiếp tuyến đạt cực trị $y'=0$ đổi màu, bảng biến thiên 3 tầng xuất hiện: dừng vừa vặn `self.wait(0.8)` đến `self.wait(1.0)`.
+     * Đóng khung kết luận / đáp án đúng: dừng `self.wait(1.0)` đến `self.wait(1.2)`.
+   - Diễn hoạt `ValueTracker` chuyển động tiếp tuyến: Dùng `rate_func=smooth` với thời gian `run_time=2.0s - 2.5s` để tiếp tuyến lướt mượt mà, không bị chậm chạp lê thê.
 3. **Tiêu Đề Pill Badge**:
    - Dùng `"VÍ DỤ MINH HỌA"` hoặc `"VÍ DỤ"`, TUYỆT ĐỐI KHÔNG dùng `"VÍ DỤ GỐC"`.
-4. **Font Chữ & Cỡ Chữ**:
-   - Tiếng Việt: `MAIN_FONT = "Times New Roman"` (hoặc `Liberation Serif`).
+4. **Font Chữ & Cỡ Chữ (Sans-serif Hiện Đại, Chống Lỗi In Đậm)**:
+   - Tiếng Việt: `MAIN_FONT = "Be Vietnam Pro"` (hoặc fallback `Inter`).
+   - TUYỆT ĐỐI KHÔNG dùng font có chân Serif (`Times New Roman`, `Liberation Serif`) cho Text tiếng Việt trên video, vì khi in đậm `weight=BOLD` trên Linux/Cairo/Pango nét chữ sẽ bị gai góc, răng cưa thô ráp và méo mó dấu tiếng Việt.
+   - Khi in đậm (Bold Typography): Sử dụng `weight=BOLD` cho tiêu đề và `weight=SEMIBOLD` (hoặc BOLD chuẩn) cho các từ khóa then chốt trên nền `Be Vietnam Pro`. Các đường nét bo tròn mượt mà, nét chữ đồng đều, dấu thanh chuẩn tỉ lệ vàng.
    - Cỡ chữ an toàn:
-     - Tiêu đề chính / Intro: `30 - 34`
+     - Tiêu đề chính / Intro / Outro: `28 - 32` (BOLD, YELLOW)
      - Tiêu đề Card: `22 - 24` (BOLD)
-     - Công thức MathTex: `26 - 32`
-     - Chữ diễn giải tiếng Việt: `22 - 24`
-     - CẤM dùng `font_size < 22` trên video dọc 9:16.
+     - Công thức MathTex: `24 - 30`
+     - Chữ diễn giải tiếng Việt: `20 - 24`
+     - CẤM dùng `font_size < 20` trên video dọc 9:16.
 5. **Bảng Màu Sư Phạm Hiện Đại**:
    - Nền chính: `#0B1120` (Midnight Navy)
    - Thẻ Card 1: `#0F172A` (Slate 900)

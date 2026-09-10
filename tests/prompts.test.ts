@@ -396,25 +396,54 @@ test("14. Manim: Standard Superscript/Subscript, VÍ DỤ MINH HỌA badge & Vis
   assert.doesNotMatch(manimCodePrompt, /Text\(".*x³.*"\)/);
   assert.doesNotMatch(manimCodePrompt, /Text\(".*x².*"\)/);
 
-  // 3. Kiểm tra quy chuẩn nhịp độ (Pacing) & làm chậm nhịp trực quan
-  assert.match(manimCodePrompt, /PACING & LÀM CHẬM NHỊP/);
-  assert.match(manimCodePrompt, /Dừng tại cực đại.*cực tiểu.*đổi màu tiếp tuyến/);
+  // 3. Kiểm tra quy chuẩn Typography: Ưu tiên Be Vietnam Pro, cấm Serif khi in đậm
+  assert.match(manimCodePrompt, /Be Vietnam Pro/);
+  assert.match(manimCodePrompt, /TUYỆT ĐỐI KHÔNG dùng font Serif/);
+
+  // 4. Kiểm tra quy chuẩn nhịp độ (Pacing) vừa phải & không để khoảng chờ quá lâu
+  assert.match(manimCodePrompt, /PACING & NHỊP ĐỘ DỨT KHOÁT/);
+  assert.match(manimCodePrompt, /self\.wait\(0\.8\)/);
   assert.match(manimCodePrompt, /self\.wait\(1\.5\)/);
 
-  // 4. Kiểm tra trong prompt tinh chỉnh sửa lỗi (Revision Prompt)
+  // 5. Kiểm tra trong prompt tinh chỉnh sửa lỗi (Revision Prompt)
   const revisionPrompt = generateManimRevisionPrompt(
     videoConfig,
     'class MainScene(Scene): pass',
-    'Sửa công thức và làm chậm tiếp tuyến'
+    'Sửa font chữ in đậm và giảm thời gian chờ'
   );
   assert.match(revisionPrompt, /VÍ DỤ MINH HỌA/);
   assert.match(revisionPrompt, /CHỈ SỐ TRÊN\/DƯỚI/);
-  assert.match(revisionPrompt, /LÀM CHẬM NHỊP TRỰC QUAN/);
+  assert.match(revisionPrompt, /Be Vietnam Pro/);
+  assert.match(revisionPrompt, /PACING VỪA PHẢI/);
 });
 
 test("15. AutomationClient: Rerender Method & Direct Parameters Support", async () => {
   const { AutomationClient } = await import("../services/automationClient");
   assert.strictEqual(typeof AutomationClient.rerenderManim, "function");
+});
+
+test("16. Manim Typography & Snappy Pacing Rules Verification", () => {
+  const videoConfig: VideoConfig = {
+    subject: "Toán",
+    topic: "Khảo sát hàm số",
+    mathType: "calculus",
+    simulationMode: "tangent_slope",
+    duration: "90s",
+    tone: "academic",
+    audience: "Học sinh lớp 12",
+    format: "vertical",
+    renderQuality: "720p"
+  };
+
+  const codePrompt = generateManimCodePrompt(videoConfig);
+  // Không được để các khoảng wait quá lâu như 3.0s hay 3.2s trong code mẫu
+  assert.doesNotMatch(codePrompt, /self\.wait\(3\.2\)/);
+  assert.doesNotMatch(codePrompt, /self\.wait\(3\.0\)/);
+  assert.doesNotMatch(codePrompt, /self\.wait\(2\.5\)/);
+  // Kiểm tra font chỉ định là Be Vietnam Pro
+  assert.match(codePrompt, /font="Be Vietnam Pro"/);
+  // Kiểm tra quy tắc không để khoảng chờ quá lâu
+  assert.match(codePrompt, /Tuyệt đối không dừng quá lâu/i);
 });
 
 

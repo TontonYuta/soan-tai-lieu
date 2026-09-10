@@ -60,7 +60,7 @@ export const MANIM_SKILLS_GUIDE = `
      * CHƯƠNG 5 - TỔNG KẾT & OUTRO THƯƠNG HIỆU (Outro Card, ~8s):
        - Thẻ Outro toàn màn hình (height=13.6, width=8.4) với 3 bí kíp đúc kết bài học.
        - Badge thương hiệu đỏ rực rỡ "Học toán cùng Yuta" + Kêu gọi follow.
-       - KẾT THÚC BẰNG self.wait(3.0) ĐỂ GIỮ NGUYÊN MÀN HÌNH OUTRO. TUYỆT ĐỐI KHÔNG FadeOut làm đen màn hình!
+       - KẾT THÚC BẰNG self.wait(1.5) ĐỂ GIỮ NGUYÊN MÀN HÌNH OUTRO. TUYỆT ĐỐI KHÔNG FadeOut làm đen màn hình!
 
 2. SỰ SÁNG TẠO & PHÓNG KHOÁNG BỐ CỤC TRONG GIỚI HẠN HÌNH HỌC AN TOÀN:
    - Được quyền sáng tạo phong phú về phối màu: Nền chính tối (#0B1120), Thẻ Slate (#0F172A, #1E293B),
@@ -77,13 +77,15 @@ export const MANIM_SKILLS_GUIDE = `
    - Bottom Card: next_to(top_card, DOWN, buff=0.2), height=6.6, width=8.4.
    - Khi chuyển giữa các chương: BẮT BUỘC FadeOut toàn bộ các đối tượng cũ trước khi tạo chương mới.
 
-4. QUY CHUẨN TYPOGRAPHY & CỠ CHỮ LỚN RÕ RÀNG TRÊN ĐIỆN THOẠI:
-   - Font chữ có chân (Serif): BẮT BUỘC "Times New Roman" (hoặc "Liberation Serif").
-   - KÍCH THƯỚC CHỮ (CẤM DÙNG font_size DƯỚI 22):
-     * Tiêu đề chính / Intro / Outro: font_size=30 đến 34 (weight=BOLD, màu YELLOW).
+4. QUY CHUẨN TYPOGRAPHY & FONT IN ĐẬM CHUẨN ĐẸP (SANS-SERIF HIỆN ĐẠI):
+   - Font chữ Tiếng Việt: BẮT BUỘC dùng "Be Vietnam Pro" (ưu tiên số 1) hoặc "Inter".
+   - TUYỆT ĐỐI CẤM dùng font Serif có chân (như "Times New Roman" hay "Liberation Serif") cho Text tiếng Việt trên video, vì khi in đậm weight=BOLD trên Linux/Cairo/Pango nét chữ sẽ bị gai góc, thô ráp, răng cưa và méo mó dấu tiếng Việt.
+   - Khi in đậm (Bold Typography): Sử dụng weight=BOLD cho tiêu đề và weight=SEMIBOLD (hoặc BOLD chuẩn) cho các từ khóa then chốt trên nền "Be Vietnam Pro". Các đường nét bo tròn mượt mà, nét chữ đồng đều, dấu thanh chuẩn tỉ lệ vàng, hiển thị sắc nét và sang trọng trên màn hình điện thoại.
+   - KÍCH THƯỚC CHỮ (CẤM DÙNG font_size DƯỚI 20):
+     * Tiêu đề chính / Intro / Outro: font_size=28 đến 32 (weight=BOLD, màu YELLOW).
      * Tiêu đề Thẻ Card: font_size=22 đến 24 (weight=BOLD, TEAL_A hoặc YELLOW).
-     * Công thức MathTex chính: font_size=26 đến 32.
-     * Văn bản tiếng Việt diễn giải: font_size=22 đến 24 (weight=MEDIUM/BOLD).
+     * Công thức MathTex chính: font_size=24 đến 30.
+     * Văn bản tiếng Việt diễn giải: font_size=20 đến 24.
      * Bảng biến thiên LaTeX: font_size=22 đến 26.
      * Nhãn trục tọa độ Oxy (x, y): font_size=22.
    - Mọi Text nhiều dòng BẮT BUỘC set line_spacing=1.2.
@@ -110,12 +112,13 @@ export const MANIM_SKILLS_GUIDE = `
      VGroup(Text("Hàm số:", font=MAIN_FONT, font_size=22), MathTex(r"y = x^3 - 3x^2", font_size=24)).arrange(RIGHT, buff=0.15)
    - Đóng khung nổi bật đáp số / kết luận: SurroundingRectangle(conclusion, color=GREEN, buff=0.16, corner_radius=0.12, stroke_width=2.5).
 
-7. QUY TẮC NHỊP ĐỘ DIỄN HOẠT (PACING & LÀM CHẬM NHỊP TẠI CÁC ĐIỂM TRỰC QUAN MẤU CHỐT):
-   - Tại các điểm mấu chốt mang tính trực quan sư phạm cao:
-     * Khi tiếp tuyến chuyển động chạm cực trị (y' = 0 đổi màu vàng / đi ngang): Dừng self.wait(1.5) đến self.wait(2.0) để người xem kịp quan sát và đối chiếu.
-     * Khi bảng biến thiên 3 tầng xuất hiện đầy đủ: Dừng self.wait(2.0) đến self.wait(2.5).
-     * Khi đóng khung hộp kết luận hoặc đáp án đúng: Dừng self.wait(2.0) đến self.wait(2.5).
-   - Diễn hoạt ValueTracker tiếp tuyến: Dùng rate_func=smooth với thời lượng run_time đủ chậm (3.5s - 4.5s) để chuyển động trực quan mượt mà, không giật cục.
+7. QUY TẮC NHỊP ĐỘ DIỄN HOẠT (PACING VỪA PHẢI, MƯỢT MÀ, KHÔNG ĐỂ KHOẢNG CHỜ QUÁ LÂU):
+   - Nhịp điệu diễn hoạt phải sinh động, dứt khoát và liên tục (Snappy & Engaging), TUYỆT ĐỐI KHÔNG dừng chết video quá lâu (>1.2s - 1.5s) gây cảm giác màn hình bị đơ hoặc kéo dài lê thê:
+     * Chuyển cảnh / Xuất hiện nội dung thông thường: Dừng nhẹ self.wait(0.5) đến self.wait(0.8).
+     * Khi tiếp tuyến chuyển động chạm cực trị (y' = 0 đổi màu vàng / đi ngang): Dừng vừa vặn self.wait(0.8) đến self.wait(1.0) để người xem kịp nhận biết.
+     * Khi bảng biến thiên 3 tầng xuất hiện: Dừng self.wait(0.8) đến self.wait(1.0).
+     * Khi đóng khung hộp kết luận hoặc đáp án đúng: Dừng self.wait(1.0) đến self.wait(1.2).
+   - Diễn hoạt ValueTracker tiếp tuyến: Dùng rate_func=smooth với thời lượng run_time=2.0s đến 2.5s để tiếp tuyến lướt mượt mà, không bị chậm chạp lê thê.
 
 8. BẢN ĐỒ CHIẾN LƯỢC TRỰC QUAN ĐA MÔN (MULTI-SUBJECT VISUAL BLUEPRINT):
    - Toán học: Đồ thị hàm số, tiếp tuyến trượt đổi màu ValueTracker, Bảng biến thiên 3 tầng, Hình học không gian gióng nét đứt.
@@ -146,7 +149,7 @@ export const MANIM_SKILLS_GUIDE = `
 `.replace("★★★ BỘ NGUYÊN TẮC MANIM CE TOÁN HỌC & VISUAL ENGINEERING CHUẨN STUDIO ★XX", "★★★ BỘ NGUYÊN TẮC MANIM CE TOÁN HỌC & VISUAL ENGINEERING CHUẨN STUDIO ★★★");
 
 const getFontDirective = (fontStyle?: string): string => {
-  return fontStyle === 'sans' ? 'Be Vietnam Pro' : 'Times New Roman';
+  return 'Be Vietnam Pro';
 };
 
 const getSimulationModeDescription = (mode?: string): string => {
@@ -265,7 +268,7 @@ YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ BỘ NGUYÊN TẮC c1_HamSo_Do
    - Phần 2: Lý thuyết 2 thẻ màu tương phản (Xanh & Đỏ, ~14s) - FadeOut toàn bộ.
    - Phần 3: Dual-Zone Container Mô phỏng động tiếp tuyến đổi màu + BBT 3 tầng (~38s) - FadeOut toàn bộ.
    - Phần 4: Chữa đề thi RAG thực chiến (TỐI ĐA 2 CÂU: Top Card = Câu 1, Bottom Card = Câu 2, ~38s) - FadeOut toàn bộ.
-   - Phần 5: Thẻ Outro tổng kết thương hiệu "Học toán cùng Yuta" (~8s) - Giữ nguyên self.wait(3.0), KHÔNG FadeOut.
+   - Phần 5: Thẻ Outro tổng kết thương hiệu "Học toán cùng Yuta" (~8s) - Giữ nguyên self.wait(1.5), KHÔNG FadeOut.
 2. Cấu hình ${isVertical ? 'Khung hình DỌC 9:16 (config.pixel_width=1080, config.pixel_height=1920, config.frame_width=9.0, config.frame_height=16.0)' : 'Khung hình NGANG 16:9 (1920x1080)'}.
 3. BỐ CỤC KHUNG THẺ CONTAINER (DUAL-ZONE) LẤP ĐẦY 93% MÀN HÌNH - TRIỆT TIÊU KHOẢNG TRỐNG ĐEN:
    - ${isVertical ? 'Top Header Bar (y ~ 7.05, height=1.1-1.3, width=8.4); Top Card (y ~ 3.15, height=6.4, width=8.4); Bottom Card (y ~ -3.75, height=6.6, width=8.4); Outro Card (height=13.6, width=8.4). BẮT BUỘC gọi fit_width(group, 7.8) cho mọi khối nội dung trong thẻ!' : 'Header đỉnh, Cột Trái Mô phỏng (width=7.2, height=6.2), Cột Phải Công thức (width=5.8, height=6.2).'}
@@ -276,16 +279,17 @@ YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ BỘ NGUYÊN TẮC c1_HamSo_Do
    - Tuyệt đối KHÔNG dùng từ ngữ giật gân, sáo rỗng hay cường điệu phong cách AI.
 5. ZERO-OVERLAP & WATERMARK SAFETY:
    - TUYỆT ĐỐI KHÔNG để biểu tượng Intro co nhỏ rồi to_corner(UL) làm watermark trôi nổi (tránh va chạm đè chữ tiêu đề)! Dọn sạch từng cảnh trước khi qua cảnh sau.
-6. QUY CHUẨN TYPOGRAPHY CỠ CHỮ LỚN RÕ RÀNG TRÊN ĐIỆN THOẠI:
-   - Sử dụng font="${chosenFont}" cho mọi đối tượng Text.
-   - Tiêu đề 30-34 BOLD, Tiêu đề Thẻ 22-24 BOLD, Công thức MathTex 26-32, Chú thích tiếng Việt 22-24. CẤM font_size < 22!
+6. QUY CHUẨN TYPOGRAPHY & FONT IN ĐẬM CHUẨN ĐẸP TRÊN ĐIỆN THOẠI:
+   - Sử dụng font="${chosenFont}" (Be Vietnam Pro) cho mọi đối tượng Text. TUYỆT ĐỐI KHÔNG dùng font Serif (Times New Roman) vì khi in đậm weight=BOLD sẽ bị răng cưa méo mó.
+   - Sử dụng weight=BOLD cho tiêu đề và weight=SEMIBOLD (hoặc BOLD chuẩn) cho các từ khóa nhấn mạnh. Nét chữ bo tròn, đường nét đồng đều, dấu thanh chuẩn tỉ lệ vàng.
+   - Tiêu đề 28-32 BOLD, Tiêu đề Thẻ 22-24 BOLD, Công thức MathTex 24-30, Chú thích tiếng Việt 20-22. CẤM font_size < 20!
    - line_spacing=1.2 cho các đoạn Text nhiều dòng.
 7. QUY TẮC CHỈ SỐ TRÊN/DƯỚI & TIÊU ĐỀ PILL BADGE:
    - 100% công thức chứa số mũ (x^2, x^3), chỉ số dưới (x_0, x_1), đạo hàm (y') BẮT BUỘC dùng MathTex(r"..."). TUYỆT ĐỐI CẤM dùng ký tự unicode mũ (x², x³, x₁, x₀) trong Text(...).
    - Tiêu đề Pill Badge: Dùng "VÍ DỤ MINH HỌA" hoặc "VÍ DỤ", TUYỆT ĐỐI KHÔNG dùng "VÍ DỤ GỐC".
-8. MÔ PHỎNG TIẾP TUYẾN ĐỘNG, BẢNG BIẾN THIÊN 3 TẦNG & PACING LÀM CHẬM NHỊP:
-   - ValueTracker + always_redraw cho tiếp tuyến đổi màu (Xanh/Đỏ/Vàng) và thanh trạng thái status_badge real-time.
-   - PACING & LÀM CHẬM NHỊP TRỰC QUAN: Dừng tại cực đại, cực tiểu khi đổi màu tiếp tuyến (self.wait(1.5)), xuất hiện BBT (self.wait(2.0)), đóng khung đáp án (self.wait(2.5)) để người xem kịp quan sát và hiểu bản chất.
+8. MÔ PHỎNG TIẾP TUYẾN ĐỘNG, BẢNG BIẾN THIÊN 3 TẦNG & PACING VỪA PHẢI:
+   - ValueTracker + always_redraw cho tiếp tuyến đổi màu (Xanh/Đỏ/Vàng) và thanh trạng thái status_badge real-time. Tiếp tuyến lướt mượt với run_time=2.0s đến 2.5s.
+   - PACING & NHỊP ĐỘ DỨT KHOÁT: Dừng nhẹ nhàng vừa đủ tại điểm mấu chốt (self.wait(0.8) đến self.wait(1.0) khi đổi màu tiếp tuyến, xuất hiện BBT, đóng khung đáp án). Tuyệt đối không dừng quá lâu (>1.2s - 1.5s) gây cảm giác màn hình bị đơ hoặc kéo dài lê thê.
    - Bảng Biến Thiên 3 tầng chuẩn mực SGK Việt Nam: MathTex(r"\\begin{array}{|c|ccccccc|} ... \\end{array}", font_size=24).
 9. 100% CÔNG THỨC LATEX HOÀN HẢO (PERFECT LATEX):
    - MỌI công thức dùng MathTex(r"...") với raw string. Đóng khung đáp số: SurroundingRectangle(result, color=GREEN, buff=0.16).
@@ -402,7 +406,7 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         self.play(FadeIn(intro_badge, shift=DOWN * 0.3), run_time=0.7)
         self.play(Write(intro_title), Create(intro_box), run_time=1.2)
         self.play(FadeIn(intro_sub), FadeIn(intro_core_rule, shift=UP * 0.2), run_time=1.1)
-        self.wait(2.2)
+        self.wait(0.8)
         self.play(FadeOut(intro_group), run_time=0.7)
 
         # ======================================================================
@@ -434,7 +438,7 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         self.play(FadeIn(th_header), FadeIn(th_sub), run_time=0.6)
         self.play(FadeIn(block_inc, shift=UP * 0.2), run_time=1.0)
         self.play(FadeIn(block_dec, shift=UP * 0.2), run_time=1.0)
-        self.wait(3.2)
+        self.wait(1.0)
         self.play(FadeOut(VGroup(th_header, th_sub, theory_stack)), run_time=0.7)
 
         # ======================================================================
@@ -548,14 +552,14 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         self.play(Create(bottom_card), FadeIn(bot_title), run_time=0.5)
         self.play(Write(calc_deriv), run_time=0.8)
         self.play(FadeIn(bbt), run_time=1.1)
-        # Nhịp điệu trực quan chậm rãi: Dừng tại cực đại x=-1 và cực tiểu x=1 để học sinh quan sát đổi màu tiếp tuyến và dấu y'
+        # Nhịp điệu trực quan vừa phải: Dừng tại cực đại x=-1 và cực tiểu x=1 để học sinh quan sát đổi màu tiếp tuyến và dấu y'
         self.play(t_param.animate.set_value(-1.0), run_time=1.8, rate_func=smooth)
-        self.wait(1.5)
+        self.wait(0.8)
         self.play(t_param.animate.set_value(1.0), run_time=2.0, rate_func=smooth)
-        self.wait(1.5)
+        self.wait(0.8)
         self.play(t_param.animate.set_value(2.1), run_time=1.6, rate_func=smooth)
         self.play(FadeIn(conclusions), Create(box_conclusion), run_time=1.1)
-        self.wait(2.5)
+        self.wait(1.0)
 
         sim_all = VGroup(
             header_card, header_content, top_card, top_title, axes, axes_labels, graph, graph_lbl,
@@ -616,7 +620,7 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         self.play(FadeIn(c1_quest), FadeIn(c1_bbt), FadeIn(c1_ask), run_time=1.3)
         self.play(FadeIn(opts_row), run_time=0.7)
         self.play(Write(c1_sol), Create(ans_c1_box), run_time=1.0)
-        self.wait(2.2)
+        self.wait(1.0)
 
         # 2. KHUNG DƯỚI: CÂU 2 (XÉT DẤU ĐẠO HÀM)
         c2_card = RoundedRectangle(corner_radius=0.2, width=8.4, height=6.6, color="#334155", fill_color="#1E293B", fill_opacity=0.95).next_to(c1_card, DOWN, buff=0.2)
@@ -652,7 +656,7 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         self.play(Write(step1), Write(step2), run_time=1.1)
         self.play(FadeIn(step3), run_time=0.8)
         self.play(Write(c2_concl), Create(ans_c2_box), run_time=1.0)
-        self.wait(3.0)
+        self.wait(1.0)
 
         qz_all = VGroup(
             qz_header_card, qz_header_content,
@@ -695,7 +699,7 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         self.play(FadeIn(brand_group, scale=0.85), run_time=1.0)
         
         # BẮT BUỘC: Giữ nguyên màn hình Outro thương hiệu, TUYỆT ĐỐI KHÔNG FadeOut làm đen màn hình!
-        self.wait(3.0)
+        self.wait(1.5)
 \`\`\`
 
 IV. HƯỚNG DẪN RENDER VÀ QUY TẮC BẮT BUỘC:
@@ -705,7 +709,7 @@ IV. HƯỚNG DẪN RENDER VÀ QUY TẮC BẮT BUỘC:
 4. TUÂN THỦ NGUYÊN TẮC CHỐNG ĐÈ CHỮ (ZERO OVERLAP): Bố cục Khung Thẻ Container Dual-Zone chuẩn xác, dãn hàng line_spacing=1.2, gọi fit_width(group, 7.8) cho mọi khối nội dung.
 5. QUY TẮC CHỈ SỐ TRÊN/DƯỚI & CÔNG THỨC TOÁN HỌC: BẮT BUỘC 100% các chỉ số trên (số mũ x^2, x^3), chỉ số dưới (x_0, x_1), đạo hàm (y') phải dùng MathTex(r"..."). TUYỆT ĐỐI CẤM dùng ký tự unicode mũ (x², x³, x₁, x₀) trong Text(...) để tránh lỗi font vỡ glyph.
 6. TIÊU ĐỀ PILL BADGE: Sử dụng "VÍ DỤ MINH HỌA" hoặc "VÍ DỤ", TUYỆT ĐỐI KHÔNG dùng "VÍ DỤ GỐC".
-7. QUY TẮC NHỊP ĐỘ DIỄN HOẠT (PACING TRỰC QUAN): Tại các điểm quan sát mấu chốt (tiếp tuyến đạt cực trị y'=0 đổi màu, bảng biến thiên xuất hiện, đóng khung kết luận), video BẮT BUỘC CHẬM LẠI bằng self.wait(1.5) đến self.wait(2.5) và rate_func=smooth với run_time đủ dài để học sinh theo kịp.
+7. QUY TẮC NHỊP ĐỘ DIỄN HOẠT (PACING VỪA PHẢI, MƯỢT MÀ): Tại các điểm quan sát mấu chốt (tiếp tuyến đạt cực trị y'=0 đổi màu, bảng biến thiên xuất hiện, đóng khung kết luận), dừng vừa vặn self.wait(0.8) đến self.wait(1.0). TUYỆT ĐỐI KHÔNG dừng quá lâu (>1.2s - 1.5s) làm video bị đơ hoặc kéo dài lê thê.
 8. Đóng đầy đủ ngoặc và lệnh construct(self). (Hệ thống máy chủ sẽ tự biên dịch mã bằng lệnh: \`manim \${qualityFlag} scene.py MainScene\`, AI tuyệt đối không tự chạy lệnh render này).
 9. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file, không view_file). CHỈ xuất mã nguồn văn bản trực tiếp.`;
 };
@@ -733,7 +737,8 @@ Với mỗi tập (từ Tập 1 đến Tập ${count}), hãy cung cấp:
     "visual_concept": "Mô phỏng hình học / đồ thị chính"
   }
 ]
-\`\`\``;
+\`\`\`
+`;
 };
 
 export const generateVideoScriptPrompt = (config: VideoConfig): string => {
@@ -781,10 +786,10 @@ ${existingCode.trim()}
 IV. YÊU CẦU THỰC THI BẮT BUỘC:
 1. Đọc kỹ từng góp ý, câu từ cần sửa, hoặc lỗi bố cục được ghi trong mục II.
 2. Viết lại TOÀN BỘ file mã nguồn Manim Python (\`scene.py\`) từ đầu, kế thừa cấu trúc 5 PHÂN CẢNH CHUẨN MỰC:
-   - Intro -> Lý thuyết 2 thẻ màu -> Dual-Zone Mô phỏng động tiếp tuyến đổi màu & BBT 3 tầng -> Chữa đề RAG (TỐI ĐA 2 CÂU) -> Thẻ Outro thương hiệu (giữ nguyên self.wait(3.0)).
-3. Giữ vững quy chuẩn CHỐNG ĐÈ CHỮ (ZERO OVERLAP), áp dụng Khung Thẻ Container Dual-Zone lấp đầy 93% màn hình, dãn dòng \`line_spacing=1.2\`, gọi fit_width(group, 7.8) cho mọi khối nội dung trong thẻ, font_size lớn rõ nét (Tiêu đề 30-34, Thẻ 22-24, MathTex 26-32, Text tiếng Việt 22-24, TUYỆT ĐỐI KHÔNG DÙNG FONT_SIZE DƯỚI 22).
+   - Intro -> Lý thuyết 2 thẻ màu -> Dual-Zone Mô phỏng động tiếp tuyến đổi màu & BBT 3 tầng -> Chữa đề RAG (TỐI ĐA 2 CÂU) -> Thẻ Outro thương hiệu (giữ nguyên self.wait(1.5)).
+3. Giữ vững quy chuẩn CHỐNG ĐÈ CHỮ (ZERO OVERLAP), áp dụng Khung Thẻ Container Dual-Zone lấp đầy 93% màn hình, dãn dòng \`line_spacing=1.2\`, gọi fit_width(group, 7.8) cho mọi khối nội dung trong thẻ, font_size lớn rõ nét (Tiêu đề 28-32 BOLD, Thẻ 22-24, MathTex 24-30, Text tiếng Việt 20-22). BẮT BUỘC dùng font Sans-serif "Be Vietnam Pro" (hoặc "Inter"), TUYỆT ĐỐI KHÔNG dùng font Serif (Times New Roman) để chữ in đậm không bị răng cưa hay méo dấu tiếng Việt.
 4. QUY TẮC CHỈ SỐ TRÊN/DƯỚI & PILL BADGE: 100% chỉ số trên/dưới dùng MathTex(r"..."), CẤM dùng unicode trong Text. Dùng "VÍ DỤ MINH HỌA" thay cho "VÍ DỤ GỐC".
-5. LÀM CHẬM NHỊP TRỰC QUAN: Tại các điểm mấu chốt, bẫy thi, tiếp tuyến đổi màu và BBT, dừng self.wait(1.5) - self.wait(2.5).
+5. NHỊP ĐỘ DIỄN HOẠT (PACING VỪA PHẢI, MƯỢT MÀ): Dừng vừa vặn self.wait(0.8) - self.wait(1.0) tại điểm mấu chốt, đổi màu tiếp tuyến và BBT, giữ Outro self.wait(1.5). TUYỆT ĐỐI KHÔNG dừng quá lâu (>1.2s - 1.5s) gây cảm giác màn hình bị đơ hoặc kéo dài lê thê.
 6. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, không viết lời chào hay giải thích ngoài mã.
 7. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file). (Hệ thống máy chủ sẽ tự biên dịch mã bằng lệnh: \`manim \${qualityFlag} scene.py MainScene\`, AI không được tự chạy lệnh này).`;
 };
