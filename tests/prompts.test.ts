@@ -647,7 +647,7 @@ test("19. LaTeX On-Demand Rerender & AI Revision Prompt Verification", () => {
   assert.match(promptWithoutConfig, /Đổi font sang Be Vietnam Pro/);
 });
 
-test("20. Manim 300s Long-Form Video & Multi-Round Practice Arena Scaling", () => {
+test("20. Manim 300s Long-Form Video & Scaled Pedagogical Practice Practice Scaling", () => {
   // 1. Kiểm tra parseDurationToSeconds
   assert.equal(parseDurationToSeconds('300s'), 300);
   assert.equal(parseDurationToSeconds('300 giây'), 300);
@@ -689,30 +689,30 @@ test("20. Manim 300s Long-Form Video & Multi-Round Practice Arena Scaling", () =
   const storyboardPrompt = generateManimStoryboardPrompt(config300);
   assert.match(storyboardPrompt, /300 giây/);
   assert.match(storyboardPrompt, /855 TỪ/i);
-  assert.match(storyboardPrompt, /MULTI-ROUND ARENA/i);
-  assert.match(storyboardPrompt, /HIỆP 1/);
-  assert.match(storyboardPrompt, /HIỆP 2/);
-  assert.match(storyboardPrompt, /HIỆP 3/);
+  assert.match(storyboardPrompt, /BÀI TẬP THỰC CHIẾN THEO TỪNG DẠNG BÀI/i);
+  assert.match(storyboardPrompt, /DẠNG BÀI 1/);
+  assert.match(storyboardPrompt, /DẠNG BÀI 2/);
+  assert.match(storyboardPrompt, /DẠNG BÀI 3/);
   assert.match(storyboardPrompt, /FadeOut/);
 
   // 4. Kiểm tra generateManimCodePrompt cho video 300s
   const codePrompt = generateManimCodePrompt(config300);
   assert.match(codePrompt, /300s/);
   assert.match(codePrompt, /855 từ/);
-  assert.match(codePrompt, /MULTI-ROUND ARENA/);
-  assert.match(codePrompt, /3 Hiệp/);
+  assert.match(codePrompt, /Bài tập thực chiến theo từng dạng bài/);
+  assert.match(codePrompt, /3 dạng bài/);
   assert.match(codePrompt, /6 câu hỏi/);
-  assert.match(codePrompt, /FadeOut\(round_group\)/);
+  assert.match(codePrompt, /FadeOut\(part_group\)/);
 
   // 5. Kiểm tra generateVideoManimPrompt cho video 300s
   const fullPrompt = generateVideoManimPrompt(config300);
   assert.match(fullPrompt, /300 giây/);
   assert.match(fullPrompt, /855 từ/);
-  assert.match(fullPrompt, /3 hiệp đấu với 6 câu hỏi/);
-  assert.match(fullPrompt, /MULTI-ROUND PRACTICE ARENA/);
+  assert.match(fullPrompt, /6 câu hỏi trọng tâm chia theo 3 dạng bài/);
+  assert.match(fullPrompt, /Bài tập thực chiến theo từng dạng bài/);
 });
 
-test("21. Manim Serif Font Default, Sentence Case, Snug Fit Boxes & Adaptive 4-Option Layout Verification", () => {
+test("21. Manim Serif Font Default, Sentence Case, Snug Fit Boxes, Atomic Options & Normalized Tangent Verification", () => {
   // 1. Kiểm tra getFontDirective: Mặc định là Serif (Times New Roman), Sans trả về Be Vietnam Pro
   assert.strictEqual(getFontDirective(undefined), 'Times New Roman');
   assert.strictEqual(getFontDirective('serif'), 'Times New Roman');
@@ -754,22 +754,33 @@ test("21. Manim Serif Font Default, Sentence Case, Snug Fit Boxes & Adaptive 4-O
   assert.match(videoPrompt, /SurroundingRectangle\(.*buff=0\.1[2-5]/);
   assert.match(videoPrompt, /RoundedRectangle\(.*text\.width \+ 0\.5/);
 
-  // 3.4. Bố cục 4 đáp án linh hoạt (4x1, 2x2, 1x4)
-  assert.match(videoPrompt, /QUY TẮC BỐ CỤC 4 ĐÁP ÁN TRẮC NGHIỆM THÔNG MINH/);
+  // 3.4. Bố cục 4 đáp án liền khối và dạng 4x1, 2x2 khóa 2 cột, 1x4
+  assert.match(videoPrompt, /QUY TẮC BỐ CỤC 4 ĐÁP ÁN TRẮC NGHIỆM LIỀN KHỐI/);
+  assert.match(videoPrompt, /ATOMIC OPTION ITEM/);
   assert.match(videoPrompt, /DẠNG 4x1/);
   assert.match(videoPrompt, /DẠNG 2x2/);
   assert.match(videoPrompt, /DẠNG 1x4/);
+  assert.match(videoPrompt, /col1 = VGroup\(optA, optC\)/);
+  assert.match(videoPrompt, /col2 = VGroup\(optB, optD\)/);
+
+  // 3.5. Tiếp tuyến chuẩn hóa độ dài cố định L=0.85 (chống cắt ra ngoài box)
+  assert.match(videoPrompt, /QUY TẮC TIẾP TUYẾN CHUẨN HÓA ĐỘ DÀI/);
+  assert.match(videoPrompt, /p1 = p_center - 0\.85 \* u/);
+  assert.match(videoPrompt, /p2 = p_center \+ 0\.85 \* u/);
 
   // 4. Kiểm tra generateManimCodePrompt
   const codePrompt = generateManimCodePrompt(config);
   assert.match(codePrompt, /font="Times New Roman"/);
   assert.match(codePrompt, /QUY TẮC TUYỆT ĐỐI KHÔNG IN HOA/);
   assert.match(codePrompt, /QUY TẮC BOX BỌC TEXT CHỨA VỪA KHÍT/);
-  assert.match(codePrompt, /QUY TẮC BỐ CỤC 4 ĐÁP ÁN TRẮC NGHIỆM THÔNG MINH/);
+  assert.match(codePrompt, /QUY TẮC BỐ CỤC 4 ĐÁP ÁN TRẮC NGHIỆM LIỀN KHỐI/);
+  assert.match(codePrompt, /TIẾP TUYẾN CHUẨN HÓA ĐỘ DÀI CỐ ĐỊNH L=0\.85/);
 
   // 5. Kiểm tra generateManimRevisionPrompt
   const revPrompt = generateManimRevisionPrompt(config, "class MainScene(Scene): pass", "Sửa bố cục 4 đáp án sang 2x2");
   assert.match(revPrompt, /Font chữ chỉ định: "Times New Roman"/);
   assert.match(revPrompt, /Sentence case chuẩn tiếng Việt/);
-  assert.match(revPrompt, /QUY TẮC BOX VỪA KHÍT & BỐ CỤC 4 ĐÁP ÁN/);
+  assert.match(revPrompt, /QUY TẮC BOX VỪA KHÍT, TIẾP TUYẾN CHUẨN HÓA & BỐ CỤC 4 ĐÁP ÁN/);
+  assert.match(revPrompt, /TIẾP TUYẾN CHUẨN HÓA ĐỘ DÀI/);
+  assert.match(revPrompt, /BỐ CỤC 4 ĐÁP ÁN LIỀN KHỐI/);
 });

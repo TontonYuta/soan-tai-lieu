@@ -291,25 +291,25 @@ const VideoForm: React.FC<VideoFormProps> = ({
               </div>
             </div>
 
-            {/* Cấu hình Số câu bài tập thực chiến RAG Đa Hiệp */}
+            {/* Cấu hình Số câu bài tập thực chiến theo dạng bài */}
             <div className="p-3 bg-[#E0F2FE] border-2 border-black">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div>
                   <div className="flex items-center gap-1.5 text-xs font-black text-black uppercase">
                     <Layers className="w-4 h-4 text-blue-600" />
-                    <span>Số câu bài tập / thực chiến (RAG Đa Hiệp):</span>
+                    <span>Số lượng bài tập thực chiến:</span>
                   </div>
                   <div className="text-[11px] font-medium text-gray-700">
-                    Bảo vệ 100% Zero-Overlap: Mỗi hiệp chỉ chiếu 2 câu, FadeOut giữa các hiệp. Hỗ trợ video dài tới 300s.
+                    Bảo vệ 100% Zero-Overlap: Mỗi dạng chỉ chiếu 2 câu, FadeOut dọn sạch giữa các dạng bài. Hỗ trợ video dài tới 300s.
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {[
                     { num: 0, label: '⚡ Tự động theo thời lượng' },
-                    { num: 2, label: '2 câu (1 Hiệp)' },
-                    { num: 4, label: '4 câu (2 Hiệp)' },
-                    { num: 6, label: '6 câu (3 Hiệp)' },
-                    { num: 8, label: '8 câu (4 Hiệp)' }
+                    { num: 2, label: '2 câu (Dạng cơ bản)' },
+                    { num: 4, label: '4 câu (2 Dạng bài)' },
+                    { num: 6, label: '6 câu (3 Dạng bài)' },
+                    { num: 8, label: '8 câu (4 Dạng bài)' }
                   ].map(opt => (
                     <button
                       key={opt.num}

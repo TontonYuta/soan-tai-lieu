@@ -2619,7 +2619,7 @@ function startInternalServer(callback) {
 
               // Bổ sung chỉ thị cho Antigravity Agent nếu là bài giảng Video
               if (isManimTask && !promptToSend.includes('MainScene')) {
-                promptToSend += `\n\nYÊU CẦU BẮT BUỘC CHO VIDEO MANIM CE (CHUẨN c1_HamSo_DonDieu.py):\n- Kế thừa cấu trúc 5 Phân Cảnh Vàng: 1. Intro (~7s-15s); 2. Lý thuyết các thẻ màu tương phản (Xanh Emerald & Đỏ Ruby, ~14s-45s); 3. Dual-Zone Mô phỏng động tương tác & Bảng/Sơ đồ phân tích (~35s-75s); 4. Chữa đề/bài tập RAG thực chiến Đa Hiệp (Multi-Round Arena: mỗi hiệp 2 câu trên Top/Bottom Card, FadeOut dọn sạch màn hình giữa các hiệp để chữa từ 2 đến 6+ câu mà vẫn đảm bảo Zero-Overlap 100% và cỡ chữ lớn >= 22); 5. Thẻ Outro thương hiệu "Học ${options.subject || 'tập'} cùng Yuta" (giữ nguyên self.wait(1.5), KHÔNG FadeOut).\n- BẮT BUỘC gọi fit_width(group, 7.8) cho mọi khối nội dung trong thẻ để triệt tiêu lỗi tràn viền.\n- FONT_SIZE LỚN RÕ RÀNG TRÊN ĐIỆN THOẠI (Tiêu đề 28-32 BOLD, Thẻ 22-24, MathTex 24-30, Diễn giải 20-22, CẤM DÙNG FONT_SIZE DƯỚI 20).\n- ĐỒNG BỘ ÂM THANH (TTS): Kịch bản VOICEOVER_SCRIPT có số từ phù hợp thời lượng (~2.85 từ/giây). Các lệnh self.play và self.wait khớp nối với lời thoại từng cảnh.\n- Xuất khối mã Python Manim CE duy nhất trong \`\`\`python ... \`\`\` có class MainScene(Scene) và def construct(self): để render ngay.\n- TUYỆT ĐỐI KHÔNG SỬ DỤNG BẤT KỲ TOOL NÀO (KHÔNG run_command, KHÔNG write_to_file, KHÔNG view_file). KHÔNG TỰ CHẠY LỆNH RENDER. CHỈ XUẤT TEXT TRỰC TIẾP.`;
+                promptToSend += `\n\nYÊU CẦU BẮT BUỘC CHO VIDEO MANIM CE (CHUẨN c1_HamSo_DonDieu.py):\n- Kế thừa cấu trúc 5 Phân Cảnh Vàng: 1. Intro (~7s-15s); 2. Lý thuyết các thẻ màu tương phản (Xanh Emerald & Đỏ Ruby, ~14s-45s); 3. Dual-Zone Mô phỏng động tương tác & Bảng/Sơ đồ phân tích (~35s-75s); 4. Bài tập thực chiến theo từng dạng bài (mỗi dạng 2 câu trên Top/Bottom Card, FadeOut dọn sạch màn hình giữa các dạng để chữa từ 2 đến 6+ câu mà vẫn đảm bảo Zero-Overlap 100% và cỡ chữ lớn >= 22); 5. Thẻ Outro thương hiệu "Học ${options.subject || 'tập'} cùng Yuta" (giữ nguyên self.wait(1.5), KHÔNG FadeOut).\n- BẮT BUỘC gọi fit_width(group, 7.8) cho mọi khối nội dung trong thẻ để triệt tiêu lỗi tràn viền.\n- FONT_SIZE LỚN RÕ RÀNG TRÊN ĐIỆN THOẠI (Tiêu đề 28-32 BOLD, Thẻ 22-24, MathTex 24-30, Diễn giải 20-22, CẤM DÙNG FONT_SIZE DƯỚI 20).\n- ĐỒNG BỘ ÂM THANH (TTS): Kịch bản VOICEOVER_SCRIPT có số từ phù hợp thời lượng (~2.85 từ/giây). Các lệnh self.play và self.wait khớp nối với lời thoại từng cảnh.\n- Xuất khối mã Python Manim CE duy nhất trong \`\`\`python ... \`\`\` có class MainScene(Scene) và def construct(self): để render ngay.\n- TUYỆT ĐỐI KHÔNG SỬ DỤNG BẤT KỲ TOOL NÀO (KHÔNG run_command, KHÔNG write_to_file, KHÔNG view_file). KHÔNG TỰ CHẠY LỆNH RENDER. CHỈ XUẤT TEXT TRỰC TIẾP.`;
               }
 
               let lastProgressReport = Date.now();
@@ -2673,14 +2673,15 @@ YÊU CẦU BẮT BUỘC KHÔNG ĐƯỢC BỎ QUA (TUÂN THỦ KIẾN TRÚC 5 PH�
    - Phần 1: Mở đầu ấn tượng (Intro, ~7s) - FadeOut toàn bộ.
    - Phần 2: Lý thuyết 2 thẻ màu tương phản (Card Xanh Emerald #064E3B & Card Đỏ Ruby #7F1D1D, height=4.0-4.2 mỗi thẻ, width=8.4) - FadeOut toàn bộ.
    - Phần 3: Dual-Zone Container Mô phỏng động tiếp tuyến trượt đổi màu theo hệ số góc + thanh trạng thái real-time always_redraw + Bảng biến thiên 3 tầng LaTeX chuẩn SGK (\\begin{array}{|c|ccccccc|}) (~38s) - FadeOut toàn bộ.
-   - Phần 4: Chữa đề thi RAG thực chiến Đa Hiệp (Multi-Round Arena: mỗi hiệp 2 câu trên Top/Bottom Card, FadeOut dọn sạch màn hình giữa các hiệp để chữa từ 2 đến 6+ câu mà vẫn đảm bảo Zero-Overlap 100% và cỡ chữ lớn >= 22).
+   - Phần 4: Bài tập thực chiến theo từng dạng bài (mỗi dạng 2 câu trên Top/Bottom Card, FadeOut dọn sạch màn hình giữa các dạng bài để chữa từ 2 đến 6+ câu mà vẫn đảm bảo Zero-Overlap 100% và cỡ chữ lớn >= 22).
    - Phần 5: Thẻ Outro tổng kết thương hiệu "Học toán cùng Yuta" (height=13.6, width=8.4) - BẮT BUỘC kết thúc bằng self.wait(1.5) giữ nguyên màn hình, TUYỆT ĐỐI KHÔNG FadeOut làm đen màn hình!
 6. BẮT BUỘC HÀM fit_width(group, 7.8) trên mọi khối nội dung mobject trong thẻ để triệt tiêu lỗi tràn viền.
 7. QUY CHUẨN TYPOGRAPHY, FONT & BỐ CỤC:
    - Font chữ mặc định có chân: Dùng font="Times New Roman" (hoặc "Liberation Serif") cho mọi đối tượng Text; nếu người dùng chọn sans thì dùng "Be Vietnam Pro".
    - TUYỆT ĐỐI KHÔNG IN HOA (Sentence case): Tiêu đề, thẻ, badges, câu hỏi và đề bài chỉ viết hoa chữ cái đầu và danh từ riêng.
    - BOX BỌC TEXT VỪA KHÍT: SurroundingRectangle(buff=0.12-0.15), huy hiệu RoundedRectangle(width=max(2.2, text.width + 0.5)).
-   - BỐ CỤC 4 ĐÁP ÁN THÍCH ỨNG: Dạng 4x1 (ngắn <= 8 ký tự), 2x2 (trung bình, khoảng nghiệm), hoặc 1x4 (dài). ans_box = SurroundingRectangle(opt, buff=0.12) vừa khít.
+   - BỐ CỤC 4 ĐÁP ÁN LIỀN KHỐI: Mọi đáp án A, B, C, D nằm trên 1 hàng (MathTex(r"\mathbf{A.}\; ..."), CẤM chữ A. đứng riêng 1 dòng). Dạng 4x1 (ngắn <= 8 ký tự), 2x2 khóa 2 cột thẳng tắp (trung bình), hoặc 1x4 (dài). ans_box = SurroundingRectangle(opt, buff=0.12) vừa khít.
+   - TIẾP TUYẾN CHUẨN HÓA ĐỘ DÀI: Cố định L=0.85 (u = v / norm(v); p1 = p_center - 0.85*u; p2 = p_center + 0.85*u), TUYỆT ĐỐI CẤM cắt ra ngoài viền thẻ!
    - Cỡ chữ lớn dễ đọc: Mọi chữ tiếng Việt font_size=20-22, MathTex font_size=24-30, tiêu đề 28-32 BOLD. TUYỆT ĐỐI KHÔNG DÙNG FONT_SIZE DƯỚI 20!
 8. 100% công thức MathTex(r"...") dùng raw string r"...".
 9. TUYỆT ĐỐI CHỈ XUẤT MÃ PYTHON TRONG KHỐI \`\`\`python ... \`\`\`, KHÔNG VIẾT LỜI CHÀO HAY GIẢI THÍCH NGOÀI MÃ!
@@ -2711,7 +2712,7 @@ YÊU CẦU BẮT BUỘC KHÔNG ĐƯỢC BỎ QUA (TUÂN THỦ KIẾN TRÚC 5 PH�
 
                   const isVertical = options.prompt.includes('9:16') || options.prompt.includes('DỌC');
                   const directPrompt = `Viết duy nhất 1 khối mã Python Manim CE (\`scene.py\`) hoàn chỉnh 100% để tạo video minh họa cho bài toán toán học chủ đề: "${options.topic || options.subject || 'Toán học'}".${ragDirectiveBlock ? `\n${ragDirectiveBlock}\n` : ''}
-BẮT BUỘC bắt đầu bằng \`\`\`python from manim import * ... \`\`\` với class MainScene(Scene) và def construct(self):. Cấu hình ${isVertical ? 'Dọc 9:16 Dual-Zone theo chuẩn 5 phân cảnh c1_HamSo_DonDieu.py, lấp đầy 93% màn hình, gọi fit_width(group, 7.8), RAG thực chiến Đa Hiệp (Multi-Round Arena), cỡ chữ lớn >= 20-22 (MathTex 24-30, Tiêu đề 28-32 BOLD), kết thúc bằng self.wait(1.5) giữ Outro card' : 'Ngang 16:9'}. TUYỆT ĐỐI KHÔNG SỬ DỤNG TOOL/COMMAND (KHÔNG run_command, KHÔNG write_to_file). CHỈ XUẤT DUY NHẤT KHỐI MÃ PYTHON RA TEXT OUTPUT! KHÔNG VIẾT LỜI CHÀO!`;
+BẮT BUỘC bắt đầu bằng \`\`\`python from manim import * ... \`\`\` với class MainScene(Scene) và def construct(self):. Cấu hình ${isVertical ? 'Dọc 9:16 Dual-Zone theo chuẩn 5 phân cảnh c1_HamSo_DonDieu.py, lấp đầy 93% màn hình, gọi fit_width(group, 7.8), Bài tập thực chiến theo từng dạng bài, cỡ chữ lớn >= 20-22 (MathTex 24-30, Tiêu đề 28-32 BOLD), kết thúc bằng self.wait(1.5) giữ Outro card' : 'Ngang 16:9'}. TUYỆT ĐỐI KHÔNG SỬ DỤNG TOOL/COMMAND (KHÔNG run_command, KHÔNG write_to_file). CHỈ XUẤT DUY NHẤT KHỐI MÃ PYTHON RA TEXT OUTPUT! KHÔNG VIẾT LỜI CHÀO!`;
                   const directText = await runAgyPrompt(directPrompt, downloadsDir, selectedModel);
                   extractedPython = extractPythonManimCode(directText, downloadsDir);
                 }
@@ -4072,7 +4073,7 @@ YÊU CẦU BẮT BUỘC ĐỂ SỬA LỖI:
               const codeFollowupPrompt = `Tuyệt vời! Dựa trên kịch bản sư phạm và khối lời thoại VOICEOVER_SCRIPT vừa thống nhất ở trên, hãy viết TOÀN BỘ file mã nguồn Manim Python (\`scene.py\`) hoàn chỉnh 100% để render video bài giảng này.
 
 YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ KIẾN TRÚC 5 PHÂN CẢNH VÀNG & c1_HamSo_DonDieu.py):
-1. Kế thừa chính xác biến VOICEOVER_SCRIPT và 5 phân cảnh vàng: (1. Intro, 2. Lý thuyết các thẻ màu, 3. Dual-Zone Mô phỏng động tiếp tuyến đổi màu & BBT 3 tầng, 4. Chữa đề RAG thực chiến Đa Hiệp Multi-Round Arena, 5. Outro thương hiệu "Học toán cùng Yuta").
+1. Kế thừa chính xác biến VOICEOVER_SCRIPT và 5 phân cảnh vàng: (1. Intro, 2. Lý thuyết các thẻ màu, 3. Dual-Zone Mô phỏng động tiếp tuyến đổi màu & BBT 3 tầng, 4. Bài tập thực chiến theo từng dạng bài, 5. Outro thương hiệu "Học toán cùng Yuta").
 2. Cấu hình ${isVertical ? 'Khung hình DỌC 9:16 (config.pixel_width=1080, config.pixel_height=1920, config.frame_width=9.0, config.frame_height=16.0)' : 'Khung hình NGANG 16:9 (1920x1080, config.frame_width=14.22, config.frame_height=8.0)'}.
 3. 100% CÔNG THỨC LATEX HOÀN HẢO (PERFECT LATEX):
    - MỌI công thức, phương trình, biến số bắt buộc dùng MathTex(r"...") với raw string r"...".
@@ -4093,7 +4094,8 @@ YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ KIẾN TRÚC 5 PHÂN CẢNH V�
    - Toàn bộ Text dùng font="Times New Roman" (hoặc "Liberation Serif") có chân làm mặc định (hoặc "Be Vietnam Pro" nếu chọn sans).
    - TUYỆT ĐỐI KHÔNG IN HOA (Sentence case chuẩn tiếng Việt cho mọi tiêu đề, thẻ, badges, câu hỏi và đề bài).
    - Khung viền bọc text chứa vừa khít: SurroundingRectangle(buff=0.12-0.15) và RoundedRectangle(width=max(2.2, text.width + 0.5)).
-   - Bố cục 4 đáp án thông minh theo độ dài: 4x1 (ngắn <= 8 ký tự), 2x2 (trung bình), hoặc 1x4 (dài). ans_box = SurroundingRectangle(opt, buff=0.12) vừa khít.
+   - Tiếp tuyến chuẩn hóa độ dài: Cố định L=0.85 (u = v / norm(v); p1 = p_center - 0.85*u; p2 = p_center + 0.85*u), TUYỆT ĐỐI CẤM cắt ra ngoài viền Top Card.
+   - Bố cục 4 đáp án liền khối: Mọi đáp án A, B, C, D nằm trên 1 hàng (cấm chữ A. đứng riêng 1 dòng). Dạng 4x1 (ngắn <= 8 ký tự), 2x2 khóa 2 cột thẳng tắp (trung bình), hoặc 1x4 (dài). ans_box = SurroundingRectangle(opt, buff=0.12) vừa khít.
    - Màu nền "#0B1120".
 8. Cảnh Outro: Thẻ Card tổng kết toàn màn hình (height=13.6, width=8.4), giữ nguyên màn hình (self.wait(1.5)), TUYỆT ĐỐI KHÔNG DÙNG FadeOut(*self.mobjects) làm đen màn hình.
 9. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, không viết bất kỳ lời chào hay giải thích ngoài mã.

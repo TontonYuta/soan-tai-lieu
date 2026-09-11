@@ -25,9 +25,9 @@ ${chunk}
 CHỈ THỊ SƯ PHẠM RAG BẮT BUỘC CHO VIDEO:
 1. KHÁI NIỆM & LÝ THUYẾT CHUẨN MỰC: Các khái niệm, định nghĩa, định lý, công thức và ví dụ minh họa BẮT BUỘC phải trích xuất chính xác theo tài liệu PDF đính kèm. Tuyệt đối không tự bịa đặt hay viết chung chung làm lệch kiến thức gốc trong tài liệu.
 2. TÊN ĐỀ BÀI & CÂU HỎI: Không nhất thiết phải viết hoa toàn bộ (ALL CAPS). Đề bài cần được xuống dòng \n bình thường theo nhịp ngữ nghĩa tự nhiên (mỗi dòng tối đa 7-9 từ) để không bị to tràn box hay vỡ khung hình.
-3. TRÍCH XUẤT BÀI TOÁN & THỰC CHIẾN ĐA HIỆP (MULTI-ROUND PRACTICE ARENA):
+3. TRÍCH XUẤT BÀI TOÁN & THỰC CHIẾN THEO TỪNG DẠNG BÀI (PRACTICE SECTION):
    - BẮT BUỘC trích xuất chính xác bài toán, câu hỏi, định nghĩa, định lý từ tài liệu RAG trên. Bám sát 100% câu từ, số liệu, giả thiết và kết luận trong tài liệu gốc. TUYỆT ĐỐI KHÔNG tự bịa nội dung khác!
-   - NGUYÊN TẮC HIỆP ĐẤU BẢO VỆ ZERO-OVERLAP: Để chữa nhiều câu (từ 2 đến 6+ câu tùy thời lượng), BẮT BUỘC phân chia thành các Hiệp (Round) độc lập. Mỗi Hiệp chỉ xuất hiện ĐÚNG 2 CÂU trên màn hình (Top Card = Câu lẻ, Bottom Card = Câu chẵn). Khi kết thúc mỗi Hiệp, BẮT BUỘC FadeOut dọn sạch màn hình trước khi tạo Hiệp tiếp theo. TUYỆT ĐỐI KHÔNG để nhiều hơn 2 câu trên màn hình cùng lúc!
+   - NGUYÊN TẮC BẢO VỆ ZERO-OVERLAP: Để chữa nhiều câu (từ 2 đến 6+ câu tùy thời lượng), BẮT BUỘC phân chia thành các Dạng bài độc lập (mỗi dạng gồm 2 câu tiêu biểu: Top Card = Câu lẻ, Bottom Card = Câu chẵn). Khi chữa xong mỗi dạng bài, BẮT BUỘC gọi self.play(FadeOut(group), run_time=0.7) dọn sạch bảng trước khi chuyển sang dạng tiếp theo. TUYỆT ĐỐI KHÔNG để nhiều hơn 2 câu trên màn hình cùng lúc!
 4. Trình bày lời giải sư phạm mạch lạc, đúng và đủ ý chính, phân tích bản chất sâu sắc.\n`;
 };
 
@@ -46,25 +46,25 @@ export const MANIM_SKILLS_GUIDE = `
        Card 2 Đỏ Ruby #7F1D1D cho tính chất phủ định/nghịch biến, height=4.0-4.2 mỗi thẻ, width=8.4).
        Với video dài (>=180s - 300s), bổ sung thêm thẻ Vàng/Tím làm rõ các trường hợp đặc biệt và lưu ý bẫy đề thi. FadeOut toàn bộ.
      * CHƯƠNG 3 - DUAL-ZONE CONTAINER MÔ PHỎNG ĐỘNG TƯƠNG TÁC (Visual Simulation, 35s - 75s):
-       - Header Bar cố định (height=1.1-1.3, width=8.4) với Pill Badge ("VÍ DỤ MINH HỌA" hoặc "VÍ DỤ").
+       - Header Bar cố định (height=1.1-1.3, width=8.4) với Pill Badge ("Ví dụ minh họa" hoặc "Ví dụ").
        - Top Card (height=6.4, width=8.4): Đồ thị Axes (x_length=7.2, y_length=4.0), đường cong axes.plot, cực trị gióng nét đứt.
-         TIẾP TUYẾN CHUYỂN ĐỘNG VỚI ValueTracker + always_redraw: Tiếp tuyến tự động đổi màu theo hệ số góc (GREEN khi dốc lên, RED khi dốc xuống, YELLOW khi đi ngang)
+         TIẾP TUYẾN CHUYỂN ĐỘNG CHUẨN HÓA ĐỘ DÀI VỚI ValueTracker + always_redraw: Tiếp tuyến tự động đổi màu theo hệ số góc (GREEN khi dốc lên, RED khi dốc xuống, YELLOW khi đi ngang), độ dài cố định trên màn hình L=0.85 (tổng chiều dài 1.7 unit), TUYỆT ĐỐI KHÔNG cắt ra ngoài viền thẻ!
          + THANH TRẠNG THÁI REAL-TIME (status_badge = always_redraw(...)) hiển thị trực tiếp y' > 0 / y' < 0 / y' = 0!
        - Bottom Card (height=6.6, width=8.4): Đạo hàm + BẢNG BIẾN THIÊN 3 TẦNG LATEX CHUẨN SGK (\\begin{array}{|c|ccccccc|})
          + Kết luận khoảng đơn điệu/cực trị đóng khung xanh SurroundingRectangle.
        - Cho ValueTracker trượt mượt mà qua các khoảng để học sinh quan sát đồ thị và BBT đồng thời. FadeOut toàn bộ.
-     * CHƯƠNG 4 - CHỮA ĐỀ THI RAG THỰC CHIẾN ĐA HIỆP (MULTI-ROUND PRACTICE ARENA, 38s - 160s+):
-       - Header Bar với Pill Badge ("THỰC CHIẾN").
-       - QUY TẮC HIỆP ĐẤU BẢO VỆ ZERO-OVERLAP TUYỆT ĐỐI (HỖ TRỢ TỪ 2 ĐẾN 6+ CÂU HỎI):
-         + Video ngắn (<= 90s): 1 Hiệp (2 câu tiêu biểu: Top Card = Câu 1, Bottom Card = Câu 2).
-         + Video chuẩn (100s - 180s): 2 Hiệp (3 - 4 câu tiêu biểu):
-           • Hiệp 1: Top Card = Câu 1, Bottom Card = Câu 2 -> self.play(FadeOut(round1_group)) dọn sạch màn hình!
-           • Hiệp 2: Top Card = Câu 3, Bottom Card = Câu 4 -> self.play(FadeOut(round2_group)) dọn sạch màn hình!
-         + Video dài chuyên sâu (200s - 300s+): 3 Hiệp (5 - 6 câu tiêu biểu):
-           • Hiệp 1 (Nhận biết & Thông hiểu): Câu 1 & Câu 2 -> FadeOut dọn sạch màn hình!
-           • Hiệp 2 (Vận dụng & Phân tích bẫy đề thi): Câu 3 & Câu 4 -> FadeOut dọn sạch màn hình!
-           • Hiệp 3 (Vận dụng cao & Mẹo giải nhanh 30s): Câu 5 & Câu 6 -> FadeOut dọn sạch màn hình!
-       - NGUYÊN TẮC BẤT DI BẤT DỊCH: Mỗi hiệp chỉ hiển thị ĐÚNG 2 CÂU trên 2 thẻ (Top Card = Câu lẻ, Bottom Card = Câu chẵn). Khi kết thúc mỗi hiệp, BẮT BUỘC FadeOut toàn bộ hiệp cũ để giải phóng 100% không gian trước khi tạo hiệp mới. Tuyệt đối không bao giờ để nhiều hơn 2 câu trên màn hình cùng một lúc!
+     * CHƯƠNG 4 - BÀI TẬP VẬN DỤNG & CHỮA ĐỀ THỰC CHIẾN (Practice Section, 38s - 160s+):
+       - Header Bar với Pill Badge ("Thực chiến").
+       - QUY TẮC BẢO VỆ ZERO-OVERLAP TUYỆT ĐỐI (HỖ TRỢ TỪ 2 ĐẾN 6+ CÂU HỎI):
+         + Video ngắn (<= 90s): 1 Dạng bài (2 câu tiêu biểu: Top Card = Câu 1, Bottom Card = Câu 2).
+         + Video chuẩn (100s - 180s): 2 Dạng bài (3 - 4 câu tiêu biểu):
+           • Dạng 1: Top Card = Câu 1, Bottom Card = Câu 2 -> self.play(FadeOut(part1_group)) dọn sạch màn hình!
+           • Dạng 2: Top Card = Câu 3, Bottom Card = Câu 4 -> self.play(FadeOut(part2_group)) dọn sạch màn hình!
+         + Video dài chuyên sâu (200s - 300s+): 3 Dạng bài (5 - 6 câu tiêu biểu):
+           • Dạng 1 (Nhận biết & Thông hiểu): Câu 1 & Câu 2 -> FadeOut dọn sạch màn hình!
+           • Dạng 2 (Vận dụng & Phân tích bẫy đề thi): Câu 3 & Câu 4 -> FadeOut dọn sạch màn hình!
+           • Dạng 3 (Vận dụng cao & Phương pháp giải nhanh): Câu 5 & Câu 6 -> FadeOut dọn sạch màn hình!
+       - NGUYÊN TẮC BẤT DI BẤT DỊCH: Mỗi màn hình chỉ hiển thị ĐÚNG 2 CÂU trên 2 thẻ (Top Card = Câu lẻ, Bottom Card = Câu chẵn). Khi giải xong mỗi dạng, BẮT BUỘC FadeOut toàn bộ để giải phóng 100% không gian trước khi chuyển sang dạng tiếp theo. Tuyệt đối không bao giờ để nhiều hơn 2 câu trên màn hình cùng một lúc!
      * CHƯƠNG 5 - TỔNG KẾT & OUTRO THƯƠNG HIỆU (Outro Card, 8s - 22s):
        - Thẻ Outro toàn màn hình (height=13.6, width=8.4) với 3 bí kíp đúc kết bài học.
        - Badge thương hiệu đỏ rực rỡ "Học toán cùng Yuta" + Kêu gọi follow.
@@ -147,12 +147,12 @@ export const MANIM_SKILLS_GUIDE = `
      * Video 90s: ~255 từ.
      * Video 120s: ~340 từ.
      * Video 180s: ~510 từ.
-     * Video 300s (5 Phút Chuyên Sâu): ~855 từ (Đầy đủ mở bài, phân tích lý thuyết, mô phỏng chuyên sâu và 3-4 hiệp thực chiến giải 6+ bài tập).
+     * Video 300s (5 Phút Chuyên Sâu): ~855 từ (Đầy đủ mở bài, phân tích lý thuyết, mô phỏng chuyên sâu và các dạng bài thực chiến giải 6+ bài tập).
    - Khớp nối phân cảnh chuẩn mực (Animation Duration ≈ Voiceover Duration):
      * Cảnh 1 (Intro): ~7s - 15s.
      * Cảnh 2 (Lý thuyết): ~14s - 45s.
      * Cảnh 3 (Mô phỏng động / Dual-Zone): ~35s - 75s.
-     * Cảnh 4 (Chữa bài thực chiến Đa Hiệp): ~38s - 150s+ (Mỗi hiệp 2 câu chiếm ~40s - 50s).
+     * Cảnh 4 (Bài tập thực chiến theo từng dạng bài): ~38s - 150s+ (Mỗi dạng 2 câu chiếm ~40s - 50s).
      * Cảnh 5 (Outro): ~8s - 20s.
    - Trong code Manim, tổng run_time của self.play(...) cộng với self.wait(...) ở mỗi phân cảnh phải khớp với thời gian đọc của phân cảnh đó để video kết thúc cùng lúc với giọng đọc.
 
@@ -171,18 +171,48 @@ export const MANIM_SKILLS_GUIDE = `
         rect = RoundedRectangle(corner_radius=0.12, width=max(2.4, text.width + 0.5), height=text.height + 0.28, ...)
       * Luôn gọi fit_width(group, 7.8) cho mọi khối nội dung trong thẻ trước khi đóng khung viền.
 
-13. QUY TẮC BỐ CỤC 4 ĐÁP ÁN TRẮC NGHIỆM THÔNG MINH (4x1, 2x2, HOẶC 1x4):
-    - Tùy thuộc vào độ rộng và độ dài thực tế của 4 đáp án A, B, C, D, BẮT BUỘC bố trí gọn gàng theo 1 trong 3 dạng chuẩn mực sau:
-      * DẠNG 4x1 (1 hàng ngang gồm 4 đáp án): Áp dụng khi 4 đáp án đều NGẮN (mỗi đáp án chỉ là 1 số, 1 ký hiệu hoặc công thức ngắn, độ dài <= 8 ký tự, ví dụ: A. 1; B. 2; C. 3; D. 4):
-        opts_group = VGroup(optA, optB, optC, optD).arrange(RIGHT, buff=0.45)
-      * DẠNG 2x2 (2 hàng, mỗi hàng 2 đáp án): Áp dụng khi 4 đáp án có ĐỘ DÀI TRUNG BÌNH (khoảng nghiệm, tọa độ điểm, biểu thức vừa phải, ví dụ: (-infty; -1) và (1; +infty)):
-        row1 = VGroup(optA, optB).arrange(RIGHT, buff=0.6)
-        row2 = VGroup(optC, optD).arrange(RIGHT, buff=0.6)
-        opts_group = VGroup(row1, row2).arrange(DOWN, aligned_edge=LEFT, buff=0.18)
-      * DẠNG 1x4 (4 hàng dọc, mỗi hàng 1 đáp án): Áp dụng khi các đáp án DÀI (chứa câu chữ văn bản, định lý, hoặc công thức phân số dài):
+13. QUY TẮC BỐ CỤC 4 ĐÁP ÁN TRẮC NGHIỆM LIỀN KHỐI (CHỐNG LỖI CHỮ A. ĐỨNG RIÊNG 1 DÒNG):
+    - QUY TẮC LIỀN KHỐI BẮT BUỘC (ATOMIC OPTION ITEM):
+      * MỖI ĐÁP ÁN A, B, C, D BẮT BUỘC PHẢI LÀ MỘT KHỐI NGUYÊN VẸN NẰM TRÊN CÙNG 1 HÀNG.
+      * Dạng công thức/khoảng nghiệm/số: BẮT BUỘC viết chung nhãn và giá trị trong 1 MathTex duy nhất:
+        optA = MathTex(r"\mathbf{A.}\; (-1; 0)", font_size=22)
+        optB = MathTex(r"\mathbf{B.}\; (0; 1)", font_size=22)
+        optC = MathTex(r"\mathbf{C.}\; (1; 2)", font_size=22)
+        optD = MathTex(r"\mathbf{D.}\; (-1; 1)", font_size=22)
+      * Dạng câu chữ tiếng Việt: BẮT BUỘC ghép nhãn và câu bằng arrange(RIGHT, buff=0.12, aligned_edge=DOWN):
+        optA = VGroup(Text("A.", font=MAIN_FONT, font_size=22, weight=BOLD), Text("Đồng biến trên (0; 2)", font=MAIN_FONT, font_size=22)).arrange(RIGHT, buff=0.12, aligned_edge=DOWN)
+      * TUYỆT ĐỐI CẤM:
+        - CẤM arrange(DOWN) giữa chữ cái nhãn A/B/C/D và nội dung đáp án!
+        - CẤM chèn dấu xuống dòng \n sau chữ cái nhãn (như Text("A.\n...")) làm chữ cái đứng cô độc 1 dòng rồi nội dung mới rớt xuống dòng dưới!
+    - BỐ CỤC 4 ĐÁP ÁN THÍCH ỨNG THEO ĐỘ RỘNG:
+      * DẠNG 4x1 (1 hàng ngang gồm 4 đáp án): Áp dụng khi 4 đáp án đều NGẮN (<= 8 ký tự, ví dụ: A. 1; B. 2; C. 3; D. 4):
+        opts_group = VGroup(optA, optB, optC, optD).arrange(RIGHT, buff=0.4)
+      * DẠNG 2x2 (2 hàng x 2 cột - KHÓA 2 CỘT THẲNG TẮP, TUYỆT ĐỐI KHÔNG LỆCH CỘT): Áp dụng khi đáp án có độ dài trung bình (khoảng nghiệm, tọa độ điểm).
+        BẮT BUỘC nhóm theo 2 cột dọc để A thẳng hàng trên C, B thẳng hàng trên D:
+        col1 = VGroup(optA, optC).arrange(DOWN, aligned_edge=LEFT, buff=0.18)
+        col2 = VGroup(optB, optD).arrange(DOWN, aligned_edge=LEFT, buff=0.18)
+        opts_group = VGroup(col1, col2).arrange(RIGHT, buff=0.8, aligned_edge=UP)
+      * DẠNG 1x4 (4 hàng dọc): Áp dụng khi các đáp án DÀI (chứa câu chữ định lý nhiều từ):
         opts_group = VGroup(optA, optB, optC, optD).arrange(DOWN, aligned_edge=LEFT, buff=0.14)
-    - Hộp khoanh đáp án đúng: ans_box = SurroundingRectangle(opt_correct, color=GREEN, buff=0.12, corner_radius=0.08, stroke_width=2.5) ôm vừa khít đáp án được chọn!
-`.replace("★★★ BỘ NGUYÊN TẮC MANIM CE TOÁN HỌC & VISUAL ENGINEERING CHUẨN STUDIO ★XX", "★★★ BỘ NGUYÊN TẮC MANIM CE TOÁN HỌC & VISUAL ENGINEERING CHUẨN STUDIO ★★★");
+    - Hộp khoanh đáp án đúng: ans_box = SurroundingRectangle(opt_correct, color=GREEN, buff=0.12, corner_radius=0.08, stroke_width=2.5) ôm vừa khít đáp án đúng! Khoảng cách giữa các đáp án luôn >= 0.35 để viền xanh không bao giờ chạm vào chữ của đáp án bên cạnh.
+
+14. QUY TẮC TIẾP TUYẾN CHUẨN HÓA ĐỘ DÀI (NORMALIZED UNIT TANGENT - CHỐNG TRÀN BOX 100%):
+    - Khi vẽ tiếp tuyến trượt trên đồ thị (ValueTracker + always_redraw), TUYỆT ĐỐI CẤM dùng p1 = c2p(t - dx, y - m*dx) vì khi hệ số góc m lớn (m=5 đến m=10), đoạn thẳng sẽ bị kéo dài 8-10 đơn vị, đâm xuyên ra ngoài Top Card làm hỏng toàn bộ bố cục!
+    - BẮT BUỘC chuẩn hóa vector chỉ phương tiếp tuyến trong không gian màn hình (Screen Space) và cố định chiều dài đoạn thẳng L = 0.85:
+      def get_tangent():
+          t = t_param.get_value()
+          m = 3*(t**2) - 3  # Đạo hàm f'(t)
+          p_center = axes.c2p(t, f_func(t))
+          dt = 0.05
+          p_near = axes.c2p(t + dt, f_func(t + dt))
+          v = p_near - p_center
+          norm_v = np.linalg.norm(v)
+          u = v / norm_v if norm_v > 1e-6 else RIGHT
+          p1 = p_center - 0.85 * u
+          p2 = p_center + 0.85 * u
+          col = GREEN_C if m > 0.1 else (RED_C if m < -0.1 else YELLOW)
+          return Line(p1, p2, color=col, stroke_width=4.0)
+`;
 
 export const getFontDirective = (fontStyle?: string): string => {
   if (fontStyle === 'sans') return 'Be Vietnam Pro';
@@ -285,7 +315,7 @@ Mô phỏng trực quan các thanh mảng chuyển động tráo đổi vị tr�
 Trục thời gian tiến trình lịch sử (Chronological Timeline) trượt qua các mốc năm quan trọng, sơ đồ tư duy nguyên nhân - diễn biến - ý nghĩa lịch sử, hoặc biểu đồ trực quan số liệu địa lý/dân số.`;
     default:
       return `[BỘ FORM BÀI GIẢNG ĐA MÔN CHUẨN STUDIO (5 CHƯƠNG KẾ THỪA c1_HamSo_DonDieu.py)]: 
-Bố cục Khung Thẻ Chuẩn: Intro -> Lý thuyết (2 thẻ màu độc lập) -> Dual-Zone Mô phỏng động tương tác & Bảng phân tích -> Chữa Đề RAG thực chiến Đa Hiệp (Multi-Round Arena) -> Thẻ Outro Thương Hiệu.`;
+Bố cục Khung Thẻ Chuẩn: Intro -> Lý thuyết (2 thẻ màu độc lập) -> Dual-Zone Mô phỏng động tương tác & Bảng phân tích -> Bài tập thực chiến theo từng dạng bài -> Thẻ Outro Thương Hiệu.`;
   }
 };
 
@@ -383,11 +413,11 @@ export const generateManimStoryboardPrompt = (config: VideoConfig): string => {
     const roundSec = Math.round(practiceSec / roundCount);
     const roundWords = Math.round(practiceWords / roundCount);
     practiceRoundsOutline += `
-     • HIỆP ${r} (${roundLabel}, ~${roundSec}s, ~${roundWords} từ):
-       - Top Card: Câu ${q1} (Đề bài + 4 đáp án / hình vẽ + Khoanh đáp án đúng).
+     • DẠNG BÀI ${r} (${roundLabel}, ~${roundSec}s, ~${roundWords} từ):
+       - Top Card: Câu ${q1} (Đề bài + 4 đáp án liền khối / hình vẽ + Khoanh đáp án đúng).
        - Bottom Card: Câu ${q2} (Đề bài + Các bước giải then chốt + Khoanh đáp án đúng).
-       - Lời thoại Hiệp ${r}: Phân tích chi tiết phương pháp tư duy, bẫy trắc nghiệm và chốt nhanh đáp án.
-       - Dọn dẹp: self.play(FadeOut(round${r}_group)) dọn sạch 100% màn hình để chuẩn bị cho hiệp tiếp theo!`;
+       - Lời thoại Dạng ${r}: Phân tích chi tiết phương pháp tư duy, bẫy trắc nghiệm và chốt nhanh đáp án.
+       - Dọn dẹp: self.play(FadeOut(part${r}_group)) dọn sạch 100% màn hình để chuẩn bị cho dạng bài tiếp theo!`;
   }
 
   return `Đóng vai Chuyên gia Sư phạm & Đạo diễn Diễn hoạt Khoa học Manim CE (chuẩn phong cách Yuta Academy).
@@ -413,7 +443,7 @@ YÊU CẦU LẬP DÀN Ý 5 PHÂN CẢNH CHUẨN MỰC VÀ SOẠN LỜI THOẠI T
    - Bottom Card (Thẻ Dưới - height=6.6, width=8.4): Suy luận lý thuyết/biến đổi số/bảng biến thiên 3 tầng/công thức định luật/cấu trúc ngữ pháp.
    - Lời thoại Mô phỏng: Thuyết minh đồng bộ từng chuyển động, làm sáng tỏ mối liên hệ giữa trực quan và công thức.
 
-4. PHÂN CẢNH 4 - THỰC CHIẾN ĐA HIỆP / CHỮA ĐỀ RAG MULTI-ROUND ARENA (~${practiceSec}S, ~${practiceWords} TỪ, GỒM ${roundCount} HIỆP, TỔNG ${exerciseCount} CÂU HỎI):
+4. PHÂN CẢNH 4 - BÀI TẬP THỰC CHIẾN THEO TỪNG DẠNG BÀI (~${practiceSec}S, ~${practiceWords} TỪ, GỒM ${roundCount} DẠNG BÀI, TỔNG ${exerciseCount} CÂU HỎI):
 ${practiceRoundsOutline}
 
 5. PHÂN CẢNH 5 - TỔNG KẾT & OUTRO THƯƠNG HIỆU (~${outroSec}S, ~${outroWords} TỪ):
@@ -461,9 +491,9 @@ YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ BỘ NGUYÊN TẮC c1_HamSo_Do
    - Phần 1: Mở đầu (Intro, ~${introSec}s) - FadeOut toàn bộ.
    - Phần 2: Lý thuyết các thẻ màu tương phản (Xanh Emerald, Đỏ Ruby..., ~${theorySec}s) - FadeOut toàn bộ.
    - Phần 3: Dual-Zone Container Mô phỏng động tiếp tuyến đổi màu + BBT 3 tầng (~${simSec}s) - FadeOut toàn bộ.
-   - Phần 4: Chữa đề thi RAG thực chiến ĐA HIỆP (MULTI-ROUND ARENA, ~${practiceSec}s, gồm ${roundCount} Hiệp với tổng cộng ${exerciseCount} câu hỏi):
-     * Mỗi Hiệp (Round) chỉ hiển thị ĐÚNG 2 CÂU trên màn hình (Top Card = Câu lẻ, Bottom Card = Câu chẵn).
-     * Khi kết thúc mỗi Hiệp: BẮT BUỘC gọi self.play(FadeOut(round_group), run_time=0.7) để giải phóng hoàn toàn màn hình trước khi tạo Hiệp tiếp theo!
+   - Phần 4: Bài tập thực chiến theo từng dạng bài (~${practiceSec}s, gồm ${roundCount} dạng bài với tổng cộng ${exerciseCount} câu hỏi):
+     * Mỗi dạng bài chỉ hiển thị ĐÚNG 2 CÂU trên màn hình (Top Card = Câu lẻ, Bottom Card = Câu chẵn).
+     * Khi kết thúc mỗi dạng bài: BẮT BUỘC gọi self.play(FadeOut(part_group), run_time=0.7) để giải phóng hoàn toàn màn hình trước khi tạo dạng bài tiếp theo!
      * TUYỆT ĐỐI KHÔNG nhồi nhét nhiều hơn 2 câu trên màn hình cùng một lúc để đảm bảo Zero-Overlap 100% và cỡ chữ lớn rõ nét (font_size >= 22).
    - Phần 5: Thẻ Outro tổng kết thương hiệu "Học ${config.subject} cùng Yuta" (~${outroSec}s) - Giữ nguyên self.wait(1.5), KHÔNG FadeOut.
 2. TỔNG THỜI LƯỢNG HOẠT HỌA KHỚP VỚI THỜI LƯỢNG MỤC TIÊU (~${approxSeconds}s, Lời thoại ~${targetWords} từ):
@@ -482,10 +512,15 @@ YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ BỘ NGUYÊN TẮC c1_HamSo_Do
    - Khung viền bao quanh (SurroundingRectangle): BẮT BUỘC dùng buff=0.12-0.15, corner_radius=0.12 để viền ôm sát vừa khít văn bản/công thức, không tràn viền, không chạm sát chữ, không quá rộng lãng phí.
    - Thẻ huy hiệu Pill Badge: Tính chiều rộng động rect = RoundedRectangle(corner_radius=0.12, width=max(2.2, text.width + 0.5), height=text.height + 0.28).
    - Luôn gọi fit_width(group, 7.8) trước khi đóng khung viền.
-7. QUY TẮC BỐ CỤC 4 ĐÁP ÁN TRẮC NGHIỆM THÔNG MINH (4x1, 2x2, HOẶC 1x4):
-   - Tùy độ dài thực tế của 4 đáp án A, B, C, D để bố trí gọn gàng theo 1 trong 3 dạng:
+7. QUY TẮC BỐ CỤC 4 ĐÁP ÁN TRẮC NGHIỆM LIỀN KHỐI (CHỐNG LỖI CHỮ A. ĐỨNG RIÊNG 1 DÒNG):
+   - MỖI ĐÁP ÁN A, B, C, D BẮT BUỘC PHẢI LÀ MỘT KHỐI NGUYÊN VẸN NẰM TRÊN CÙNG 1 HÀNG.
+   - Viết chung nhãn và giá trị: MathTex(r"\\mathbf{A.}\; ...") hoặc VGroup(Text("A."), Text("...")).arrange(RIGHT, buff=0.12, aligned_edge=DOWN). TUYỆT ĐỐI CẤM arrange(DOWN) giữa nhãn và đáp án, CẤM chèn \\n sau nhãn.
+   - Tùy độ dài thực tế của 4 đáp án để bố trí theo 1 trong 3 dạng:
      * DẠNG 4x1: Khi 4 đáp án đều NGẮN (<= 8 ký tự, số hoặc biến): VGroup(optA, optB, optC, optD).arrange(RIGHT, buff=0.35).
-     * DẠNG 2x2: Khi 4 đáp án có ĐỘ DÀI TRUNG BÌNH (khoảng nghiệm, tọa độ): VGroup(VGroup(optA, optB).arrange(RIGHT, buff=0.6), VGroup(optC, optD).arrange(RIGHT, buff=0.6)).arrange(DOWN, aligned_edge=LEFT, buff=0.18).
+     * DẠNG 2x2 (KHÓA 2 CỘT THẲNG TẮP, CHỐNG LỆCH HÀNG ZÍC-ZẮC): Khi 4 đáp án có ĐỘ DÀI TRUNG BÌNH (khoảng nghiệm, tọa độ). BẮT BUỘC:
+       col1 = VGroup(optA, optC).arrange(DOWN, aligned_edge=LEFT, buff=0.18)
+       col2 = VGroup(optB, optD).arrange(DOWN, aligned_edge=LEFT, buff=0.18)
+       VGroup(col1, col2).arrange(RIGHT, buff=0.8, aligned_edge=UP)
      * DẠNG 1x4: Khi đáp án DÀI (chứa câu chữ văn bản, định lý): VGroup(optA, optB, optC, optD).arrange(DOWN, aligned_edge=LEFT, buff=0.14).
    - Hộp khoanh đáp án: SurroundingRectangle(opt_correct, color=GREEN, buff=0.12, corner_radius=0.08, stroke_width=2.5) ôm vừa khít đáp án đúng!
 8. QUY CHUẨN TYPOGRAPHY & FONT CHỮ CHUẨN MỰC:
@@ -495,8 +530,9 @@ YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ BỘ NGUYÊN TẮC c1_HamSo_Do
 9. QUY TẮC CHỈ SỐ TRÊN/DƯỚI & TIÊU ĐỀ PILL BADGE:
    - 100% công thức chứa số mũ (x^2, x^3), chỉ số dưới (x_0, x_1), đạo hàm (y') BẮT BUỘC dùng MathTex(r"..."). TUYỆT ĐỐI CẤM dùng ký tự unicode mũ (x², x³, x₁, x₀) trong Text(...).
    - Tiêu đề Pill Badge: Dùng "Ví dụ minh họa" hoặc "Ví dụ", TUYỆT ĐỐI KHÔNG dùng "VÍ DỤ GỐC".
-10. MÔ PHỎNG TIẾP TUYẾN ĐỘNG, BẢNG BIẾN THIÊN 3 TẦNG & PACING VỪA PHẢI:
-    - ValueTracker + always_redraw cho tiếp tuyến đổi màu (Xanh/Đỏ/Vàng) và thanh trạng thái status_badge real-time. Tiếp tuyến lướt mượt với run_time=2.0s đến 2.5s.
+10. MÔ PHỎNG TIẾP TUYẾN ĐỘNG CHUẨN HÓA ĐỘ DÀI, BẢNG BIẾN THIÊN 3 TẦNG & PACING VỪA PHẢI:
+    - ValueTracker + always_redraw cho tiếp tuyến đổi màu (Xanh/Đỏ/Vàng) và thanh trạng thái status_badge real-time.
+    - TIẾP TUYẾN CHUẨN HÓA ĐỘ DÀI CỐ ĐỊNH L=0.85 (u = v / norm(v); p1 = p_center - 0.85*u; p2 = p_center + 0.85*u). TUYỆT ĐỐI CẤM đoạn thẳng kéo dài vô tận làm cắt ra ngoài viền thẻ!
     - PACING & NHỊP ĐỘ DỨT KHOÁT: Dừng nhẹ nhàng vừa đủ tại điểm mấu chốt (self.wait(0.8) đến self.wait(1.0) khi đổi màu tiếp tuyến, xuất hiện BBT, đóng khung đáp án). Tuyệt đối không dừng quá lâu (>1.2s - 1.5s) gây cảm giác màn hình bị đơ hoặc kéo dài lê thê.
     - Bảng Biến Thiên 3 tầng chuẩn mực SGK Việt Nam: MathTex(r"\\begin{array}{|c|ccccccc|} ... \\end{array}", font_size=24).
 11. QUY TẮC SỬ DỤNG HÌNH ẢNH MINH HỌA (ImageMobject - CHỐNG CRASH 100%):
@@ -549,7 +585,7 @@ I. THÔNG TIN VIDEO & CẤU HÌNH HÌNH THỨC:
 - Font chữ chỉ định: "${chosenFont}" (Có ngắt dòng line_spacing=1.2 & spacing chuẩn giữa các chữ)
 - Mẫu Diễn hoạt: ${simDesc}
 - Khán giả: ${config.audience || 'Học sinh / Người học'}
-- Yêu cầu chi tiết: ${config.details || "Trực quan, bố cục 5 phân cảnh chuẩn c1_HamSo_DonDieu.py, mô phỏng sinh động, chữa đề RAG thực chiến Đa Hiệp"}
+- Yêu cầu chi tiết: ${config.details || "Trực quan, bố cục 5 phân cảnh chuẩn c1_HamSo_DonDieu.py, mô phỏng sinh động, Bài tập thực chiến theo từng dạng bài"}
 - ĐỒNG BỘ THỜI GIAN ÂM THANH (TTS): Kịch bản VOICEOVER_SCRIPT phải có độ dài tương ứng (~${targetWords} từ cho ${approxSeconds}s). Các lệnh self.play(..., run_time=...) và self.wait(...) ở mỗi phân cảnh BẮT BUỘC phải khớp với thời gian đọc phân cảnh đó.
 ${episodeChunk}
 ${ragPromptChunk}
@@ -567,7 +603,7 @@ VOICEOVER_SCRIPT = """
 Chào mừng các bạn đến với bài giảng về ${config.topic} môn ${config.subject}! Hôm nay chúng ta sẽ cùng nắm trọn lý thuyết nền tảng và phương pháp giải các dạng bài thực chiến kinh điển nhất.
 Về phần lý thuyết cốt lõi, hãy ghi nhớ thật kỹ các nguyên tắc cốt lõi tương ứng với hai khía cạnh then chốt được đóng khung rõ ràng trên màn hình.
 Ở phần mô phỏng thực tế, hãy quan sát chuyển động và sự biến thiên trực quan theo thời gian thực, hoàn toàn ăn khớp với các công thức và phân tích logic bên dưới.
-Bây giờ chúng ta cùng bước vào phần thực chiến chữa bài tập điển hình qua ${roundCount} hiệp đấu với ${exerciseCount} câu hỏi. Ở mỗi hiệp, ta lần lượt phân tích bản chất từng câu, chỉ ra bẫy đề thi và chốt ngay đáp án chính xác.
+Bây giờ chúng ta cùng bước vào phần bài tập thực chiến với ${exerciseCount} câu hỏi trọng tâm chia theo ${roundCount} dạng bài. Ở mỗi dạng bài, ta lần lượt phân tích bản chất từng câu, chỉ ra bẫy đề thi và chốt ngay đáp án chính xác.
 Đừng quên lưu lại video và bấm theo dõi kênh ${brandName} để cùng nhau bứt phá điểm số mỗi ngày nhé!
 """
 
@@ -697,11 +733,15 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
 
         def get_tangent():
             t = t_param.get_value()
-            y = f_func(t)
             m = 3 * (t**2) - 3
-            dx = 0.42
-            p1 = axes.c2p(t - dx, y - m * dx)
-            p2 = axes.c2p(t + dx, y + m * dx)
+            p_center = axes.c2p(t, f_func(t))
+            dt = 0.05
+            p_near = axes.c2p(t + dt, f_func(t + dt))
+            v = p_near - p_center
+            norm_v = np.linalg.norm(v)
+            u = v / norm_v if norm_v > 1e-6 else RIGHT
+            p1 = p_center - 0.85 * u
+            p2 = p_center + 0.85 * u
             col = GREEN_C if m > 0.1 else (RED_C if m < -0.1 else YELLOW)
             return Line(p1, p2, color=col, stroke_width=4.0)
 
@@ -816,16 +856,16 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         )
 
         c1_ask = Text("Hỏi: Hàm số đã cho đồng biến trên khoảng nào?", font=MAIN_FONT, font_size=22, color=YELLOW)
-        optA = MathTex(r"A.\\; (-\\infty; -1)", font_size=22, color=WHITE)
-        optB = MathTex(r"B.\\; (0; 1)", font_size=22, color=WHITE)
-        optC = MathTex(r"C.\\; (-1; 1)", font_size=22, color=WHITE)
-        optD = MathTex(r"D.\\; (-1; 0)", font_size=22, color=GREEN_B)
+        optA = MathTex(r"\mathbf{A.}\; (-\infty; -1)", font_size=22, color=WHITE)
+        optB = MathTex(r"\mathbf{B.}\; (0; 1)", font_size=22, color=WHITE)
+        optC = MathTex(r"\mathbf{C.}\; (-1; 1)", font_size=22, color=WHITE)
+        optD = MathTex(r"\mathbf{D.}\; (-1; 0)", font_size=22, color=GREEN_B)
         # DẠNG 4x1: 4 đáp án ngắn gọn nằm trên 1 hàng ngang
         opts_row = VGroup(optA, optB, optC, optD).arrange(RIGHT, buff=0.35)
 
         c1_sol = VGroup(
             Text("➜ f'(x) > 0 và đồ thị đi lên trên (-1; 0). Chọn", font=MAIN_FONT, font_size=22, color=GREEN_B, weight=BOLD),
-            MathTex(r"\\mathbf{D}", font_size=24, color=GREEN)
+            MathTex(r"\mathbf{D}", font_size=24, color=GREEN)
         ).arrange(RIGHT, buff=0.15)
 
         c1_content = VGroup(c1_quest, c1_bbt, c1_ask, opts_row, c1_sol).arrange(DOWN, buff=0.18).move_to(c1_card).shift(DOWN * 0.22)
@@ -846,14 +886,14 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         c2_q2 = Text("Mệnh đề nào dưới đây đúng?", font=MAIN_FONT, font_size=22, color=WHITE)
         c2_quest = VGroup(VGroup(c2_q1, c2_qm).arrange(RIGHT, buff=0.15), c2_q2).arrange(DOWN, aligned_edge=LEFT, buff=0.1)
 
-        # DẠNG 2x2: Bố cục 2 hàng x 2 cột cho các đáp án trung bình (hoặc dùng 1x4 nếu câu chữ dài)
-        c2_optA = MathTex(r"A.\\; (0; 2)", font_size=22, color=WHITE)
-        c2_optB = MathTex(r"B.\\; (-\\infty; 0)", font_size=22, color=WHITE)
-        c2_optC = MathTex(r"C.\\; (2; +\\infty)", font_size=22, color=WHITE)
-        c2_optD = MathTex(r"D.\\; (0; 2) \\;\\text{và}\\; (2; +\\infty)", font_size=22, color=GREEN_B)
-        row1 = VGroup(c2_optA, c2_optB).arrange(RIGHT, buff=0.7)
-        row2 = VGroup(c2_optC, c2_optD).arrange(RIGHT, buff=0.7)
-        c2_opts = VGroup(row1, row2).arrange(DOWN, aligned_edge=LEFT, buff=0.14)
+        # DẠNG 2x2: Bố cục 2 hàng x 2 cột (Khóa 2 cột thẳng tắp, không bao giờ lệch hàng zíc-zắc)
+        c2_optA = MathTex(r"\mathbf{A.}\; (0; 2)", font_size=22, color=WHITE)
+        c2_optB = MathTex(r"\mathbf{B.}\; (-\infty; 0)", font_size=22, color=WHITE)
+        c2_optC = MathTex(r"\mathbf{C.}\; (2; +\infty)", font_size=22, color=WHITE)
+        c2_optD = MathTex(r"\mathbf{D.}\; (0; 2) \;\text{và}\; (2; +\infty)", font_size=22, color=GREEN_B)
+        col1 = VGroup(c2_optA, c2_optC).arrange(DOWN, aligned_edge=LEFT, buff=0.18)
+        col2 = VGroup(c2_optB, c2_optD).arrange(DOWN, aligned_edge=LEFT, buff=0.18)
+        c2_opts = VGroup(col1, col2).arrange(RIGHT, buff=0.85, aligned_edge=UP)
 
         step1 = MathTex(r"\\text{Bước 1: } y' = 3x^2 - 6x = 3x(x - 2)", font_size=24, color=LIGHT_GRAY)
         step2 = MathTex(r"\\text{Bước 2: } y' = 0 \\iff x = 0 \\quad\\text{hoặc}\\quad x = 2", font_size=24, color=LIGHT_GRAY)
@@ -1008,9 +1048,12 @@ ${existingCode.trim()}
 IV. YÊU CẦU THỰC THI BẮT BUỘC:
 1. Đọc kỹ từng góp ý, câu từ cần sửa, hoặc lỗi bố cục được ghi trong mục II.
 2. Viết lại TOÀN BỘ file mã nguồn Manim Python (\`scene.py\`) từ đầu, kế thừa cấu trúc 5 PHÂN CẢNH CHUẨN MỰC:
-   - Intro -> Lý thuyết các thẻ màu -> Dual-Zone Mô phỏng động tiếp tuyến đổi màu & BBT 3 tầng -> Chữa đề RAG thực chiến Đa Hiệp (Multi-Round Arena: mỗi hiệp 2 câu trên Top/Bottom Card, FadeOut dọn sạch màn hình giữa các hiệp để chữa từ 2 đến 6+ câu mà vẫn đảm bảo Zero-Overlap 100% và cỡ chữ lớn >= 22) -> Thẻ Outro thương hiệu (giữ nguyên self.wait(1.5)). Khớp nối tổng thời lượng video với thời lượng yêu cầu.
+   - Intro -> Lý thuyết các thẻ màu -> Dual-Zone Mô phỏng động tiếp tuyến đổi màu & BBT 3 tầng -> Bài tập thực chiến theo từng dạng bài (mỗi dạng 2 câu trên Top/Bottom Card, FadeOut dọn sạch màn hình giữa các dạng bài để chữa từ 2 đến 6+ câu mà vẫn đảm bảo Zero-Overlap 100% và cỡ chữ lớn >= 22) -> Thẻ Outro thương hiệu (giữ nguyên self.wait(1.5)). Khớp nối tổng thời lượng video với thời lượng yêu cầu.
 3. Giữ vững quy chuẩn CHỐNG ĐÈ CHỮ (ZERO OVERLAP), áp dụng Khung Thẻ Container Dual-Zone lấp đầy 93% màn hình, dãn dòng \`line_spacing=1.2\`, gọi fit_width(group, 7.8) cho mọi khối nội dung trong thẻ, font_size lớn rõ nét (Tiêu đề 28-32 BOLD, Thẻ 22-24, MathTex 24-30, Text tiếng Việt 20-22). Dùng font "${chosenFont}". TUYỆT ĐỐI KHÔNG IN HOA (Sentence case chuẩn tiếng Việt cho mọi tiêu đề, thẻ, badges, câu hỏi và đề bài).
-4. QUY TẮC BOX VỪA KHÍT & BỐ CỤC 4 ĐÁP ÁN: Khung viền SurroundingRectangle(buff=0.12-0.15) ôm vừa khít nội dung, không tràn và không quá thừa. Tùy độ dài 4 đáp án A, B, C, D để bố trí dạng 4x1 (ngắn <= 8 ký tự), 2x2 (trung bình, khoảng nghiệm/tọa độ), hoặc 1x4 (dài, mệnh đề). ans_box = SurroundingRectangle(opt, buff=0.12) vừa khít đáp án đúng.
+4. QUY TẮC BOX VỪA KHÍT, TIẾP TUYẾN CHUẨN HÓA & BỐ CỤC 4 ĐÁP ÁN:
+   - Khung viền SurroundingRectangle(buff=0.12-0.15) ôm vừa khít nội dung, không tràn và không quá thừa.
+   - TIẾP TUYẾN CHUẨN HÓA ĐỘ DÀI: Cố định L=0.85 (u = v / norm(v); p1 = p_center - 0.85*u; p2 = p_center + 0.85*u), TUYỆT ĐỐI CẤM cắt ra ngoài viền Top Card.
+   - BỐ CỤC 4 ĐÁP ÁN LIỀN KHỐI: Mọi đáp án A, B, C, D là khối nguyên vẹn trên 1 hàng (MathTex(r"\mathbf{A.}\; ..."), CẤM chữ A. đứng riêng 1 dòng). Bố trí dạng 4x1 (ngắn <= 8 ký tự), dạng 2x2 KHÓA 2 CỘT THẲNG TẮP (trung bình), hoặc dạng 1x4 (dài). ans_box = SurroundingRectangle(opt, buff=0.12) vừa khít đáp án đúng.
 5. QUY TẮC CHỈ SỐ TRÊN/DƯỚI & PILL BADGE: 100% chỉ số trên/dưới dùng MathTex(r"..."), CẤM dùng unicode trong Text. Dùng "Ví dụ minh họa" hoặc "Ví dụ", TUYỆT ĐỐI KHÔNG dùng "VÍ DỤ GỐC".
 6. NHỊP ĐỘ DIỄN HOẠT (PACING VỪA PHẢI, MƯỢT MÀ): Dừng vừa vặn self.wait(0.8) - self.wait(1.0) tại điểm mấu chốt, đổi màu tiếp tuyến và BBT, giữ Outro self.wait(1.5). TUYỆT ĐỐI KHÔNG dừng quá lâu (>1.2s - 1.5s) gây cảm giác màn hình bị đơ hoặc kéo dài lê thê.
 7. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, không viết lời chào hay giải thích ngoài mã.
