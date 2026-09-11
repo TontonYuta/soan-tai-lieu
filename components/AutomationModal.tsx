@@ -24,6 +24,8 @@ interface AutomationModalProps {
   voiceSpeed?: string;
   topic?: string;
   subject?: string;
+  duration?: string;
+  exerciseCount?: number;
   initialTabMode?: 'auto' | 'rerender';
 }
 
@@ -54,6 +56,8 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
   voiceSpeed,
   topic,
   subject,
+  duration,
+  exerciseCount,
   initialTabMode = 'auto',
 }) => {
   const [isRunning, setIsRunning] = useState(false);
@@ -445,6 +449,8 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
         seriesOutline: seriesOutline,
         topic: topic,
         subject: subject,
+        duration: duration,
+        exerciseCount: exerciseCount,
         model: effectiveModel,
         modelName: effectiveModelName,
         enableVoice: enableVoice !== undefined ? enableVoice : (typeof window !== 'undefined' ? localStorage.getItem('yuta_manim_enable_voice') === 'true' : false),
@@ -475,7 +481,8 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
         { 
           subject: subject || 'Toán học',
           topic: topic || 'Bài giảng',
-          duration: '60 giây',
+          duration: duration || '100 - 120 giây',
+          exerciseCount: exerciseCount,
           tone: 'simple',
           audience: 'Học sinh & Người tự học',
           format: 'vertical' 

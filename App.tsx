@@ -101,6 +101,8 @@ const App: React.FC = () => {
     enableVoice?: boolean;
     voiceName?: string;
     voiceSpeed?: string;
+    duration?: string;
+    exerciseCount?: number;
   }>({});
   const [currentVideoConfig, setCurrentVideoConfig] = useState<VideoConfig | null>(null);
   const [geminiLink, setGeminiLink] = useState<string>(localStorage.getItem('gemini_fixed_link') || '');
@@ -361,6 +363,8 @@ const App: React.FC = () => {
       enableVoice: finalConfig.enableVoice,
       voiceName: finalConfig.voiceName,
       voiceSpeed: finalConfig.voiceSpeed,
+      duration: finalConfig.duration,
+      exerciseCount: finalConfig.exerciseCount,
     });
     setStatus(GenerationStatus.LOADING);
     setError(null);
@@ -443,6 +447,8 @@ const App: React.FC = () => {
         voiceSpeed={videoExtraConfig.voiceSpeed}
         topic={contextMetadata?.topic}
         subject={contextMetadata?.subject}
+        duration={videoExtraConfig.duration}
+        exerciseCount={videoExtraConfig.exerciseCount}
       />
 
 
@@ -727,6 +733,8 @@ const App: React.FC = () => {
                     enableVoice: finalCfg.enableVoice,
                     voiceName: finalCfg.voiceName,
                     voiceSpeed: finalCfg.voiceSpeed,
+                    duration: finalCfg.duration,
+                    exerciseCount: finalCfg.exerciseCount,
                   });
                   handleDirectAutomate(
                     generateVideoManimPrompt(finalCfg), 

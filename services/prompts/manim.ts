@@ -25,9 +25,9 @@ ${chunk}
 CHỈ THỊ SƯ PHẠM RAG BẮT BUỘC CHO VIDEO:
 1. KHÁI NIỆM & LÝ THUYẾT CHUẨN MỰC: Các khái niệm, định nghĩa, định lý, công thức và ví dụ minh họa BẮT BUỘC phải trích xuất chính xác theo tài liệu PDF đính kèm. Tuyệt đối không tự bịa đặt hay viết chung chung làm lệch kiến thức gốc trong tài liệu.
 2. TÊN ĐỀ BÀI & CÂU HỎI: Không nhất thiết phải viết hoa toàn bộ (ALL CAPS). Đề bài cần được xuống dòng \n bình thường theo nhịp ngữ nghĩa tự nhiên (mỗi dòng tối đa 7-9 từ) để không bị to tràn box hay vỡ khung hình.
-1. BẮT BUỘC trích xuất chính xác bài toán, câu hỏi, định nghĩa, định lý, hiện tượng hoặc dữ liệu từ tài liệu RAG trên.
-2. NGUYÊN TẮC MẬT ĐỘ: Chọn ĐÚNG 2 BÀI/CÂU TIÊU BIỂU NHẤT từ tài liệu để đưa vào Phần Thực Chiến (Top Card = Câu 1, Bottom Card = Câu 2). TUYỆT ĐỐI KHÔNG tham lam nhồi nhét 3-4 câu gây vỡ khung hình!
-3. Bám sát 100% câu từ, số liệu, giả thiết và kết luận trong tài liệu gốc. TUYỆT ĐỐI KHÔNG tự bịa nội dung khác!
+3. TRÍCH XUẤT BÀI TOÁN & THỰC CHIẾN ĐA HIỆP (MULTI-ROUND PRACTICE ARENA):
+   - BẮT BUỘC trích xuất chính xác bài toán, câu hỏi, định nghĩa, định lý từ tài liệu RAG trên. Bám sát 100% câu từ, số liệu, giả thiết và kết luận trong tài liệu gốc. TUYỆT ĐỐI KHÔNG tự bịa nội dung khác!
+   - NGUYÊN TẮC HIỆP ĐẤU BẢO VỆ ZERO-OVERLAP: Để chữa nhiều câu (từ 2 đến 6+ câu tùy thời lượng), BẮT BUỘC phân chia thành các Hiệp (Round) độc lập. Mỗi Hiệp chỉ xuất hiện ĐÚNG 2 CÂU trên màn hình (Top Card = Câu lẻ, Bottom Card = Câu chẵn). Khi kết thúc mỗi Hiệp, BẮT BUỘC FadeOut dọn sạch màn hình trước khi tạo Hiệp tiếp theo. TUYỆT ĐỐI KHÔNG để nhiều hơn 2 câu trên màn hình cùng lúc!
 4. Trình bày lời giải sư phạm mạch lạc, đúng và đủ ý chính, phân tích bản chất sâu sắc.\n`;
 };
 
@@ -36,15 +36,16 @@ export const MANIM_SKILLS_GUIDE = `
 (Kế thừa Cấu trúc 5 Phân Cảnh Chuẩn Mực từ c1_HamSo_DonDieu.py, Hệ Thống Khung Thẻ Container Dual-Zone,
  Mô Phỏng Động ValueTracker + Tiếp Tuyến Đổi Màu, Bảng Biến Thiên 3 Tầng & Chống Đè Chữ Tuyệt Đối)
 
-1. CẤU TRÚC 5 PHÂN CẢNH CHUẨN MỰC (5-CHAPTER CINEMATIC FLOW, ~100-120S):
-   - Mọi video bài giảng toán học chuẩn studio BẮT BUỘC chia thành đúng 5 chương mạch lạc:
-     * CHƯƠNG 1 - MỞ ĐẦU ẤN TƯỢNG (Intro, ~7s):
+1. CẤU TRÚC PHÂN CẢNH CHUẨN MỰC (ADAPTIVE CINEMATIC FLOW, TỪ 60S ĐẾN 300S):
+   - Mọi video bài giảng toán học chuẩn studio BẮT BUỘC chia thành 5 chương mạch lạc, co giãn linh hoạt theo thời lượng mục tiêu:
+     * CHƯƠNG 1 - MỞ ĐẦU ẤN TƯỢNG (Intro, 7s - 20s):
        Pill Badge tên chuyên đề + Khung bao tiêu đề SurroundingRectangle + Phụ đề + Xem trước các công thức cốt lõi.
        Chuyển cảnh: FadeOut toàn bộ Intro để tránh đè chữ. TUYỆT ĐỐI KHÔNG đưa biểu tượng lên góc UL làm watermark!
-     * CHƯƠNG 2 - LÝ THUYẾT CỐT LÕI VỚI 2 THẺ MÀU TƯƠNG PHẢN (Theory Cards, ~14s):
-       Header đỉnh + 2 Thẻ màu độc lập xếp dọc (Card 1 Xanh Emerald #064E3B cho tính chất khẳng định/đồng biến;
-       Card 2 Đỏ Ruby #7F1D1D cho tính chất phủ định/nghịch biến, height=4.0-4.2 mỗi thẻ, width=8.4). FadeOut toàn bộ.
-     * CHƯƠNG 3 - DUAL-ZONE CONTAINER MÔ PHỎNG ĐỘNG TƯƠNG TÁC (Visual Simulation, ~38s):
+     * CHƯƠNG 2 - LÝ THUYẾT CỐT LÕI VỚI CẶP THẺ MÀU TƯƠNG PHẢN (Theory Cards, 14s - 50s):
+       Header đỉnh + Các Thẻ màu độc lập xếp dọc (Card 1 Xanh Emerald #064E3B cho tính chất khẳng định/đồng biến;
+       Card 2 Đỏ Ruby #7F1D1D cho tính chất phủ định/nghịch biến, height=4.0-4.2 mỗi thẻ, width=8.4).
+       Với video dài (>=180s - 300s), bổ sung thêm thẻ Vàng/Tím làm rõ các trường hợp đặc biệt và lưu ý bẫy đề thi. FadeOut toàn bộ.
+     * CHƯƠNG 3 - DUAL-ZONE CONTAINER MÔ PHỎNG ĐỘNG TƯƠNG TÁC (Visual Simulation, 35s - 75s):
        - Header Bar cố định (height=1.1-1.3, width=8.4) với Pill Badge ("VÍ DỤ MINH HỌA" hoặc "VÍ DỤ").
        - Top Card (height=6.4, width=8.4): Đồ thị Axes (x_length=7.2, y_length=4.0), đường cong axes.plot, cực trị gióng nét đứt.
          TIẾP TUYẾN CHUYỂN ĐỘNG VỚI ValueTracker + always_redraw: Tiếp tuyến tự động đổi màu theo hệ số góc (GREEN khi dốc lên, RED khi dốc xuống, YELLOW khi đi ngang)
@@ -52,12 +53,19 @@ export const MANIM_SKILLS_GUIDE = `
        - Bottom Card (height=6.6, width=8.4): Đạo hàm + BẢNG BIẾN THIÊN 3 TẦNG LATEX CHUẨN SGK (\\begin{array}{|c|ccccccc|})
          + Kết luận khoảng đơn điệu/cực trị đóng khung xanh SurroundingRectangle.
        - Cho ValueTracker trượt mượt mà qua các khoảng để học sinh quan sát đồ thị và BBT đồng thời. FadeOut toàn bộ.
-     * CHƯƠNG 4 - CHỮA ĐỀ THI RAG THỰC CHIẾN (Thực Chiến RAG, ~38s):
+     * CHƯƠNG 4 - CHỮA ĐỀ THI RAG THỰC CHIẾN ĐA HIỆP (MULTI-ROUND PRACTICE ARENA, 38s - 160s+):
        - Header Bar với Pill Badge ("THỰC CHIẾN").
-       - QUY TẮC MẬT ĐỘ BẮT BUỘC: TỐI ĐA 2 CÂU TIÊU BIỂU (Top Card = Câu 1; Bottom Card = Câu 2). TUYỆT ĐỐI KHÔNG nhồi 3-4 câu!
-       - Top Card (Câu 1, height=6.4): Đề bài + BBT LaTeX hoặc đồ thị + 4 đáp án hàng ngang + Hộp xanh SurroundingRectangle quanh đáp án đúng.
-       - Bottom Card (Câu 2, height=6.6): Đề bài + Phương pháp giải đại số 3 bước ngắn gọn + Hộp xanh SurroundingRectangle quanh đáp án đúng. FadeOut toàn bộ.
-     * CHƯƠNG 5 - TỔNG KẾT & OUTRO THƯƠNG HIỆU (Outro Card, ~8s):
+       - QUY TẮC HIỆP ĐẤU BẢO VỆ ZERO-OVERLAP TUYỆT ĐỐI (HỖ TRỢ TỪ 2 ĐẾN 6+ CÂU HỎI):
+         + Video ngắn (<= 90s): 1 Hiệp (2 câu tiêu biểu: Top Card = Câu 1, Bottom Card = Câu 2).
+         + Video chuẩn (100s - 180s): 2 Hiệp (3 - 4 câu tiêu biểu):
+           • Hiệp 1: Top Card = Câu 1, Bottom Card = Câu 2 -> self.play(FadeOut(round1_group)) dọn sạch màn hình!
+           • Hiệp 2: Top Card = Câu 3, Bottom Card = Câu 4 -> self.play(FadeOut(round2_group)) dọn sạch màn hình!
+         + Video dài chuyên sâu (200s - 300s+): 3 Hiệp (5 - 6 câu tiêu biểu):
+           • Hiệp 1 (Nhận biết & Thông hiểu): Câu 1 & Câu 2 -> FadeOut dọn sạch màn hình!
+           • Hiệp 2 (Vận dụng & Phân tích bẫy đề thi): Câu 3 & Câu 4 -> FadeOut dọn sạch màn hình!
+           • Hiệp 3 (Vận dụng cao & Mẹo giải nhanh 30s): Câu 5 & Câu 6 -> FadeOut dọn sạch màn hình!
+       - NGUYÊN TẮC BẤT DI BẤT DỊCH: Mỗi hiệp chỉ hiển thị ĐÚNG 2 CÂU trên 2 thẻ (Top Card = Câu lẻ, Bottom Card = Câu chẵn). Khi kết thúc mỗi hiệp, BẮT BUỘC FadeOut toàn bộ hiệp cũ để giải phóng 100% không gian trước khi tạo hiệp mới. Tuyệt đối không bao giờ để nhiều hơn 2 câu trên màn hình cùng một lúc!
+     * CHƯƠNG 5 - TỔNG KẾT & OUTRO THƯƠNG HIỆU (Outro Card, 8s - 22s):
        - Thẻ Outro toàn màn hình (height=13.6, width=8.4) với 3 bí kíp đúc kết bài học.
        - Badge thương hiệu đỏ rực rỡ "Học toán cùng Yuta" + Kêu gọi follow.
        - KẾT THÚC BẰNG self.wait(1.5) ĐỂ GIỮ NGUYÊN MÀN HÌNH OUTRO. TUYỆT ĐỐI KHÔNG FadeOut làm đen màn hình!
@@ -133,18 +141,20 @@ export const MANIM_SKILLS_GUIDE = `
    - Tuyệt đối KHÔNG sử dụng các từ ngữ giật gân, sáo rỗng hay cường điệu phong cách AI. Sử dụng các thuật ngữ sư phạm chuẩn mực, trong sáng: "định lý cốt lõi", "quy tắc trọng tâm", "phương pháp giải", "lưu ý quan trọng", "kết luận ghi nhớ".
    - Mọi khái niệm, lý thuyết, công thức phải được đối chiếu và bám sát chính xác tài liệu PDF đính kèm (RAG).
 
-10. QUY TẮC ĐỒNG BỘ THỜI GIAN ÂM THANH (TTS) & HOẠT HỌA MANIM (TTS-ANIMATION SYNC):
+10. QUY TẮC ĐỒNG BỘ THỜI GIAN ÂM THANH (TTS) & HOẠT HỌA MANIM (TTS-ANIMATION SYNC, TỪ 60S ĐẾN 300S):
    - Tốc độ đọc tự nhiên của giọng đọc AI: ~2.8 - 3.0 từ/giây (160 - 180 từ/phút).
    - Dung lượng kịch bản VOICEOVER_SCRIPT phải tương ứng: Số từ ≈ Thời lượng (giây) × 2.85.
      * Video 60s: ~170 từ.
      * Video 90s: ~255 từ.
-     * Video 110-120s: ~300-330 từ.
+     * Video 120s: ~340 từ.
+     * Video 180s: ~510 từ.
+     * Video 300s (5 Phút Chuyên Sâu): ~855 từ (Đầy đủ mở bài, phân tích lý thuyết, mô phỏng chuyên sâu và 3-4 hiệp thực chiến giải 6+ bài tập).
    - Khớp nối phân cảnh chuẩn mực (Animation Duration ≈ Voiceover Duration):
-     * Cảnh 1 (Intro): 7s -> ~20 từ.
-     * Cảnh 2 (Lý thuyết): 14s -> ~40 từ.
-     * Cảnh 3 (Mô phỏng động / Dual-Zone): 38s -> ~105 từ.
-     * Cảnh 4 (Chữa bài thực chiến): 38s -> ~105 từ.
-     * Cảnh 5 (Outro): 8s -> ~25 từ.
+     * Cảnh 1 (Intro): ~7s - 15s.
+     * Cảnh 2 (Lý thuyết): ~14s - 45s.
+     * Cảnh 3 (Mô phỏng động / Dual-Zone): ~35s - 75s.
+     * Cảnh 4 (Chữa bài thực chiến Đa Hiệp): ~38s - 150s+ (Mỗi hiệp 2 câu chiếm ~40s - 50s).
+     * Cảnh 5 (Outro): ~8s - 20s.
    - Trong code Manim, tổng run_time của self.play(...) cộng với self.wait(...) ở mỗi phân cảnh phải khớp với thời gian đọc của phân cảnh đó để video kết thúc cùng lúc với giọng đọc.
 `.replace("★★★ BỘ NGUYÊN TẮC MANIM CE TOÁN HỌC & VISUAL ENGINEERING CHUẨN STUDIO ★XX", "★★★ BỘ NGUYÊN TẮC MANIM CE TOÁN HỌC & VISUAL ENGINEERING CHUẨN STUDIO ★★★");
 
@@ -248,8 +258,67 @@ Mô phỏng trực quan các thanh mảng chuyển động tráo đổi vị tr�
 Trục thời gian tiến trình lịch sử (Chronological Timeline) trượt qua các mốc năm quan trọng, sơ đồ tư duy nguyên nhân - diễn biến - ý nghĩa lịch sử, hoặc biểu đồ trực quan số liệu địa lý/dân số.`;
     default:
       return `[BỘ FORM BÀI GIẢNG ĐA MÔN CHUẨN STUDIO (5 CHƯƠNG KẾ THỪA c1_HamSo_DonDieu.py)]: 
-Bố cục Khung Thẻ Chuẩn: Intro -> Lý thuyết (2 thẻ màu độc lập) -> Dual-Zone Mô phỏng động tương tác & Bảng phân tích -> Chữa Đề RAG thực chiến (Tối đa 2 câu) -> Thẻ Outro Thương Hiệu.`;
+Bố cục Khung Thẻ Chuẩn: Intro -> Lý thuyết (2 thẻ màu độc lập) -> Dual-Zone Mô phỏng động tương tác & Bảng phân tích -> Chữa Đề RAG thực chiến Đa Hiệp (Multi-Round Arena) -> Thẻ Outro Thương Hiệu.`;
   }
+};
+
+export const parseDurationToSeconds = (durationStr?: string, defaultSec: number = 110): number => {
+  if (!durationStr) return defaultSec;
+  const str = durationStr.toLowerCase().trim();
+
+  // Pattern like "100 - 120 giây", "3 - 5 phút", "100-120s"
+  const rangeMatch = str.match(/(\d+(?:\.\d+)?)\s*(?:-|đến|to)\s*(\d+(?:\.\d+)?)/);
+  if (rangeMatch) {
+    const min = parseFloat(rangeMatch[1]);
+    const max = parseFloat(rangeMatch[2]);
+    if (!isNaN(min) && !isNaN(max)) {
+      const avg = (min + max) / 2;
+      if (str.includes('phút') || str.includes('phut') || str.includes('min') || str.includes('m')) {
+        return Math.round(avg * 60);
+      }
+      return Math.round(avg);
+    }
+  }
+
+  // Pattern like "300s", "300 giây", "300 giay", "300 sec"
+  const secMatch = str.match(/(\d+)\s*(?:giây|giay|sec|s\b)/);
+  if (secMatch) {
+    const secs = parseInt(secMatch[1], 10);
+    if (!isNaN(secs) && secs > 0) return secs;
+  }
+
+  // Pattern like "5 phút", "5 phut", "5 mins", "5m"
+  const minMatch = str.match(/(\d+(?:\.\d+)?)\s*(?:phút|phut|min|m\b)/);
+  if (minMatch) {
+    const mins = parseFloat(minMatch[1]);
+    if (!isNaN(mins) && mins > 0) return Math.round(mins * 60);
+  }
+
+  // Just number like "300"
+  const numOnlyMatch = str.match(/^(\d+)$/);
+  if (numOnlyMatch) {
+    const n = parseInt(numOnlyMatch[1], 10);
+    if (!isNaN(n) && n > 0) return n;
+  }
+
+  return defaultSec;
+};
+
+export const getExerciseAndRoundPlan = (durationSec: number, requestedExerciseCount?: number) => {
+  let exerciseCount = requestedExerciseCount && requestedExerciseCount > 0 ? requestedExerciseCount : 0;
+  if (!exerciseCount) {
+    if (durationSec <= 90) {
+      exerciseCount = 2;
+    } else if (durationSec <= 170) {
+      exerciseCount = 4;
+    } else if (durationSec <= 260) {
+      exerciseCount = 6;
+    } else {
+      exerciseCount = 6;
+    }
+  }
+  const roundCount = Math.max(1, Math.ceil(exerciseCount / 2));
+  return { exerciseCount, roundCount };
 };
 
 // =========================================================================
@@ -257,44 +326,71 @@ Bố cục Khung Thẻ Chuẩn: Intro -> Lý thuyết (2 thẻ màu độc lập
 // =========================================================================
 export const generateManimStoryboardPrompt = (config: VideoConfig): string => {
   const isVertical = config.format === 'vertical';
-  const targetDurationStr = config.duration || '100 - 120 giây';
+  const approxSeconds = parseDurationToSeconds(config.duration, isVertical ? 110 : 120);
+  const targetDurationStr = config.duration || `${approxSeconds} giây`;
+  const targetWords = Math.round(approxSeconds * 2.85);
   const simDesc = getSimulationModeDescription(config.simulationMode);
   const ragSection = sanitizeAndExtractRag(config.attachedPdf);
   const imageSection = extractAttachedImageDirective(config.attachedImage);
 
-  const approxSeconds = isVertical ? 110 : 120;
-  const targetWords = Math.round(approxSeconds * 2.85);
+  const { exerciseCount, roundCount } = getExerciseAndRoundPlan(approxSeconds, config.exerciseCount);
+
+  // Phân bổ thời lượng thích ứng theo target duration
+  const introSec = Math.max(7, Math.round(approxSeconds * 0.08));
+  const theorySec = Math.max(14, Math.round(approxSeconds * 0.16));
+  const simSec = Math.max(30, Math.round(approxSeconds * 0.26));
+  const outroSec = Math.max(8, Math.round(approxSeconds * 0.06));
+  const practiceSec = approxSeconds - (introSec + theorySec + simSec + outroSec);
+
+  const introWords = Math.round(introSec * 2.85);
+  const theoryWords = Math.round(theorySec * 2.85);
+  const simWords = Math.round(simSec * 2.85);
+  const outroWords = Math.round(outroSec * 2.85);
+  const practiceWords = targetWords - (introWords + theoryWords + simWords + outroWords);
+
+  let practiceRoundsOutline = "";
+  for (let r = 1; r <= roundCount; r++) {
+    const q1 = (r - 1) * 2 + 1;
+    const q2 = Math.min(r * 2, exerciseCount);
+    const roundLabel = r === 1 ? "Nhận biết & Đọc dữ liệu nhanh" : r === 2 ? "Thông hiểu & Biến đổi đại số" : r === 3 ? "Vận dụng & Phân tích bẫy đề thi" : `Vận dụng cao & Mẹo giải nhanh`;
+    const roundSec = Math.round(practiceSec / roundCount);
+    const roundWords = Math.round(practiceWords / roundCount);
+    practiceRoundsOutline += `
+     • HIỆP ${r} (${roundLabel}, ~${roundSec}s, ~${roundWords} từ):
+       - Top Card: Câu ${q1} (Đề bài + 4 đáp án / hình vẽ + Khoanh đáp án đúng).
+       - Bottom Card: Câu ${q2} (Đề bài + Các bước giải then chốt + Khoanh đáp án đúng).
+       - Lời thoại Hiệp ${r}: Phân tích chi tiết phương pháp tư duy, bẫy trắc nghiệm và chốt nhanh đáp án.
+       - Dọn dẹp: self.play(FadeOut(round${r}_group)) dọn sạch 100% màn hình để chuẩn bị cho hiệp tiếp theo!`;
+  }
 
   return `Đóng vai Chuyên gia Sư phạm & Đạo diễn Diễn hoạt Khoa học Manim CE (chuẩn phong cách Yuta Academy).
 Nhiệm vụ của bạn là xây dựng KỊCH BẢN SƯ PHẠM VÀ LỜI THOẠI THUYẾT MINH TRÔI CHẢY, PHONG PHÚ cho video bài giảng về: "${config.topic}" (Môn: ${config.subject}, Khán giả: ${config.audience || 'Học sinh / Người học'}).
 Định dạng: ${isVertical ? 'DỌC 9:16 (TikTok / Shorts / Reels - Bố cục Khung Thẻ Dual-Zone lấp đầy 93% màn hình)' : 'NGANG 16:9 (YouTube / Bài giảng)'}.
-THỜI LƯỢNG MỤC TIÊU: ${targetDurationStr}.
+THỜI LƯỢNG MỤC TIÊU: ${targetDurationStr} (~${approxSeconds} giây).
 ${simDesc}
 ${ragSection}
 ${imageSection}
 
 YÊU CẦU LẬP DÀN Ý 5 PHÂN CẢNH CHUẨN MỰC VÀ SOẠN LỜI THOẠI TRÔI CHẢY, TRUYỀN CẢM, CÓ NGẮT NGHỈ MẠCH LẠC PHÙ HỢP VỚI THỜI LƯỢNG ${targetDurationStr} (ĐỘ DÀI KỊCH BẢN KHOẢNG ${targetWords} TỪ - TỐC ĐỘ ĐỌC 2.85 TỪ/GIÂY):
 
-1. PHÂN CẢNH 1 - MỞ ĐẦU ẤN TƯỢNG (INTRO, ~7S, ~20 TỪ):
+1. PHÂN CẢNH 1 - MỞ ĐẦU ẤN TƯỢNG (INTRO, ~${introSec}S, ~${introWords} TỪ):
    - Khung thẻ Intro với Tên bài học, Pill badge môn học "${config.subject.toUpperCase()}" và Ký hiệu/khái niệm cốt lõi.
    - Lời thoại Intro: Chào mừng, đặt vấn đề kích thích tò mò và tạo cảm hứng học tập.
 
-2. PHÂN CẢNH 2 - LÝ THUYẾT CỐT LÕI VỚI 2 THẺ MÀU TƯƠNG PHẢN (~14S, ~40 TỪ):
-   - 2 Thẻ màu độc lập đối chiếu (Thẻ Xanh Emerald cho trường hợp 1 / thuận / khẳng định; Thẻ Đỏ Ruby cho trường hợp 2 / nghịch / phủ định).
+2. PHÂN CẢNH 2 - LÝ THUYẾT CỐT LÕI VỚI CẶP THẺ MÀU TƯƠNG PHẢN (~${theorySec}S, ~${theoryWords} TỪ):
+   - Các Thẻ màu độc lập đối chiếu (Thẻ Xanh Emerald cho trường hợp thuận / khẳng định; Thẻ Đỏ Ruby cho trường hợp nghịch / phủ định; với video >=180s bổ sung thẻ phân tích trường hợp đặc biệt / bẫy).
    - Lời thoại Lý thuyết: Phân tích trực quan, so sánh bản chất và làm nổi bật điều kiện áp dụng.
 
-3. PHÂN CẢNH 3 - DUAL-ZONE CONTAINER MÔ PHỎNG ĐỘNG TƯƠNG TÁC (~38S, ~105 TỪ):
-   - Top Card (Thẻ Trên - height=6.4, width=8.4): Trực quan hóa hiện tượng/đồ thị/mô hình/hình ảnh minh họa ImageMobject.
-   - Bottom Card (Thẻ Dưới - height=6.6, width=8.4): Suy luận lý thuyết/biến đổi số/bảng biến thiên/công thức định luật/cấu trúc ngữ pháp.
+3. PHÂN CẢNH 3 - DUAL-ZONE CONTAINER MÔ PHỎNG ĐỘNG TƯƠNG TÁC (~${simSec}S, ~${simWords} TỪ):
+   - Top Card (Thẻ Trên - height=6.4, width=8.4): Trực quan hóa hiện tượng/đồ thị/mô hình/hình ảnh minh họa ImageMobject với ValueTracker + Tiếp tuyến đổi màu + Thanh trạng thái real-time.
+   - Bottom Card (Thẻ Dưới - height=6.6, width=8.4): Suy luận lý thuyết/biến đổi số/bảng biến thiên 3 tầng/công thức định luật/cấu trúc ngữ pháp.
    - Lời thoại Mô phỏng: Thuyết minh đồng bộ từng chuyển động, làm sáng tỏ mối liên hệ giữa trực quan và công thức.
 
-4. PHÂN CẢNH 4 - THỰC CHIẾN / BÀI TẬP VẬN DỤNG RAG (TỐI ĐA 2 CÂU TIÊU BIỂU, ~38S, ~105 TỪ):
-   - Top Card: Câu 1 (Đọc đồ thị/hình ảnh/nhận biết nhanh) + 4 đáp án + Hộp xanh khoanh đáp án đúng.
-   - Bottom Card: Câu 2 (Vận dụng/tính toán/biện luận logic) + 3 bước giải then chốt + Hộp xanh khoanh đáp án đúng.
-   - Lời thoại Chữa đề: Chỉ ra mẹo giải nhanh, phân tích bẫy đề thi và chốt phương pháp xử lý dứt khoát.
+4. PHÂN CẢNH 4 - THỰC CHIẾN ĐA HIỆP / CHỮA ĐỀ RAG MULTI-ROUND ARENA (~${practiceSec}S, ~${practiceWords} TỪ, GỒM ${roundCount} HIỆP, TỔNG ${exerciseCount} CÂU HỎI):
+${practiceRoundsOutline}
 
-5. PHÂN CẢNH 5 - TỔNG KẾT & OUTRO THƯƠNG HIỆU (~8S, ~25 TỪ):
-   - Thẻ Outro: Đúc kết 3 bí kíp bài học + Thông điệp thương hiệu "Học ${config.subject} cùng Yuta" (giữ nguyên khung hình cuối 1.5s).
+5. PHÂN CẢNH 5 - TỔNG KẾT & OUTRO THƯƠNG HIỆU (~${outroSec}S, ~${outroWords} TỪ):
+   - Thẻ Outro: Đúc kết 3 bí kíp bài học + Thông điệp thương hiệu "Học ${config.subject} cùng Yuta" (giữ nguyên khung hình cuối self.wait(1.5), TUYỆT ĐỐI KHÔNG FadeOut).
    - Lời thoại Outro: Đúc kết giá trị và kêu gọi follow kênh.
 
 ĐỊNH DẠNG TRẢ VỀ:
@@ -312,11 +408,21 @@ VOICEOVER_SCRIPT = """
 export const generateManimCodePrompt = (config: VideoConfig): string => {
   const isVertical = config.format === 'vertical';
   const qualityFlag = config.renderQuality === '1080p' ? '-qh' : config.renderQuality === '4k' ? '-qk' : '-ql';
-  const targetDurationStr = config.duration || '100 - 120 giây';
+  const approxSeconds = parseDurationToSeconds(config.duration, isVertical ? 110 : 120);
+  const targetDurationStr = config.duration || `${approxSeconds} giây`;
+  const targetWords = Math.round(approxSeconds * 2.85);
   const chosenFont = getFontDirective(config.fontStyle);
   const simDesc = getSimulationModeDescription(config.simulationMode);
   const ragSection = sanitizeAndExtractRag(config.attachedPdf);
   const imageSection = extractAttachedImageDirective(config.attachedImage);
+
+  const { exerciseCount, roundCount } = getExerciseAndRoundPlan(approxSeconds, config.exerciseCount);
+
+  const introSec = Math.max(7, Math.round(approxSeconds * 0.08));
+  const theorySec = Math.max(14, Math.round(approxSeconds * 0.16));
+  const simSec = Math.max(30, Math.round(approxSeconds * 0.26));
+  const outroSec = Math.max(8, Math.round(approxSeconds * 0.06));
+  const practiceSec = approxSeconds - (introSec + theorySec + simSec + outroSec);
 
   return `Tuyệt vời! Dựa trên kịch bản sư phạm và khối lời thoại VOICEOVER_SCRIPT vừa thống nhất ở trên, hãy viết TOÀN BỘ file mã nguồn Manim Python (\`scene.py\`) hoàn chỉnh 100% để render video bài giảng này.
 ${simDesc}
@@ -325,42 +431,47 @@ ${imageSection}
 
 YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ BỘ NGUYÊN TẮC c1_HamSo_DonDieu.py & DUAL-ZONE CONTAINER CARDS):
 1. Kế thừa chính xác biến VOICEOVER_SCRIPT và cấu trúc 5 PHÂN CẢNH CHUẨN MỰC:
-   - Phần 1: Mở đầu (Intro, ~7s) - FadeOut toàn bộ.
-   - Phần 2: Lý thuyết 2 thẻ màu tương phản (Xanh & Đỏ, ~14s) - FadeOut toàn bộ.
-   - Phần 3: Dual-Zone Container Mô phỏng động tiếp tuyến đổi màu + BBT 3 tầng (~38s) - FadeOut toàn bộ.
-   - Phần 4: Chữa đề thi RAG thực chiến (TỐI ĐA 2 CÂU: Top Card = Câu 1, Bottom Card = Câu 2, ~38s) - FadeOut toàn bộ.
-   - Phần 5: Thẻ Outro tổng kết thương hiệu "Học toán cùng Yuta" (~8s) - Giữ nguyên self.wait(1.5), KHÔNG FadeOut.
-2. Cấu hình ${isVertical ? 'Khung hình DỌC 9:16 (config.pixel_width=1080, config.pixel_height=1920, config.frame_width=9.0, config.frame_height=16.0)' : 'Khung hình NGANG 16:9 (1920x1080)'}.
-3. BỐ CỤC KHUNG THẺ CONTAINER (DUAL-ZONE) LẤP ĐẦY 93% MÀN HÌNH - TRIỆT TIÊU KHOẢNG TRỐNG ĐEN:
+   - Phần 1: Mở đầu (Intro, ~${introSec}s) - FadeOut toàn bộ.
+   - Phần 2: Lý thuyết các thẻ màu tương phản (Xanh Emerald, Đỏ Ruby..., ~${theorySec}s) - FadeOut toàn bộ.
+   - Phần 3: Dual-Zone Container Mô phỏng động tiếp tuyến đổi màu + BBT 3 tầng (~${simSec}s) - FadeOut toàn bộ.
+   - Phần 4: Chữa đề thi RAG thực chiến ĐA HIỆP (MULTI-ROUND ARENA, ~${practiceSec}s, gồm ${roundCount} Hiệp với tổng cộng ${exerciseCount} câu hỏi):
+     * Mỗi Hiệp (Round) chỉ hiển thị ĐÚNG 2 CÂU trên màn hình (Top Card = Câu lẻ, Bottom Card = Câu chẵn).
+     * Khi kết thúc mỗi Hiệp: BẮT BUỘC gọi self.play(FadeOut(round_group), run_time=0.7) để giải phóng hoàn toàn màn hình trước khi tạo Hiệp tiếp theo!
+     * TUYỆT ĐỐI KHÔNG nhồi nhét nhiều hơn 2 câu trên màn hình cùng một lúc để đảm bảo Zero-Overlap 100% và cỡ chữ lớn rõ nét (font_size >= 22).
+   - Phần 5: Thẻ Outro tổng kết thương hiệu "Học ${config.subject} cùng Yuta" (~${outroSec}s) - Giữ nguyên self.wait(1.5), KHÔNG FadeOut.
+2. TỔNG THỜI LƯỢNG HOẠT HỌA KHỚP VỚI THỜI LƯỢNG MỤC TIÊU (~${approxSeconds}s, Lời thoại ~${targetWords} từ):
+   - Tổng run_time của self.play(...) và self.wait(...) ở mỗi phân cảnh BẮT BUỘC phải khớp với thời gian đọc của phân cảnh đó để video kết thúc chuẩn xác cùng lúc với giọng đọc.
+3. Cấu hình ${isVertical ? 'Khung hình DỌC 9:16 (config.pixel_width=1080, config.pixel_height=1920, config.frame_width=9.0, config.frame_height=16.0)' : 'Khung hình NGANG 16:9 (1920x1080)'}.
+4. BỐ CỤC KHUNG THẺ CONTAINER (DUAL-ZONE) LẤP ĐẦY 93% MÀN HÌNH - TRIỆT TIÊU KHOẢNG TRỐNG ĐEN:
    - ${isVertical ? 'Top Header Bar (y ~ 7.05, height=1.1-1.3, width=8.4); Top Card (y ~ 3.15, height=6.4, width=8.4); Bottom Card (y ~ -3.75, height=6.6, width=8.4); Outro Card (height=13.6, width=8.4). BẮT BUỘC gọi fit_width(group, 7.8) cho mọi khối nội dung trong thẻ!' : 'Header đỉnh, Cột Trái Mô phỏng (width=7.2, height=6.2), Cột Phải Công thức (width=5.8, height=6.2).'}
-4. TIÊU ĐỀ INTRO DÀN ĐỀU & ĐỀ BÀI CHỐNG TRÀN BOX:
+5. TIÊU ĐỀ INTRO DÀN ĐỀU & ĐỀ BÀI CHỐNG TRÀN BOX:
    - Tên chủ đề Intro: Không bắt buộc viết hoa toàn bộ, ngắt dòng \n cân đối nếu dài, dùng alignment="CENTER", sau arrange BẮT BUỘC gọi for item in intro_group: item.set_x(0) để căn giữa đối xứng tuyệt đối trục X=0.
    - Khái niệm, lý thuyết: Trình bày chuẩn xác theo tài liệu PDF đính kèm (RAG), không tự ý suy diễn hay viết chung chung.
    - Tên đề bài và câu hỏi: Không viết hoa toàn bộ, xuống dòng \n tự nhiên (7-9 từ/dòng), font_size=20-22 để không bao giờ bị to tràn box.
    - Tuyệt đối KHÔNG dùng từ ngữ giật gân, sáo rỗng hay cường điệu phong cách AI.
-5. ZERO-OVERLAP & WATERMARK SAFETY:
+6. ZERO-OVERLAP & WATERMARK SAFETY:
    - TUYỆT ĐỐI KHÔNG để biểu tượng Intro co nhỏ rồi to_corner(UL) làm watermark trôi nổi (tránh va chạm đè chữ tiêu đề)! Dọn sạch từng cảnh trước khi qua cảnh sau.
-6. QUY CHUẨN TYPOGRAPHY & FONT IN ĐẬM CHUẨN ĐẸP TRÊN ĐIỆN THOẠI:
+7. QUY CHUẨN TYPOGRAPHY & FONT IN ĐẬM CHUẨN ĐẸP TRÊN ĐIỆN THOẠI:
    - Sử dụng font="${chosenFont}" (Be Vietnam Pro) cho mọi đối tượng Text. TUYỆT ĐỐI KHÔNG dùng font Serif (Times New Roman) vì khi in đậm weight=BOLD sẽ bị răng cưa méo mó.
    - Sử dụng weight=BOLD cho tiêu đề và weight=SEMIBOLD (hoặc BOLD chuẩn) cho các từ khóa nhấn mạnh. Nét chữ bo tròn, đường nét đồng đều, dấu thanh chuẩn tỉ lệ vàng.
    - Tiêu đề 28-32 BOLD, Tiêu đề Thẻ 22-24 BOLD, Công thức MathTex 24-30, Chú thích tiếng Việt 20-22. CẤM font_size < 20!
    - line_spacing=1.2 cho các đoạn Text nhiều dòng.
-7. QUY TẮC CHỈ SỐ TRÊN/DƯỚI & TIÊU ĐỀ PILL BADGE:
+8. QUY TẮC CHỈ SỐ TRÊN/DƯỚI & TIÊU ĐỀ PILL BADGE:
    - 100% công thức chứa số mũ (x^2, x^3), chỉ số dưới (x_0, x_1), đạo hàm (y') BẮT BUỘC dùng MathTex(r"..."). TUYỆT ĐỐI CẤM dùng ký tự unicode mũ (x², x³, x₁, x₀) trong Text(...).
    - Tiêu đề Pill Badge: Dùng "VÍ DỤ MINH HỌA" hoặc "VÍ DỤ", TUYỆT ĐỐI KHÔNG dùng "VÍ DỤ GỐC".
-8. MÔ PHỎNG TIẾP TUYẾN ĐỘNG, BẢNG BIẾN THIÊN 3 TẦNG & PACING VỪA PHẢI:
+9. MÔ PHỎNG TIẾP TUYẾN ĐỘNG, BẢNG BIẾN THIÊN 3 TẦNG & PACING VỪA PHẢI:
    - ValueTracker + always_redraw cho tiếp tuyến đổi màu (Xanh/Đỏ/Vàng) và thanh trạng thái status_badge real-time. Tiếp tuyến lướt mượt với run_time=2.0s đến 2.5s.
    - PACING & NHỊP ĐỘ DỨT KHOÁT: Dừng nhẹ nhàng vừa đủ tại điểm mấu chốt (self.wait(0.8) đến self.wait(1.0) khi đổi màu tiếp tuyến, xuất hiện BBT, đóng khung đáp án). Tuyệt đối không dừng quá lâu (>1.2s - 1.5s) gây cảm giác màn hình bị đơ hoặc kéo dài lê thê.
    - Bảng Biến Thiên 3 tầng chuẩn mực SGK Việt Nam: MathTex(r"\\begin{array}{|c|ccccccc|} ... \\end{array}", font_size=24).
-9. QUY TẮC SỬ DỤNG HÌNH ẢNH MINH HỌA (ImageMobject - CHỐNG CRASH 100%):
-   - Khi có ảnh đính kèm (hoặc khi cần chèn ảnh minh họa): BẮT BUỘC dùng ImageMobject(r"...").
-   - TUYỆT ĐỐI CẤM thêm ImageMobject vào VGroup(...) (sẽ crash TypeError!). BẮT BUỘC dùng Group(...) thay cho VGroup(...) khi có chứa ImageMobject.
-   - Luôn co tỷ lệ vừa vặn thẻ: img.scale_to_fit_width(4.5) và đóng khung viền bo tròn SurroundingRectangle(img, buff=0.08, color=TEAL_A, corner_radius=0.15).
-10. 100% CÔNG THỨC LATEX HOÀN HẢO (PERFECT LATEX):
-   - MỌI công thức dùng MathTex(r"...") với raw string. Đóng khung đáp số: SurroundingRectangle(result, color=GREEN, buff=0.16).
-11. Màu nền: "#0B1120".
-12. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, không viết bất kỳ lời chào hay giải thích ngoài mã.
-13. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file). (Hệ thống máy chủ sẽ tự biên dịch mã bằng lệnh: \`manim \${qualityFlag} scene.py MainScene\`, AI không được tự chạy lệnh này).`;
+10. QUY TẮC SỬ DỤNG HÌNH ẢNH MINH HỌA (ImageMobject - CHỐNG CRASH 100%):
+    - Khi có ảnh đính kèm (hoặc khi cần chèn ảnh minh họa): BẮT BUỘC dùng ImageMobject(r"...").
+    - TUYỆT ĐỐI CẤM thêm ImageMobject vào VGroup(...) (sẽ crash TypeError!). BẮT BUỘC dùng Group(...) thay cho VGroup(...) khi có chứa ImageMobject.
+    - Luôn co tỷ lệ vừa vặn thẻ: img.scale_to_fit_width(4.5) và đóng khung viền bo tròn SurroundingRectangle(img, buff=0.08, color=TEAL_A, corner_radius=0.15).
+11. 100% CÔNG THỨC LATEX HOÀN HẢO (PERFECT LATEX):
+    - MỌI công thức dùng MathTex(r"...") với raw string. Đóng khung đáp số: SurroundingRectangle(result, color=GREEN, buff=0.16).
+12. Màu nền: "#0B1120".
+13. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, không viết bất kỳ lời chào hay giải thích ngoài mã.
+14. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file). (Hệ thống máy chủ sẽ tự biên dịch mã bằng lệnh: \`manim \${qualityFlag} scene.py MainScene\`, AI không được tự chạy lệnh này).`;
 };
 
 // =========================================================================
@@ -369,14 +480,15 @@ YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ BỘ NGUYÊN TẮC c1_HamSo_Do
 export const generateVideoManimPrompt = (config: VideoConfig): string => {
   const isVertical = config.format === 'vertical';
   const qualityFlag = config.renderQuality === '1080p' ? '-qh' : config.renderQuality === '4k' ? '-qk' : '-ql';
-  const targetDurationStr = config.duration || '100 - 120 giây';
+  const approxSeconds = parseDurationToSeconds(config.duration, isVertical ? 110 : 120);
+  const targetDurationStr = config.duration || `${approxSeconds} giây`;
+  const targetWords = Math.round(approxSeconds * 2.85);
   const chosenFont = getFontDirective(config.fontStyle);
   const simDesc = getSimulationModeDescription(config.simulationMode);
   const ragPromptChunk = sanitizeAndExtractRag(config.attachedPdf);
   const imagePromptChunk = extractAttachedImageDirective(config.attachedImage);
+  const { exerciseCount, roundCount } = getExerciseAndRoundPlan(approxSeconds, config.exerciseCount);
 
-  const approxSeconds = isVertical ? 110 : 120;
-  const targetWords = Math.round(approxSeconds * 2.85);
   const brandName = config.subject.toLowerCase().includes('toán') ? 'Học toán cùng Yuta' : `Học ${config.subject} cùng Yuta`;
 
   let episodeChunk = "";
@@ -396,13 +508,13 @@ Nhiệm vụ của bạn là viết một file mã nguồn Manim Python (\`scene
 I. THÔNG TIN VIDEO & CẤU HÌNH HÌNH THỨC:
 - Môn học: ${config.subject}
 - Chủ đề: ${config.topic}
-- THỜI LƯỢNG MỤC TIÊU: ${targetDurationStr} (Độ dài lời thoại VOICEOVER_SCRIPT ~${targetWords} từ)
+- THỜI LƯỢNG MỤC TIÊU: ${targetDurationStr} (~${approxSeconds} giây, Độ dài lời thoại VOICEOVER_SCRIPT ~${targetWords} từ)
 - Định dạng: ${isVertical ? 'DỌC 9:16 (TikTok / YouTube Shorts / Reels)' : 'NGANG 16:9 (YouTube / Bài giảng)'}
 - Font chữ chỉ định: "${chosenFont}" (Có ngắt dòng line_spacing=1.2 & spacing chuẩn giữa các chữ)
 - Mẫu Diễn hoạt: ${simDesc}
 - Khán giả: ${config.audience || 'Học sinh / Người học'}
-- Yêu cầu chi tiết: ${config.details || "Trực quan, bố cục 5 phân cảnh chuẩn c1_HamSo_DonDieu.py, mô phỏng sinh động, chữa đề RAG thực chiến"}
-- ĐỒNG BỘ THỜI GIAN ÂM THANH (TTS): Kịch bản VOICEOVER_SCRIPT phải có độ dài tương ứng (~${targetWords} từ). Các lệnh self.play(..., run_time=...) và self.wait(...) ở mỗi phân cảnh BẮT BUỘC phải khớp với thời gian đọc phân cảnh đó.
+- Yêu cầu chi tiết: ${config.details || "Trực quan, bố cục 5 phân cảnh chuẩn c1_HamSo_DonDieu.py, mô phỏng sinh động, chữa đề RAG thực chiến Đa Hiệp"}
+- ĐỒNG BỘ THỜI GIAN ÂM THANH (TTS): Kịch bản VOICEOVER_SCRIPT phải có độ dài tương ứng (~${targetWords} từ cho ${approxSeconds}s). Các lệnh self.play(..., run_time=...) và self.wait(...) ở mỗi phân cảnh BẮT BUỘC phải khớp với thời gian đọc phân cảnh đó.
 ${episodeChunk}
 ${ragPromptChunk}
 ${imagePromptChunk}
@@ -414,12 +526,12 @@ III. BỘ KHUNG CODE PYTHON MẪU KIẾN TRÚC SƯ PHẠM (CẤU TRÚC 5 PHÂN C
 \`\`\`python
 from manim import *
 
-# 0. KỊCH BẢN THUYẾT MINH ĐỒNG BỘ CHUẨN SHORTS (~100-120 GIÂY, ~${targetWords} TỪ)
+# 0. KỊCH BẢN THUYẾT MINH ĐỒNG BỘ (~${approxSeconds} GIÂY, ~${targetWords} TỪ)
 VOICEOVER_SCRIPT = """
 Chào mừng các bạn đến với bài giảng về ${config.topic} môn ${config.subject}! Hôm nay chúng ta sẽ cùng nắm trọn lý thuyết nền tảng và phương pháp giải các dạng bài thực chiến kinh điển nhất.
 Về phần lý thuyết cốt lõi, hãy ghi nhớ thật kỹ các nguyên tắc cốt lõi tương ứng với hai khía cạnh then chốt được đóng khung rõ ràng trên màn hình.
 Ở phần mô phỏng thực tế, hãy quan sát chuyển động và sự biến thiên trực quan theo thời gian thực, hoàn toàn ăn khớp với các công thức và phân tích logic bên dưới.
-Bây giờ chúng ta cùng bước vào phần thực chiến chữa bài tập điển hình. Ở Câu 1 dạng nhận biết và đọc dữ liệu, ta dễ dàng chốt ngay đáp án chính xác. Ở Câu 2 dạng vận dụng và suy luận, chỉ cần tuân thủ đúng các bước giải ngắn gọn.
+Bây giờ chúng ta cùng bước vào phần thực chiến chữa bài tập điển hình qua ${roundCount} hiệp đấu với ${exerciseCount} câu hỏi. Ở mỗi hiệp, ta lần lượt phân tích bản chất từng câu, chỉ ra bẫy đề thi và chốt ngay đáp án chính xác.
 Đừng quên lưu lại video và bấm theo dõi kênh ${brandName} để cùng nhau bứt phá điểm số mỗi ngày nhé!
 """
 
@@ -853,7 +965,7 @@ ${existingCode.trim()}
 IV. YÊU CẦU THỰC THI BẮT BUỘC:
 1. Đọc kỹ từng góp ý, câu từ cần sửa, hoặc lỗi bố cục được ghi trong mục II.
 2. Viết lại TOÀN BỘ file mã nguồn Manim Python (\`scene.py\`) từ đầu, kế thừa cấu trúc 5 PHÂN CẢNH CHUẨN MỰC:
-   - Intro -> Lý thuyết 2 thẻ màu -> Dual-Zone Mô phỏng động tiếp tuyến đổi màu & BBT 3 tầng -> Chữa đề RAG (TỐI ĐA 2 CÂU) -> Thẻ Outro thương hiệu (giữ nguyên self.wait(1.5)).
+   - Intro -> Lý thuyết các thẻ màu -> Dual-Zone Mô phỏng động tiếp tuyến đổi màu & BBT 3 tầng -> Chữa đề RAG thực chiến Đa Hiệp (Multi-Round Arena: mỗi hiệp 2 câu trên Top/Bottom Card, FadeOut dọn sạch màn hình giữa các hiệp để chữa từ 2 đến 6+ câu mà vẫn đảm bảo Zero-Overlap 100% và cỡ chữ lớn >= 22) -> Thẻ Outro thương hiệu (giữ nguyên self.wait(1.5)). Khớp nối tổng thời lượng video với thời lượng yêu cầu.
 3. Giữ vững quy chuẩn CHỐNG ĐÈ CHỮ (ZERO OVERLAP), áp dụng Khung Thẻ Container Dual-Zone lấp đầy 93% màn hình, dãn dòng \`line_spacing=1.2\`, gọi fit_width(group, 7.8) cho mọi khối nội dung trong thẻ, font_size lớn rõ nét (Tiêu đề 28-32 BOLD, Thẻ 22-24, MathTex 24-30, Text tiếng Việt 20-22). BẮT BUỘC dùng font Sans-serif "Be Vietnam Pro" (hoặc "Inter"), TUYỆT ĐỐI KHÔNG dùng font Serif (Times New Roman) để chữ in đậm không bị răng cưa hay méo dấu tiếng Việt.
 4. QUY TẮC CHỈ SỐ TRÊN/DƯỚI & PILL BADGE: 100% chỉ số trên/dưới dùng MathTex(r"..."), CẤM dùng unicode trong Text. Dùng "VÍ DỤ MINH HỌA" thay cho "VÍ DỤ GỐC".
 5. NHỊP ĐỘ DIỄN HOẠT (PACING VỪA PHẢI, MƯỢT MÀ): Dừng vừa vặn self.wait(0.8) - self.wait(1.0) tại điểm mấu chốt, đổi màu tiếp tuyến và BBT, giữ Outro self.wait(1.5). TUYỆT ĐỐI KHÔNG dừng quá lâu (>1.2s - 1.5s) gây cảm giác màn hình bị đơ hoặc kéo dài lê thê.

@@ -46,6 +46,8 @@ export interface AutomationRunParams {
   seriesOutline?: string;
   topic?: string;
   subject?: string;
+  duration?: string;
+  exerciseCount?: number;
   model?: string;
   modelName?: string;
   enableVoice?: boolean;

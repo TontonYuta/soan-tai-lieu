@@ -54,7 +54,8 @@ const VideoForm: React.FC<VideoFormProps> = ({
     seriesOutline: '',
     enableVoice: typeof window !== 'undefined' ? localStorage.getItem('yuta_manim_enable_voice') === 'true' : false,
     voiceName: 'vi-VN-HoaiMyNeural',
-    voiceSpeed: '+0%'
+    voiceSpeed: '+0%',
+    exerciseCount: 0,
   });
 
   const [selectedAi, setSelectedAi] = useState<string>(
@@ -251,18 +252,78 @@ const VideoForm: React.FC<VideoFormProps> = ({
                 </div>
 
                 <div className="group relative">
-                  <label className={labelClass}>{isSeries ? 'Thời lượng mỗi tập' : 'Thời lượng'}</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className={labelClass}>{isSeries ? 'Thời lượng mỗi tập' : 'Thời lượng'}</label>
+                    <div className="flex gap-1 flex-wrap">
+                      {[
+                        { label: '60s', val: '60 giây (Shorts)' },
+                        { label: '120s', val: '120 giây (2 Phút)' },
+                        { label: '180s', val: '180 giây (3 Phút)' },
+                        { label: '300s 🔥', val: '300 giây (5 Phút Chuyên Sâu)' }
+                      ].map(pill => (
+                        <button
+                          key={pill.label}
+                          type="button"
+                          onClick={() => handleChange('duration', pill.val)}
+                          className={`text-[10px] font-black px-1.5 py-0.5 border border-black rounded-none transition-all cursor-pointer ${
+                            config.duration === pill.val 
+                              ? 'bg-[#FFE600] text-black shadow-[1px_1px_0_0_rgba(0,0,0,1)]' 
+                              : 'bg-white text-gray-700 hover:bg-gray-100'
+                          }`}
+                        >
+                          {pill.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <div className="relative">
                     <Clock className={iconClass} />
                     <input
                       type="text"
                       className={inputClass}
-                      placeholder="60 giây, 2 - 3 phút..."
+                      placeholder="60 giây, 120s, 300s (5 phút)..."
                       value={config.duration}
                       onChange={e => handleChange('duration', e.target.value)}
                       required
                     />
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Cấu hình Số câu bài tập thực chiến RAG Đa Hiệp */}
+            <div className="p-3 bg-[#E0F2FE] border-2 border-black">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div>
+                  <div className="flex items-center gap-1.5 text-xs font-black text-black uppercase">
+                    <Layers className="w-4 h-4 text-blue-600" />
+                    <span>Số câu bài tập / thực chiến (RAG Đa Hiệp):</span>
+                  </div>
+                  <div className="text-[11px] font-medium text-gray-700">
+                    Bảo vệ 100% Zero-Overlap: Mỗi hiệp chỉ chiếu 2 câu, FadeOut giữa các hiệp. Hỗ trợ video dài tới 300s.
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {[
+                    { num: 0, label: '⚡ Tự động theo thời lượng' },
+                    { num: 2, label: '2 câu (1 Hiệp)' },
+                    { num: 4, label: '4 câu (2 Hiệp)' },
+                    { num: 6, label: '6 câu (3 Hiệp)' },
+                    { num: 8, label: '8 câu (4 Hiệp)' }
+                  ].map(opt => (
+                    <button
+                      key={opt.num}
+                      type="button"
+                      onClick={() => handleChange('exerciseCount', opt.num)}
+                      className={`px-2.5 py-1 text-xs font-black border-2 border-black transition-all cursor-pointer ${
+                        (config.exerciseCount || 0) === opt.num
+                          ? 'bg-blue-500 text-white shadow-[2px_2px_0_0_rgba(0,0,0,1)] translate-x-[1px] translate-y-[1px]'
+                          : 'bg-white text-black hover:bg-blue-100 shadow-[1px_1px_0_0_rgba(0,0,0,1)]'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>

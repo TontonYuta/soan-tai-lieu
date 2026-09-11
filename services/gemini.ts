@@ -8,7 +8,9 @@ import {
   generateManimCodePrompt, 
   generateVideoManimPrompt,
   generateManimRevisionPrompt,
-  extractAttachedImageDirective
+  extractAttachedImageDirective,
+  parseDurationToSeconds,
+  getExerciseAndRoundPlan
 } from "./prompts/manim";
 import { generateVideoScriptPrompt } from "./prompts/script";
 import { generateBatPrompt } from "./prompts/bat";
@@ -29,5 +31,7 @@ export {
   generateVideoScriptPrompt,
   generateBatPrompt,
   generateProjectPrompt,
-  extractAttachedImageDirective
+  extractAttachedImageDirective,
+  parseDurationToSeconds,
+  getExerciseAndRoundPlan
 };

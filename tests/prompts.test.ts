@@ -7,6 +7,7 @@ import {
   generateRoadmapPrompt,
   generateWorksheetPrompt,
   generateSimilarPrompt,
+  generateManimStoryboardPrompt,
   generateManimCodePrompt,
   generateVideoManimPrompt,
   generateVideoScriptPrompt,
@@ -14,7 +15,9 @@ import {
   generateManimRevisionPrompt,
   extractAttachedImageDirective,
   generateProjectPrompt,
-  generateLatexRevisionPrompt
+  generateLatexRevisionPrompt,
+  parseDurationToSeconds,
+  getExerciseAndRoundPlan
 } from '../services/gemini';
 
 import { ExamConfig, WorksheetConfig, VideoConfig, SimilarExerciseConfig, LearningConfig, RoadmapConfig, BatConfig, ProjectConfig } from '../types';
@@ -632,6 +635,72 @@ test("19. LaTeX On-Demand Rerender & AI Revision Prompt Verification", () => {
   assert.match(promptWithoutConfig, /Môn học: Toán học \/ Khoa học/);
   assert.match(promptWithoutConfig, /Đổi font sang Be Vietnam Pro/);
 });
+
+test("20. Manim 300s Long-Form Video & Multi-Round Practice Arena Scaling", () => {
+  // 1. Kiểm tra parseDurationToSeconds
+  assert.equal(parseDurationToSeconds('300s'), 300);
+  assert.equal(parseDurationToSeconds('300 giây'), 300);
+  assert.equal(parseDurationToSeconds('5 phút'), 300);
+  assert.equal(parseDurationToSeconds('3 - 5 phút'), 240);
+  assert.equal(parseDurationToSeconds('100 - 120 giây'), 110);
+  assert.equal(parseDurationToSeconds('180s'), 180);
+  assert.equal(parseDurationToSeconds('60 giây (Shorts)'), 60);
+  assert.equal(parseDurationToSeconds(undefined, 110), 110);
+
+  // 2. Kiểm tra getExerciseAndRoundPlan
+  const plan300 = getExerciseAndRoundPlan(300);
+  assert.equal(plan300.exerciseCount, 6);
+  assert.equal(plan300.roundCount, 3);
+
+  const planExplicit8 = getExerciseAndRoundPlan(300, 8);
+  assert.equal(planExplicit8.exerciseCount, 8);
+  assert.equal(planExplicit8.roundCount, 4);
+
+  const plan60 = getExerciseAndRoundPlan(60);
+  assert.equal(plan60.exerciseCount, 2);
+  assert.equal(plan60.roundCount, 1);
+
+  const plan120 = getExerciseAndRoundPlan(120);
+  assert.equal(plan120.exerciseCount, 4);
+  assert.equal(plan120.roundCount, 2);
+
+  // 3. Kiểm tra generateManimStoryboardPrompt cho video 300s
+  const config300: VideoConfig = {
+    subject: "Toán học",
+    topic: "Chuyên đề Khảo sát Hàm số & Cực trị Chuyên sâu",
+    duration: "300s",
+    tone: "academic",
+    audience: "Học sinh 12 luyện thi ĐGNL & THPTQG",
+    format: "vertical",
+    simulationMode: "calculus"
+  };
+
+  const storyboardPrompt = generateManimStoryboardPrompt(config300);
+  assert.match(storyboardPrompt, /300 giây/);
+  assert.match(storyboardPrompt, /855 TỪ/i);
+  assert.match(storyboardPrompt, /MULTI-ROUND ARENA/i);
+  assert.match(storyboardPrompt, /HIỆP 1/);
+  assert.match(storyboardPrompt, /HIỆP 2/);
+  assert.match(storyboardPrompt, /HIỆP 3/);
+  assert.match(storyboardPrompt, /FadeOut/);
+
+  // 4. Kiểm tra generateManimCodePrompt cho video 300s
+  const codePrompt = generateManimCodePrompt(config300);
+  assert.match(codePrompt, /300s/);
+  assert.match(codePrompt, /855 từ/);
+  assert.match(codePrompt, /MULTI-ROUND ARENA/);
+  assert.match(codePrompt, /3 Hiệp/);
+  assert.match(codePrompt, /6 câu hỏi/);
+  assert.match(codePrompt, /FadeOut\(round_group\)/);
+
+  // 5. Kiểm tra generateVideoManimPrompt cho video 300s
+  const fullPrompt = generateVideoManimPrompt(config300);
+  assert.match(fullPrompt, /300 giây/);
+  assert.match(fullPrompt, /855 từ/);
+  assert.match(fullPrompt, /3 hiệp đấu với 6 câu hỏi/);
+  assert.match(fullPrompt, /MULTI-ROUND PRACTICE ARENA/);
+});
+
 
 
 

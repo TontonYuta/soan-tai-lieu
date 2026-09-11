@@ -157,6 +157,8 @@ export interface VideoConfig {
   seriesOutline?: string;
   currentEpisodeIndex?: number;
   playlistVideos?: PlaylistItem[];
+  // Số lượng bài tập thực chiến / hiệp đấu RAG (2, 4, 6, 8)
+  exerciseCount?: number;
 }
 
 export interface BatConfig {
