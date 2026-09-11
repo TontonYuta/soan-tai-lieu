@@ -763,24 +763,29 @@ test("21. Manim Serif Font Default, Sentence Case, Snug Fit Boxes, Atomic Option
   assert.match(videoPrompt, /col1 = VGroup\(optA, optC\)/);
   assert.match(videoPrompt, /col2 = VGroup\(optB, optD\)/);
 
-  // 3.5. Tiếp tuyến chuẩn hóa độ dài cố định L=0.85 (chống cắt ra ngoài box)
-  assert.match(videoPrompt, /QUY TẮC TIẾP TUYẾN CHUẨN HÓA ĐỘ DÀI/);
-  assert.match(videoPrompt, /p1 = p_center - 0\.85 \* u/);
-  assert.match(videoPrompt, /p2 = p_center \+ 0\.85 \* u/);
+  // 3.5. Tiếp tuyến chuẩn mực theo c1_HamSo_DonDieu.py
+  assert.match(videoPrompt, /QUY TẮC TIẾP TUYẾN ĐỒ THỊ CHUẨN MỰC/);
+  assert.match(videoPrompt, /p1 = axes\.c2p\(t - dx, y - m \* dx\)/);
+  assert.match(videoPrompt, /p2 = axes\.c2p\(t \+ dx, y \+ m \* dx\)/);
+
+  // 3.6. Quy tắc Ưu tiên 1 dòng & Chống xuống dòng vô tội vạ
+  assert.match(videoPrompt, /QUY TẮC ƯU TIÊN 1 DÒNG/);
+  assert.match(videoPrompt, /CHỐNG XUỐNG DÒNG VÔ TỘI VẠ/);
 
   // 4. Kiểm tra generateManimCodePrompt
   const codePrompt = generateManimCodePrompt(config);
   assert.match(codePrompt, /font="Times New Roman"/);
-  assert.match(codePrompt, /QUY TẮC TUYỆT ĐỐI KHÔNG IN HOA/);
+  assert.match(codePrompt, /TUYỆT ĐỐI KHÔNG IN HOA/);
   assert.match(codePrompt, /QUY TẮC BOX BỌC TEXT CHỨA VỪA KHÍT/);
   assert.match(codePrompt, /QUY TẮC BỐ CỤC 4 ĐÁP ÁN TRẮC NGHIỆM LIỀN KHỐI/);
-  assert.match(codePrompt, /TIẾP TUYẾN CHUẨN HÓA ĐỘ DÀI CỐ ĐỊNH L=0\.85/);
+  assert.match(codePrompt, /TIẾP TUYẾN CHUẨN MỰC THEO c1_HamSo_DonDieu\.py/);
+  assert.match(codePrompt, /QUY TẮC ƯU TIÊN 1 DÒNG/);
 
   // 5. Kiểm tra generateManimRevisionPrompt
   const revPrompt = generateManimRevisionPrompt(config, "class MainScene(Scene): pass", "Sửa bố cục 4 đáp án sang 2x2");
   assert.match(revPrompt, /Font chữ chỉ định: "Times New Roman"/);
   assert.match(revPrompt, /Sentence case chuẩn tiếng Việt/);
-  assert.match(revPrompt, /QUY TẮC BOX VỪA KHÍT, TIẾP TUYẾN CHUẨN HÓA & BỐ CỤC 4 ĐÁP ÁN/);
-  assert.match(revPrompt, /TIẾP TUYẾN CHUẨN HÓA ĐỘ DÀI/);
+  assert.match(revPrompt, /QUY TẮC ƯU TIÊN 1 DÒNG, BOX VỪA KHÍT, TIẾP TUYẾN/);
+  assert.match(revPrompt, /TIẾP TUYẾN CHUẨN MỰC/);
   assert.match(revPrompt, /BỐ CỤC 4 ĐÁP ÁN LIỀN KHỐI/);
 });

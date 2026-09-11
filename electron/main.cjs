@@ -2677,11 +2677,11 @@ YÊU CẦU BẮT BUỘC KHÔNG ĐƯỢC BỎ QUA (TUÂN THỦ KIẾN TRÚC 5 PH�
    - Phần 5: Thẻ Outro tổng kết thương hiệu "Học toán cùng Yuta" (height=13.6, width=8.4) - BẮT BUỘC kết thúc bằng self.wait(1.5) giữ nguyên màn hình, TUYỆT ĐỐI KHÔNG FadeOut làm đen màn hình!
 6. BẮT BUỘC HÀM fit_width(group, 7.8) trên mọi khối nội dung mobject trong thẻ để triệt tiêu lỗi tràn viền.
 7. QUY CHUẨN TYPOGRAPHY, FONT & BỐ CỤC:
-   - Font chữ mặc định có chân: Dùng font="Times New Roman" (hoặc "Liberation Serif") cho mọi đối tượng Text; nếu người dùng chọn sans thì dùng "Be Vietnam Pro".
+   - QUY TẮC ƯU TIÊN 1 DÒNG: Mọi đề bài, câu hỏi, dữ kiện và kết luận ngắn (<= 14-16 từ) BẮT BUỘC viết trên CÙNG 1 DÒNG DUY NHẤT. CẤM ngắt dòng \n vô tội vạ hoặc tách đề bài ngắn thành nhiều dòng với arrange(DOWN). Nối ngang bằng arrange(RIGHT, buff=0.12).
    - TUYỆT ĐỐI KHÔNG IN HOA (Sentence case): Tiêu đề, thẻ, badges, câu hỏi và đề bài chỉ viết hoa chữ cái đầu và danh từ riêng.
    - BOX BỌC TEXT VỪA KHÍT: SurroundingRectangle(buff=0.12-0.15), huy hiệu RoundedRectangle(width=max(2.2, text.width + 0.5)).
    - BỐ CỤC 4 ĐÁP ÁN LIỀN KHỐI: Mọi đáp án A, B, C, D nằm trên 1 hàng (MathTex(r"\mathbf{A.}\; ..."), CẤM chữ A. đứng riêng 1 dòng). Dạng 4x1 (ngắn <= 8 ký tự), 2x2 khóa 2 cột thẳng tắp (trung bình), hoặc 1x4 (dài). ans_box = SurroundingRectangle(opt, buff=0.12) vừa khít.
-   - TIẾP TUYẾN CHUẨN HÓA ĐỘ DÀI: Cố định L=0.85 (u = v / norm(v); p1 = p_center - 0.85*u; p2 = p_center + 0.85*u), TUYỆT ĐỐI CẤM cắt ra ngoài viền thẻ!
+   - TIẾP TUYẾN CHUẨN MỰC (c1_HamSo_DonDieu.py): dx = 0.38; p1 = axes.c2p(t - dx, y - m * dx); p2 = axes.c2p(t + dx, y + m * dx). Gọn gàng, vừa vặn thẻ, không cần vector phức tạp!
    - Cỡ chữ lớn dễ đọc: Mọi chữ tiếng Việt font_size=20-22, MathTex font_size=24-30, tiêu đề 28-32 BOLD. TUYỆT ĐỐI KHÔNG DÙNG FONT_SIZE DƯỚI 20!
 8. 100% công thức MathTex(r"...") dùng raw string r"...".
 9. TUYỆT ĐỐI CHỈ XUẤT MÃ PYTHON TRONG KHỐI \`\`\`python ... \`\`\`, KHÔNG VIẾT LỜI CHÀO HAY GIẢI THÍCH NGOÀI MÃ!
@@ -4093,8 +4093,9 @@ YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ KIẾN TRÚC 5 PHÂN CẢNH V�
 7. QUY CHUẨN FONT & BỐ CỤC:
    - Toàn bộ Text dùng font="Times New Roman" (hoặc "Liberation Serif") có chân làm mặc định (hoặc "Be Vietnam Pro" nếu chọn sans).
    - TUYỆT ĐỐI KHÔNG IN HOA (Sentence case chuẩn tiếng Việt cho mọi tiêu đề, thẻ, badges, câu hỏi và đề bài).
+   - Ưu tiên 1 dòng: Mọi câu chữ, đề bài, bước giải ngắn BẮT BUỘC trên cùng 1 dòng, CẤM ngắt dòng \n vô tội vạ.
    - Khung viền bọc text chứa vừa khít: SurroundingRectangle(buff=0.12-0.15) và RoundedRectangle(width=max(2.2, text.width + 0.5)).
-   - Tiếp tuyến chuẩn hóa độ dài: Cố định L=0.85 (u = v / norm(v); p1 = p_center - 0.85*u; p2 = p_center + 0.85*u), TUYỆT ĐỐI CẤM cắt ra ngoài viền Top Card.
+   - Tiếp tuyến chuẩn mực (c1_HamSo_DonDieu.py): dx = 0.38; p1 = axes.c2p(t - dx, y - m * dx); p2 = axes.c2p(t + dx, y + m * dx).
    - Bố cục 4 đáp án liền khối: Mọi đáp án A, B, C, D nằm trên 1 hàng (cấm chữ A. đứng riêng 1 dòng). Dạng 4x1 (ngắn <= 8 ký tự), 2x2 khóa 2 cột thẳng tắp (trung bình), hoặc 1x4 (dài). ans_box = SurroundingRectangle(opt, buff=0.12) vừa khít.
    - Màu nền "#0B1120".
 8. Cảnh Outro: Thẻ Card tổng kết toàn màn hình (height=13.6, width=8.4), giữ nguyên màn hình (self.wait(1.5)), TUYỆT ĐỐI KHÔNG DÙNG FadeOut(*self.mobjects) làm đen màn hình.

@@ -24,7 +24,11 @@ ${chunk}
 """
 CHỈ THỊ SƯ PHẠM RAG BẮT BUỘC CHO VIDEO:
 1. KHÁI NIỆM & LÝ THUYẾT CHUẨN MỰC: Các khái niệm, định nghĩa, định lý, công thức và ví dụ minh họa BẮT BUỘC phải trích xuất chính xác theo tài liệu PDF đính kèm. Tuyệt đối không tự bịa đặt hay viết chung chung làm lệch kiến thức gốc trong tài liệu.
-2. TÊN ĐỀ BÀI & CÂU HỎI: Không nhất thiết phải viết hoa toàn bộ (ALL CAPS). Đề bài cần được xuống dòng \n bình thường theo nhịp ngữ nghĩa tự nhiên (mỗi dòng tối đa 7-9 từ) để không bị to tràn box hay vỡ khung hình.
+2. TÊN ĐỀ BÀI & CÂU HỎI (QUY TẮC ƯU TIÊN 1 DÒNG & CHỐNG XUỐNG DÒNG VÔ TỘI VẠ):
+   - Mọi câu hỏi, đề bài, dữ kiện và kết luận NGẮN (<= 14-16 từ hoặc <= 65 ký tự) BẮT BUỘC viết trên CÙNG 1 DÒNG DUY NHẤT. Tuyệt đối CẤM xuống dòng \n vô tội vạ hoặc chia nhỏ một câu ngắn thành nhiều mobject rồi arrange(DOWN) làm rớt dòng cụt lủn.
+   - Nếu kết hợp chữ tiếng Việt và công thức MathTex: Nối ngang trên 1 dòng duy nhất bằng arrange(RIGHT, buff=0.12).
+   - Chỉ xuống dòng khi đề bài THỰC SỰ DÀI (> 16 từ), và luôn gọi fit_width(group, 7.8) để tự động co tỷ lệ vừa khít khung thẻ.
+   - Không viết hoa toàn bộ (ALL CAPS), chỉ dùng Sentence case.
 3. TRÍCH XUẤT BÀI TOÁN & THỰC CHIẾN THEO TỪNG DẠNG BÀI (PRACTICE SECTION):
    - BẮT BUỘC trích xuất chính xác bài toán, câu hỏi, định nghĩa, định lý từ tài liệu RAG trên. Bám sát 100% câu từ, số liệu, giả thiết và kết luận trong tài liệu gốc. TUYỆT ĐỐI KHÔNG tự bịa nội dung khác!
    - NGUYÊN TẮC BẢO VỆ ZERO-OVERLAP: Để chữa nhiều câu (từ 2 đến 6+ câu tùy thời lượng), BẮT BUỘC phân chia thành các Dạng bài độc lập (mỗi dạng gồm 2 câu tiêu biểu: Top Card = Câu lẻ, Bottom Card = Câu chẵn). Khi chữa xong mỗi dạng bài, BẮT BUỘC gọi self.play(FadeOut(group), run_time=0.7) dọn sạch bảng trước khi chuyển sang dạng tiếp theo. TUYỆT ĐỐI KHÔNG để nhiều hơn 2 câu trên màn hình cùng lúc!
@@ -196,22 +200,40 @@ export const MANIM_SKILLS_GUIDE = `
         opts_group = VGroup(optA, optB, optC, optD).arrange(DOWN, aligned_edge=LEFT, buff=0.14)
     - Hộp khoanh đáp án đúng: ans_box = SurroundingRectangle(opt_correct, color=GREEN, buff=0.12, corner_radius=0.08, stroke_width=2.5) ôm vừa khít đáp án đúng! Khoảng cách giữa các đáp án luôn >= 0.35 để viền xanh không bao giờ chạm vào chữ của đáp án bên cạnh.
 
-14. QUY TẮC TIẾP TUYẾN CHUẨN HÓA ĐỘ DÀI (NORMALIZED UNIT TANGENT - CHỐNG TRÀN BOX 100%):
-    - Khi vẽ tiếp tuyến trượt trên đồ thị (ValueTracker + always_redraw), TUYỆT ĐỐI CẤM dùng p1 = c2p(t - dx, y - m*dx) vì khi hệ số góc m lớn (m=5 đến m=10), đoạn thẳng sẽ bị kéo dài 8-10 đơn vị, đâm xuyên ra ngoài Top Card làm hỏng toàn bộ bố cục!
-    - BẮT BUỘC chuẩn hóa vector chỉ phương tiếp tuyến trong không gian màn hình (Screen Space) và cố định chiều dài đoạn thẳng L = 0.85:
+14. QUY TẮC TIẾP TUYẾN ĐỒ THỊ CHUẨN MỰC (THEO c1_HamSo_DonDieu.py):
+    - Khi vẽ tiếp tuyến trượt trên đồ thị (ValueTracker + always_redraw), sử dụng công thức tiếp tuyến đơn giản, trực quan và chạy ổn định 100% từ c1_HamSo_DonDieu.py:
       def get_tangent():
           t = t_param.get_value()
-          m = 3*(t**2) - 3  # Đạo hàm f'(t)
-          p_center = axes.c2p(t, f_func(t))
-          dt = 0.05
-          p_near = axes.c2p(t + dt, f_func(t + dt))
-          v = p_near - p_center
-          norm_v = np.linalg.norm(v)
-          u = v / norm_v if norm_v > 1e-6 else RIGHT
-          p1 = p_center - 0.85 * u
-          p2 = p_center + 0.85 * u
+          y = f_func(t)
+          m = 3 * (t**2) - 3  # Đạo hàm f'(t)
+          dx = 0.38
+          p1 = axes.c2p(t - dx, y - m * dx)
+          p2 = axes.c2p(t + dx, y + m * dx)
           col = GREEN_C if m > 0.1 else (RED_C if m < -0.1 else YELLOW)
           return Line(p1, p2, color=col, stroke_width=4.0)
+    - Chọn dx = 0.35 đến 0.40 gọn gàng để độ dài tiếp tuyến vừa vặn, hiển thị đẹp và tự nhiên mà không cần các phép toán vector phức tạp.
+
+15. QUY TẮC ƯU TIÊN 1 DÒNG (SINGLE-LINE FIRST) & CHỐNG XUỐNG DÒNG VÔ TỘI VẠ:
+    - MỌI NỘI DUNG NGẮN (<= 14-16 từ hoặc <= 65 ký tự) BẮT BUỘC TRÌNH BÀY TRÊN CÙNG 1 DÒNG DUY NHẤT (kế thừa chuẩn mực từ c1_HamSo_DonDieu.py):
+      * Đề bài câu hỏi ngắn:
+        c2_quest = Text("Cho hàm số y = x³ - 3x². Mệnh đề nào dưới đây đúng?", font=MAIN_FONT, font_size=22, color=WHITE)
+        (Nếu kết hợp MathTex: VGroup(Text("Cho hàm số"), MathTex(r"y = x^3 - 3x^2."), Text("Mệnh đề nào dưới đây đúng?")).arrange(RIGHT, buff=0.12))
+      * Câu hỏi đọc hình/bảng:
+        c1_ask = Text("Hỏi: Hàm số đã cho đồng biến trên khoảng nào?", font=MAIN_FONT, font_size=22, color=YELLOW)
+      * Từng bước giải đại số / xét dấu:
+        step1 = MathTex(r"\text{Bước 1: } y' = 3x^2 - 6x = 3x(x - 2)", font_size=24, color=LIGHT_GRAY)
+        step2 = MathTex(r"\text{Bước 2: } y' = 0 \iff x = 0 \quad\text{hoặc}\quad x = 2", font_size=24, color=LIGHT_GRAY)
+      * Bước giải có nhãn tiếng Việt + MathTex: Nối ngang arrange(RIGHT, buff=0.15) trên 1 dòng:
+        step3 = VGroup(Text("Bước 3 (Trong trái ngoài cùng, a = 3 > 0):", font_size=22), MathTex(r"y' < 0 \iff x \in (0; 2)", font_size=24)).arrange(RIGHT, buff=0.15)
+      * Kết luận và khoanh đáp án:
+        c2_concl = VGroup(Text("➜ Hàm số nghịch biến trên (0; 2). Chọn", font_size=22), MathTex(r"\mathbf{B}", font_size=24)).arrange(RIGHT, buff=0.15)
+      * Từng dòng lý thuyết thẻ màu:
+        Text("➜ Đồ thị đi LÊN từ trái sang phải (↗)", font_size=22)
+    - TUYỆT ĐỐI CẤM (ANTI-PATTERNS):
+      * CẤM ngắt dòng \n sau các cụm từ ngắn (như "Cho hàm số\n", "Hỏi:\n", "Tính đạo hàm\n", "Mệnh đề nào\ndưới đây đúng?").
+      * CẤM dùng arrange(DOWN) để chia nhỏ một câu ngắn thành nhiều dòng xếp chồng lên nhau làm lãng phí chiều cao thẻ.
+      * CẤM tách riêng nhãn và nội dung kết luận (như để "Đồng biến trên:" ở dòng 1, rồi khoảng nghiệm rớt xuống dòng 2).
+    - NGUYÊN TẮC BẢO VỆ: Chỉ ngắt xuống dòng khi câu thực sự dài (> 16 từ), và luôn gọi fit_width(group, 7.8) để tự động co tỷ lệ vừa khít khung thẻ!
 `;
 
 export const getFontDirective = (fontStyle?: string): string => {
@@ -501,12 +523,16 @@ YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ BỘ NGUYÊN TẮC c1_HamSo_Do
 3. Cấu hình ${isVertical ? 'Khung hình DỌC 9:16 (config.pixel_width=1080, config.pixel_height=1920, config.frame_width=9.0, config.frame_height=16.0)' : 'Khung hình NGANG 16:9 (1920x1080)'}.
 4. BỐ CỤC KHUNG THẺ CONTAINER (DUAL-ZONE) LẤP ĐẦY 93% MÀN HÌNH - TRIỆT TIÊU KHOẢNG TRỐNG ĐEN:
    - ${isVertical ? 'Top Header Bar (y ~ 7.05, height=1.1-1.3, width=8.4); Top Card (y ~ 3.15, height=6.4, width=8.4); Bottom Card (y ~ -3.75, height=6.6, width=8.4); Outro Card (height=13.6, width=8.4). BẮT BUỘC gọi fit_width(group, 7.8) cho mọi khối nội dung trong thẻ!' : 'Header đỉnh, Cột Trái Mô phỏng (width=7.2, height=6.2), Cột Phải Công thức (width=5.8, height=6.2).'}
-5. TIÊU ĐỀ INTRO DÀN ĐỀU & ĐỀ BÀI CHỐNG TRÀN BOX (QUY TẮC TUYỆT ĐỐI KHÔNG IN HOA):
+5. TIÊU ĐỀ INTRO DÀN ĐỀU & ĐỀ BÀI CHỐNG TRÀN BOX (QUY TẮC ƯU TIÊN 1 DÒNG & TUYỆT ĐỐI KHÔNG IN HOA):
+   - QUY TẮC ƯU TIÊN 1 DÒNG (SINGLE-LINE FIRST) & CHỐNG XUỐNG DÒNG VÔ TỘI VẠ:
+     * Mọi đề bài, câu hỏi, dữ kiện và kết luận NGẮN (<= 14-16 từ hoặc <= 65 ký tự) BẮT BUỘC viết trên CÙNG 1 DÒNG DUY NHẤT.
+     * TUYỆT ĐỐI CẤM ngắt dòng \n vô tội vạ hoặc chia nhỏ một câu ngắn thành nhiều mobject rồi arrange(DOWN) làm rớt dòng cụt lủn.
+     * Nếu kết hợp chữ tiếng Việt và công thức MathTex: Nối ngang trên 1 dòng duy nhất bằng arrange(RIGHT, buff=0.12).
+     * Chỉ xuống dòng khi đề bài THỰC SỰ DÀI (> 16 từ), và luôn gọi fit_width(group, 7.8) để tự động co tỷ lệ vừa khít khung thẻ.
    - TUYỆT ĐỐI KHÔNG viết hoa toàn bộ (ALL CAPS) ở bất kỳ đâu: Tiêu đề Intro, tên phân cảnh, pill badges, tiêu đề thẻ, đề bài và kết luận.
    - BẮT BUỘC dùng Sentence case (chỉ viết hoa chữ cái đầu và danh từ riêng như Oxy, THPT, SGK): Ví dụ "Khảo sát sự biến thiên của hàm số", "Ví dụ minh họa", "Thực chiến", "Câu 1: Đọc bảng biến thiên", "Tổng kết bí kíp".
-   - Tên chủ đề Intro: Ngắt dòng \\n cân đối nếu dài, dùng alignment="CENTER", sau arrange BẮT BUỘC gọi for item in intro_group: item.set_x(0) để căn giữa đối xứng tuyệt đối trục X=0.
+   - Tên chủ đề Intro: Ngắt dòng \n cân đối nếu quá dài (> 35 ký tự), dùng alignment="CENTER", sau arrange BẮT BUỘC gọi for item in intro_group: item.set_x(0) để căn giữa đối xứng tuyệt đối trục X=0.
    - Khái niệm, lý thuyết: Trình bày chuẩn xác theo tài liệu PDF đính kèm (RAG), không tự ý suy diễn hay viết chung chung.
-   - Tên đề bài và câu hỏi: Không viết hoa toàn bộ, xuống dòng \\n tự nhiên (7-9 từ/dòng), font_size=20-22 để không bao giờ bị to tràn box.
    - Tuyệt đối KHÔNG dùng từ ngữ giật gân, sáo rỗng hay cường điệu phong cách AI.
 6. QUY TẮC BOX BỌC TEXT CHỨA VỪA KHÍT NỘI DUNG (SNUG & RESPONSIVE BOXES):
    - Khung viền bao quanh (SurroundingRectangle): BẮT BUỘC dùng buff=0.12-0.15, corner_radius=0.12 để viền ôm sát vừa khít văn bản/công thức, không tràn viền, không chạm sát chữ, không quá rộng lãng phí.
@@ -514,7 +540,7 @@ YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ BỘ NGUYÊN TẮC c1_HamSo_Do
    - Luôn gọi fit_width(group, 7.8) trước khi đóng khung viền.
 7. QUY TẮC BỐ CỤC 4 ĐÁP ÁN TRẮC NGHIỆM LIỀN KHỐI (CHỐNG LỖI CHỮ A. ĐỨNG RIÊNG 1 DÒNG):
    - MỖI ĐÁP ÁN A, B, C, D BẮT BUỘC PHẢI LÀ MỘT KHỐI NGUYÊN VẸN NẰM TRÊN CÙNG 1 HÀNG.
-   - Viết chung nhãn và giá trị: MathTex(r"\\mathbf{A.}\; ...") hoặc VGroup(Text("A."), Text("...")).arrange(RIGHT, buff=0.12, aligned_edge=DOWN). TUYỆT ĐỐI CẤM arrange(DOWN) giữa nhãn và đáp án, CẤM chèn \\n sau nhãn.
+   - Viết chung nhãn và giá trị: MathTex(r"\mathbf{A.}\; ...") hoặc VGroup(Text("A."), Text("...")).arrange(RIGHT, buff=0.12, aligned_edge=DOWN). TUYỆT ĐỐI CẤM arrange(DOWN) giữa nhãn và đáp án, CẤM chèn \n sau nhãn.
    - Tùy độ dài thực tế của 4 đáp án để bố trí theo 1 trong 3 dạng:
      * DẠNG 4x1: Khi 4 đáp án đều NGẮN (<= 8 ký tự, số hoặc biến): VGroup(optA, optB, optC, optD).arrange(RIGHT, buff=0.35).
      * DẠNG 2x2 (KHÓA 2 CỘT THẲNG TẮP, CHỐNG LỆCH HÀNG ZÍC-ZẮC): Khi 4 đáp án có ĐỘ DÀI TRUNG BÌNH (khoảng nghiệm, tọa độ). BẮT BUỘC:
@@ -530,11 +556,11 @@ YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ BỘ NGUYÊN TẮC c1_HamSo_Do
 9. QUY TẮC CHỈ SỐ TRÊN/DƯỚI & TIÊU ĐỀ PILL BADGE:
    - 100% công thức chứa số mũ (x^2, x^3), chỉ số dưới (x_0, x_1), đạo hàm (y') BẮT BUỘC dùng MathTex(r"..."). TUYỆT ĐỐI CẤM dùng ký tự unicode mũ (x², x³, x₁, x₀) trong Text(...).
    - Tiêu đề Pill Badge: Dùng "Ví dụ minh họa" hoặc "Ví dụ", TUYỆT ĐỐI KHÔNG dùng "VÍ DỤ GỐC".
-10. MÔ PHỎNG TIẾP TUYẾN ĐỘNG CHUẨN HÓA ĐỘ DÀI, BẢNG BIẾN THIÊN 3 TẦNG & PACING VỪA PHẢI:
+10. MÔ PHỎNG TIẾP TUYẾN ĐỘNG (THEO c1_HamSo_DonDieu.py), BẢNG BIẾN THIÊN 3 TẦNG & PACING VỪA PHẢI:
     - ValueTracker + always_redraw cho tiếp tuyến đổi màu (Xanh/Đỏ/Vàng) và thanh trạng thái status_badge real-time.
-    - TIẾP TUYẾN CHUẨN HÓA ĐỘ DÀI CỐ ĐỊNH L=0.85 (u = v / norm(v); p1 = p_center - 0.85*u; p2 = p_center + 0.85*u). TUYỆT ĐỐI CẤM đoạn thẳng kéo dài vô tận làm cắt ra ngoài viền thẻ!
+    - TIẾP TUYẾN CHUẨN MỰC THEO c1_HamSo_DonDieu.py: dx = 0.38; p1 = axes.c2p(t - dx, y - m * dx); p2 = axes.c2p(t + dx, y + m * dx). Gọn gàng, vừa vặn thẻ, không cần vector phức tạp!
     - PACING & NHỊP ĐỘ DỨT KHOÁT: Dừng nhẹ nhàng vừa đủ tại điểm mấu chốt (self.wait(0.8) đến self.wait(1.0) khi đổi màu tiếp tuyến, xuất hiện BBT, đóng khung đáp án). Tuyệt đối không dừng quá lâu (>1.2s - 1.5s) gây cảm giác màn hình bị đơ hoặc kéo dài lê thê.
-    - Bảng Biến Thiên 3 tầng chuẩn mực SGK Việt Nam: MathTex(r"\\begin{array}{|c|ccccccc|} ... \\end{array}", font_size=24).
+    - Bảng Biến Thiên 3 tầng chuẩn mực SGK Việt Nam: MathTex(r"\begin{array}{|c|ccccccc|} ... \end{array}", font_size=24).
 11. QUY TẮC SỬ DỤNG HÌNH ẢNH MINH HỌA (ImageMobject - CHỐNG CRASH 100%):
     - Khi có ảnh đính kèm (hoặc khi cần chèn ảnh minh họa): BẮT BUỘC dùng ImageMobject(r"...").
     - TUYỆT ĐỐI CẤM thêm ImageMobject vào VGroup(...) (sẽ crash TypeError!). BẮT BUỘC dùng Group(...) thay cho VGroup(...) khi có chứa ImageMobject.
@@ -733,15 +759,11 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
 
         def get_tangent():
             t = t_param.get_value()
+            y = f_func(t)
             m = 3 * (t**2) - 3
-            p_center = axes.c2p(t, f_func(t))
-            dt = 0.05
-            p_near = axes.c2p(t + dt, f_func(t + dt))
-            v = p_near - p_center
-            norm_v = np.linalg.norm(v)
-            u = v / norm_v if norm_v > 1e-6 else RIGHT
-            p1 = p_center - 0.85 * u
-            p2 = p_center + 0.85 * u
+            dx = 0.38
+            p1 = axes.c2p(t - dx, y - m * dx)
+            p2 = axes.c2p(t + dx, y + m * dx)
             col = GREEN_C if m > 0.1 else (RED_C if m < -0.1 else YELLOW)
             return Line(p1, p2, color=col, stroke_width=4.0)
 
@@ -878,13 +900,17 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         self.play(Write(c1_sol), Create(ans_c1_box), run_time=1.0)
         self.wait(1.0)
 
-        # 2. KHUNG DƯỚI: CÂU 2 (XÉT DẤU ĐẠO HÀM - MINH HỌA BỐ CỤC 2x2 HOẶC 1x4 KHI ĐÁP ÁN DÀI)
+        # 2. KHUNG DƯỚI: CÂU 2 (XÉT DẤU ĐẠO HÀM - ƯU TIÊN 1 DÒNG CHO ĐỀ BÀI)
         c2_card = RoundedRectangle(corner_radius=0.2, width=8.4, height=6.6, color="#334155", fill_color="#1E293B", fill_opacity=0.95).next_to(c1_card, DOWN, buff=0.2)
         c2_title = Text("Câu 2: Xét dấu đạo hàm", font=MAIN_FONT, font_size=22, weight=BOLD, color=YELLOW).next_to(c2_card.get_top(), DOWN, buff=0.18)
-        c2_q1 = Text("Cho hàm số", font=MAIN_FONT, font_size=22, color=WHITE)
-        c2_qm = MathTex(r"y = x^3 - 3x^2.", font_size=24, color=WHITE)
-        c2_q2 = Text("Mệnh đề nào dưới đây đúng?", font=MAIN_FONT, font_size=22, color=WHITE)
-        c2_quest = VGroup(VGroup(c2_q1, c2_qm).arrange(RIGHT, buff=0.15), c2_q2).arrange(DOWN, aligned_edge=LEFT, buff=0.1)
+
+        # Đề bài ngắn: Trình bày trọn vẹn trên 1 hàng duy nhất (chống xuống dòng vô tội vạ)
+        c2_quest = VGroup(
+            Text("Cho hàm số", font=MAIN_FONT, font_size=22, color=WHITE),
+            MathTex(r"y = x^3 - 3x^2.", font_size=24, color=WHITE),
+            Text("Mệnh đề nào dưới đây đúng?", font=MAIN_FONT, font_size=22, color=WHITE)
+        ).arrange(RIGHT, buff=0.12)
+        fit_width(c2_quest, 7.8)
 
         # DẠNG 2x2: Bố cục 2 hàng x 2 cột (Khóa 2 cột thẳng tắp, không bao giờ lệch hàng zíc-zắc)
         c2_optA = MathTex(r"\mathbf{A.}\; (0; 2)", font_size=22, color=WHITE)
@@ -1050,9 +1076,10 @@ IV. YÊU CẦU THỰC THI BẮT BUỘC:
 2. Viết lại TOÀN BỘ file mã nguồn Manim Python (\`scene.py\`) từ đầu, kế thừa cấu trúc 5 PHÂN CẢNH CHUẨN MỰC:
    - Intro -> Lý thuyết các thẻ màu -> Dual-Zone Mô phỏng động tiếp tuyến đổi màu & BBT 3 tầng -> Bài tập thực chiến theo từng dạng bài (mỗi dạng 2 câu trên Top/Bottom Card, FadeOut dọn sạch màn hình giữa các dạng bài để chữa từ 2 đến 6+ câu mà vẫn đảm bảo Zero-Overlap 100% và cỡ chữ lớn >= 22) -> Thẻ Outro thương hiệu (giữ nguyên self.wait(1.5)). Khớp nối tổng thời lượng video với thời lượng yêu cầu.
 3. Giữ vững quy chuẩn CHỐNG ĐÈ CHỮ (ZERO OVERLAP), áp dụng Khung Thẻ Container Dual-Zone lấp đầy 93% màn hình, dãn dòng \`line_spacing=1.2\`, gọi fit_width(group, 7.8) cho mọi khối nội dung trong thẻ, font_size lớn rõ nét (Tiêu đề 28-32 BOLD, Thẻ 22-24, MathTex 24-30, Text tiếng Việt 20-22). Dùng font "${chosenFont}". TUYỆT ĐỐI KHÔNG IN HOA (Sentence case chuẩn tiếng Việt cho mọi tiêu đề, thẻ, badges, câu hỏi và đề bài).
-4. QUY TẮC BOX VỪA KHÍT, TIẾP TUYẾN CHUẨN HÓA & BỐ CỤC 4 ĐÁP ÁN:
+4. QUY TẮC ƯU TIÊN 1 DÒNG, BOX VỪA KHÍT, TIẾP TUYẾN & BỐ CỤC 4 ĐÁP ÁN:
+   - QUY TẮC ƯU TIÊN 1 DÒNG (SINGLE-LINE FIRST) & CHỐNG XUỐNG DÒNG VÔ TỘI VẠ: Mọi đề bài, câu hỏi, dữ kiện và kết luận NGẮN (<= 14-16 từ) BẮT BUỘC viết trên CÙNG 1 DÒNG DUY NHẤT, CẤM ngắt dòng \n vô tội vạ hoặc chia nhỏ một câu ngắn với arrange(DOWN). Nối ngang bằng arrange(RIGHT, buff=0.12).
    - Khung viền SurroundingRectangle(buff=0.12-0.15) ôm vừa khít nội dung, không tràn và không quá thừa.
-   - TIẾP TUYẾN CHUẨN HÓA ĐỘ DÀI: Cố định L=0.85 (u = v / norm(v); p1 = p_center - 0.85*u; p2 = p_center + 0.85*u), TUYỆT ĐỐI CẤM cắt ra ngoài viền Top Card.
+   - TIẾP TUYẾN CHUẨN MỰC (c1_HamSo_DonDieu.py): dx = 0.38; p1 = axes.c2p(t - dx, y - m * dx); p2 = axes.c2p(t + dx, y + m * dx). Gọn gàng, vừa vặn thẻ, không cần vector phức tạp.
    - BỐ CỤC 4 ĐÁP ÁN LIỀN KHỐI: Mọi đáp án A, B, C, D là khối nguyên vẹn trên 1 hàng (MathTex(r"\mathbf{A.}\; ..."), CẤM chữ A. đứng riêng 1 dòng). Bố trí dạng 4x1 (ngắn <= 8 ký tự), dạng 2x2 KHÓA 2 CỘT THẲNG TẮP (trung bình), hoặc dạng 1x4 (dài). ans_box = SurroundingRectangle(opt, buff=0.12) vừa khít đáp án đúng.
 5. QUY TẮC CHỈ SỐ TRÊN/DƯỚI & PILL BADGE: 100% chỉ số trên/dưới dùng MathTex(r"..."), CẤM dùng unicode trong Text. Dùng "Ví dụ minh họa" hoặc "Ví dụ", TUYỆT ĐỐI KHÔNG dùng "VÍ DỤ GỐC".
 6. NHỊP ĐỘ DIỄN HOẠT (PACING VỪA PHẢI, MƯỢT MÀ): Dừng vừa vặn self.wait(0.8) - self.wait(1.0) tại điểm mấu chốt, đổi màu tiếp tuyến và BBT, giữ Outro self.wait(1.5). TUYỆT ĐỐI KHÔNG dừng quá lâu (>1.2s - 1.5s) gây cảm giác màn hình bị đơ hoặc kéo dài lê thê.
