@@ -17,7 +17,8 @@ import {
   generateProjectPrompt,
   generateLatexRevisionPrompt,
   parseDurationToSeconds,
-  getExerciseAndRoundPlan
+  getExerciseAndRoundPlan,
+  getFontDirective
 } from '../services/gemini';
 
 import { ExamConfig, WorksheetConfig, VideoConfig, SimilarExerciseConfig, LearningConfig, RoadmapConfig, BatConfig, ProjectConfig } from '../types';
@@ -391,8 +392,8 @@ test("14. Manim: Standard Superscript/Subscript, VÍ DỤ MINH HỌA badge & Vis
   };
 
   const manimCodePrompt = generateManimCodePrompt(videoConfig);
-  // 1. Kiểm tra không còn Pill Badge "VÍ DỤ GỐC", mà đã đổi thành "VÍ DỤ MINH HỌA"
-  assert.match(manimCodePrompt, /VÍ DỤ MINH HỌA/);
+  // 1. Kiểm tra không còn Pill Badge "VÍ DỤ GỐC", mà đã đổi thành "Ví dụ minh họa" (Sentence case)
+  assert.match(manimCodePrompt, /Ví dụ minh họa/i);
   assert.doesNotMatch(manimCodePrompt, /pill_txt = Text\("VÍ DỤ GỐC"/);
 
   // 2. Kiểm tra quy chuẩn chỉ số trên / chỉ số dưới và cấm unicode trong Text
@@ -402,9 +403,10 @@ test("14. Manim: Standard Superscript/Subscript, VÍ DỤ MINH HỌA badge & Vis
   assert.doesNotMatch(manimCodePrompt, /Text\(".*x³.*"\)/);
   assert.doesNotMatch(manimCodePrompt, /Text\(".*x².*"\)/);
 
-  // 3. Kiểm tra quy chuẩn Typography: Ưu tiên Be Vietnam Pro, cấm Serif khi in đậm
-  assert.match(manimCodePrompt, /Be Vietnam Pro/);
-  assert.match(manimCodePrompt, /TUYỆT ĐỐI KHÔNG dùng font Serif/);
+  // 3. Kiểm tra quy chuẩn Typography: Mặc định font có chân (Times New Roman), hỗ trợ Be Vietnam Pro khi chọn sans
+  assert.match(manimCodePrompt, /Times New Roman/);
+  const manimCodePromptSans = generateManimCodePrompt({ ...videoConfig, fontStyle: 'sans' });
+  assert.match(manimCodePromptSans, /Be Vietnam Pro/);
 
   // 4. Kiểm tra quy chuẩn nhịp độ (Pacing) vừa phải & không để khoảng chờ quá lâu
   assert.match(manimCodePrompt, /PACING & NHỊP ĐỘ DỨT KHOÁT/);
@@ -417,9 +419,15 @@ test("14. Manim: Standard Superscript/Subscript, VÍ DỤ MINH HỌA badge & Vis
     'class MainScene(Scene): pass',
     'Sửa font chữ in đậm và giảm thời gian chờ'
   );
-  assert.match(revisionPrompt, /VÍ DỤ MINH HỌA/);
+  assert.match(revisionPrompt, /Ví dụ minh họa/i);
   assert.match(revisionPrompt, /CHỈ SỐ TRÊN\/DƯỚI/);
-  assert.match(revisionPrompt, /Be Vietnam Pro/);
+  assert.match(revisionPrompt, /Times New Roman/);
+  const revisionPromptSans = generateManimRevisionPrompt(
+    { ...videoConfig, fontStyle: 'sans' },
+    'class MainScene(Scene): pass',
+    'Sửa font'
+  );
+  assert.match(revisionPromptSans, /Be Vietnam Pro/);
   assert.match(revisionPrompt, /PACING VỪA PHẢI/);
 });
 
@@ -447,8 +455,11 @@ test("16. Manim Typography & Snappy Pacing Rules Verification", () => {
   assert.doesNotMatch(codePrompt, /self\.wait\(3\.2\)/);
   assert.doesNotMatch(codePrompt, /self\.wait\(3\.0\)/);
   assert.doesNotMatch(codePrompt, /self\.wait\(2\.5\)/);
-  // Kiểm tra font chỉ định là Be Vietnam Pro
-  assert.match(codePrompt, /font="Be Vietnam Pro"/);
+  // Kiểm tra font mặc định là font có chân (Times New Roman)
+  assert.match(codePrompt, /font="Times New Roman"/);
+  // Kiểm tra khi chọn fontStyle: 'sans' thì trả về Be Vietnam Pro
+  const sansPrompt = generateManimCodePrompt({ ...videoConfig, fontStyle: 'sans' });
+  assert.match(sansPrompt, /font="Be Vietnam Pro"/);
   // Kiểm tra quy tắc không để khoảng chờ quá lâu
   assert.match(codePrompt, /Tuyệt đối không dừng quá lâu/i);
 });
@@ -701,8 +712,64 @@ test("20. Manim 300s Long-Form Video & Multi-Round Practice Arena Scaling", () =
   assert.match(fullPrompt, /MULTI-ROUND PRACTICE ARENA/);
 });
 
+test("21. Manim Serif Font Default, Sentence Case, Snug Fit Boxes & Adaptive 4-Option Layout Verification", () => {
+  // 1. Kiểm tra getFontDirective: Mặc định là Serif (Times New Roman), Sans trả về Be Vietnam Pro
+  assert.strictEqual(getFontDirective(undefined), 'Times New Roman');
+  assert.strictEqual(getFontDirective('serif'), 'Times New Roman');
+  assert.strictEqual(getFontDirective('sans'), 'Be Vietnam Pro');
 
+  // 2. Cấu hình bài toán chuẩn
+  const config: VideoConfig = {
+    subject: "Toán học",
+    topic: "Khảo sát sự biến thiên của hàm số",
+    duration: "120s",
+    tone: "academic",
+    audience: "Học sinh lớp 12",
+    format: "vertical",
+    simulationMode: "calculus"
+  };
 
+  // 3. Kiểm tra generateVideoManimPrompt
+  const videoPrompt = generateVideoManimPrompt(config);
 
+  // 3.1. Font chữ có chân mặc định
+  assert.match(videoPrompt, /Times New Roman/);
 
+  // 3.2. Sentence Case chuẩn tiếng Việt (TUYỆT ĐỐI KHÔNG IN HOA)
+  assert.match(videoPrompt, /QUY TẮC TUYỆT ĐỐI KHÔNG IN HOA/);
+  assert.match(videoPrompt, /Sentence case/i);
+  assert.doesNotMatch(videoPrompt, /Text\("KHẢO SÁT/);
+  assert.doesNotMatch(videoPrompt, /Text\("VÍ DỤ/);
+  assert.doesNotMatch(videoPrompt, /Text\("CÂU 1/);
+  assert.doesNotMatch(videoPrompt, /Text\("CÂU 2/);
+  assert.doesNotMatch(videoPrompt, /Text\("TỔNG KẾT/);
+  assert.match(videoPrompt, /Ví dụ minh họa/);
+  assert.match(videoPrompt, /Thực chiến/);
+  assert.match(videoPrompt, /Câu 1: Đọc bảng biến thiên/);
+  assert.match(videoPrompt, /Câu 2: Xét dấu đạo hàm/);
+  assert.match(videoPrompt, /Tổng kết bí kíp/);
 
+  // 3.3. Box bọc text chứa vừa khít nội dung (buff=0.12-0.15, text.width + 0.5)
+  assert.match(videoPrompt, /QUY TẮC BOX BỌC TEXT CHỨA VỪA KHÍT NỘI DUNG/);
+  assert.match(videoPrompt, /SurroundingRectangle\(.*buff=0\.1[2-5]/);
+  assert.match(videoPrompt, /RoundedRectangle\(.*text\.width \+ 0\.5/);
+
+  // 3.4. Bố cục 4 đáp án linh hoạt (4x1, 2x2, 1x4)
+  assert.match(videoPrompt, /QUY TẮC BỐ CỤC 4 ĐÁP ÁN TRẮC NGHIỆM THÔNG MINH/);
+  assert.match(videoPrompt, /DẠNG 4x1/);
+  assert.match(videoPrompt, /DẠNG 2x2/);
+  assert.match(videoPrompt, /DẠNG 1x4/);
+
+  // 4. Kiểm tra generateManimCodePrompt
+  const codePrompt = generateManimCodePrompt(config);
+  assert.match(codePrompt, /font="Times New Roman"/);
+  assert.match(codePrompt, /QUY TẮC TUYỆT ĐỐI KHÔNG IN HOA/);
+  assert.match(codePrompt, /QUY TẮC BOX BỌC TEXT CHỨA VỪA KHÍT/);
+  assert.match(codePrompt, /QUY TẮC BỐ CỤC 4 ĐÁP ÁN TRẮC NGHIỆM THÔNG MINH/);
+
+  // 5. Kiểm tra generateManimRevisionPrompt
+  const revPrompt = generateManimRevisionPrompt(config, "class MainScene(Scene): pass", "Sửa bố cục 4 đáp án sang 2x2");
+  assert.match(revPrompt, /Font chữ chỉ định: "Times New Roman"/);
+  assert.match(revPrompt, /Sentence case chuẩn tiếng Việt/);
+  assert.match(revPrompt, /QUY TẮC BOX VỪA KHÍT & BỐ CỤC 4 ĐÁP ÁN/);
+});

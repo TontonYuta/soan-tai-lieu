@@ -85,10 +85,9 @@ export const MANIM_SKILLS_GUIDE = `
    - Bottom Card: next_to(top_card, DOWN, buff=0.2), height=6.6, width=8.4.
    - Khi chuyển giữa các chương: BẮT BUỘC FadeOut toàn bộ các đối tượng cũ trước khi tạo chương mới.
 
-4. QUY CHUẨN TYPOGRAPHY & FONT IN ĐẬM CHUẨN ĐẸP (SANS-SERIF HIỆN ĐẠI):
-   - Font chữ Tiếng Việt: BẮT BUỘC dùng "Be Vietnam Pro" (ưu tiên số 1) hoặc "Inter".
-   - TUYỆT ĐỐI CẤM dùng font Serif có chân (như "Times New Roman" hay "Liberation Serif") cho Text tiếng Việt trên video, vì khi in đậm weight=BOLD trên Linux/Cairo/Pango nét chữ sẽ bị gai góc, thô ráp, răng cưa và méo mó dấu tiếng Việt.
-   - Khi in đậm (Bold Typography): Sử dụng weight=BOLD cho tiêu đề và weight=SEMIBOLD (hoặc BOLD chuẩn) cho các từ khóa then chốt trên nền "Be Vietnam Pro". Các đường nét bo tròn mượt mà, nét chữ đồng đều, dấu thanh chuẩn tỉ lệ vàng, hiển thị sắc nét và sang trọng trên màn hình điện thoại.
+4. QUY CHUẨN TYPOGRAPHY & FONT CHỮ CÓ CHÂN (SERIF) LÀM MẶC ĐỊNH:
+   - Font chữ Tiếng Việt: MẶC ĐỊNH sử dụng font chữ có chân (Serif) trang trọng, chuẩn mực sách giáo khoa và các tạp chí toán học: "Times New Roman" (hoặc "Liberation Serif").
+   - Nếu người dùng chỉ định font không chân (Sans-Serif): Sử dụng "Be Vietnam Pro" (hoặc "Inter").
    - KÍCH THƯỚC CHỮ (CẤM DÙNG font_size DƯỚI 20):
      * Tiêu đề chính / Intro / Outro: font_size=28 đến 32 (weight=BOLD, màu YELLOW).
      * Tiêu đề Thẻ Card: font_size=22 đến 24 (weight=BOLD, TEAL_A hoặc YELLOW).
@@ -156,10 +155,38 @@ export const MANIM_SKILLS_GUIDE = `
      * Cảnh 4 (Chữa bài thực chiến Đa Hiệp): ~38s - 150s+ (Mỗi hiệp 2 câu chiếm ~40s - 50s).
      * Cảnh 5 (Outro): ~8s - 20s.
    - Trong code Manim, tổng run_time của self.play(...) cộng với self.wait(...) ở mỗi phân cảnh phải khớp với thời gian đọc của phân cảnh đó để video kết thúc cùng lúc với giọng đọc.
+
+11. QUY TẮC TUYỆT ĐỐI KHÔNG IN HOA (NO ALL CAPS - CHUẨN CHÍNH TẢ TIẾNG VIỆT):
+    - TUYỆT ĐỐI KHÔNG viết hoa toàn bộ (ALL CAPS) ở tiêu đề chính, tên bài học, tên phân cảnh, pill badges, tiêu đề thẻ hay đề bài câu hỏi.
+    - BẮT BUỘC dùng chữ thường chuẩn ngữ pháp Tiếng Việt (Sentence case: chỉ viết hoa chữ cái đầu câu và danh từ riêng/tên viết tắt như Oxy, THPT, SGK).
+    - Ví dụ chuẩn đẹp:
+      * Đúng: "Khảo sát sự biến thiên của hàm số", "Ví dụ minh họa", "Thực chiến", "Câu 1: Đọc bảng biến thiên", "Bảng biến thiên & kết luận", "Tổng kết bí kíp".
+      * Sai (CẤM): "KHẢO SÁT SỰ BIẾN THIÊN", "VÍ DỤ MINH HỌA", "THỰC CHIẾN", "CÂU 1: ĐỌC BẢNG BIẾN THIÊN", "BẢNG BIẾN THIÊN & KẾT LUẬN".
+
+12. QUY TẮC BOX BỌC TEXT CHỨA VỪA KHÍT NỘI DUNG (SNUG & RESPONSIVE BOXES):
+    - Mọi khung viền bao quanh (SurroundingRectangle, RoundedRectangle, Pill Badges, Callout Boxes, Answer Boxes) BẮT BUỘC phải đủ rộng để chứa vừa khít text bên trong:
+      * Không để text tràn ra ngoài viền, không để chữ chạm sát mép viền, cũng không để box quá rộng trống trải lãng phí diện tích.
+      * Với khung viền bao quanh: BẮT BUỘC dùng SurroundingRectangle(target_mob, buff=0.15, corner_radius=0.12, stroke_width=2.5). Thuộc tính buff=0.15 tự động co giãn ôm vừa khít mọi kích thước của text/công thức!
+      * Với huy hiệu Pill Badge: Tính chiều rộng động theo text:
+        rect = RoundedRectangle(corner_radius=0.12, width=max(2.4, text.width + 0.5), height=text.height + 0.28, ...)
+      * Luôn gọi fit_width(group, 7.8) cho mọi khối nội dung trong thẻ trước khi đóng khung viền.
+
+13. QUY TẮC BỐ CỤC 4 ĐÁP ÁN TRẮC NGHIỆM THÔNG MINH (4x1, 2x2, HOẶC 1x4):
+    - Tùy thuộc vào độ rộng và độ dài thực tế của 4 đáp án A, B, C, D, BẮT BUỘC bố trí gọn gàng theo 1 trong 3 dạng chuẩn mực sau:
+      * DẠNG 4x1 (1 hàng ngang gồm 4 đáp án): Áp dụng khi 4 đáp án đều NGẮN (mỗi đáp án chỉ là 1 số, 1 ký hiệu hoặc công thức ngắn, độ dài <= 8 ký tự, ví dụ: A. 1; B. 2; C. 3; D. 4):
+        opts_group = VGroup(optA, optB, optC, optD).arrange(RIGHT, buff=0.45)
+      * DẠNG 2x2 (2 hàng, mỗi hàng 2 đáp án): Áp dụng khi 4 đáp án có ĐỘ DÀI TRUNG BÌNH (khoảng nghiệm, tọa độ điểm, biểu thức vừa phải, ví dụ: (-infty; -1) và (1; +infty)):
+        row1 = VGroup(optA, optB).arrange(RIGHT, buff=0.6)
+        row2 = VGroup(optC, optD).arrange(RIGHT, buff=0.6)
+        opts_group = VGroup(row1, row2).arrange(DOWN, aligned_edge=LEFT, buff=0.18)
+      * DẠNG 1x4 (4 hàng dọc, mỗi hàng 1 đáp án): Áp dụng khi các đáp án DÀI (chứa câu chữ văn bản, định lý, hoặc công thức phân số dài):
+        opts_group = VGroup(optA, optB, optC, optD).arrange(DOWN, aligned_edge=LEFT, buff=0.14)
+    - Hộp khoanh đáp án đúng: ans_box = SurroundingRectangle(opt_correct, color=GREEN, buff=0.12, corner_radius=0.08, stroke_width=2.5) ôm vừa khít đáp án được chọn!
 `.replace("★★★ BỘ NGUYÊN TẮC MANIM CE TOÁN HỌC & VISUAL ENGINEERING CHUẨN STUDIO ★XX", "★★★ BỘ NGUYÊN TẮC MANIM CE TOÁN HỌC & VISUAL ENGINEERING CHUẨN STUDIO ★★★");
 
-const getFontDirective = (fontStyle?: string): string => {
-  return 'Be Vietnam Pro';
+export const getFontDirective = (fontStyle?: string): string => {
+  if (fontStyle === 'sans') return 'Be Vietnam Pro';
+  return 'Times New Roman'; // Mặc định: Font chữ có chân (Serif)
 };
 
 export const extractAttachedImageDirective = (attachedImage?: any): string => {
@@ -374,7 +401,7 @@ ${imageSection}
 YÊU CẦU LẬP DÀN Ý 5 PHÂN CẢNH CHUẨN MỰC VÀ SOẠN LỜI THOẠI TRÔI CHẢY, TRUYỀN CẢM, CÓ NGẮT NGHỈ MẠCH LẠC PHÙ HỢP VỚI THỜI LƯỢNG ${targetDurationStr} (ĐỘ DÀI KỊCH BẢN KHOẢNG ${targetWords} TỪ - TỐC ĐỘ ĐỌC 2.85 TỪ/GIÂY):
 
 1. PHÂN CẢNH 1 - MỞ ĐẦU ẤN TƯỢNG (INTRO, ~${introSec}S, ~${introWords} TỪ):
-   - Khung thẻ Intro với Tên bài học, Pill badge môn học "${config.subject.toUpperCase()}" và Ký hiệu/khái niệm cốt lõi.
+   - Khung thẻ Intro với Tên bài học (Sentence case, TUYỆT ĐỐI KHÔNG IN HOA), Pill badge môn học "${config.subject}" và Ký hiệu/khái niệm cốt lõi.
    - Lời thoại Intro: Chào mừng, đặt vấn đề kích thích tò mò và tạo cảm hứng học tập.
 
 2. PHÂN CẢNH 2 - LÝ THUYẾT CỐT LÕI VỚI CẶP THẺ MÀU TƯƠNG PHẢN (~${theorySec}S, ~${theoryWords} TỪ):
@@ -390,7 +417,7 @@ YÊU CẦU LẬP DÀN Ý 5 PHÂN CẢNH CHUẨN MỰC VÀ SOẠN LỜI THOẠI T
 ${practiceRoundsOutline}
 
 5. PHÂN CẢNH 5 - TỔNG KẾT & OUTRO THƯƠNG HIỆU (~${outroSec}S, ~${outroWords} TỪ):
-   - Thẻ Outro: Đúc kết 3 bí kíp bài học + Thông điệp thương hiệu "Học ${config.subject} cùng Yuta" (giữ nguyên khung hình cuối self.wait(1.5), TUYỆT ĐỐI KHÔNG FadeOut).
+   - Thẻ Outro: Đúc kết 3 bí kíp bài học + Thông điệp thương hiệu "Học ${config.subject} cùng Yuta" (giữ nguyên khung hình cuối self.wait(1.5), TUYỆT ĐỐI KHÔNG FadeOut). Tiêu đề Sentence case, không viết hoa toàn bộ.
    - Lời thoại Outro: Đúc kết giá trị và kêu gọi follow kênh.
 
 ĐỊNH DẠNG TRẢ VỀ:
@@ -444,34 +471,43 @@ YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ BỘ NGUYÊN TẮC c1_HamSo_Do
 3. Cấu hình ${isVertical ? 'Khung hình DỌC 9:16 (config.pixel_width=1080, config.pixel_height=1920, config.frame_width=9.0, config.frame_height=16.0)' : 'Khung hình NGANG 16:9 (1920x1080)'}.
 4. BỐ CỤC KHUNG THẺ CONTAINER (DUAL-ZONE) LẤP ĐẦY 93% MÀN HÌNH - TRIỆT TIÊU KHOẢNG TRỐNG ĐEN:
    - ${isVertical ? 'Top Header Bar (y ~ 7.05, height=1.1-1.3, width=8.4); Top Card (y ~ 3.15, height=6.4, width=8.4); Bottom Card (y ~ -3.75, height=6.6, width=8.4); Outro Card (height=13.6, width=8.4). BẮT BUỘC gọi fit_width(group, 7.8) cho mọi khối nội dung trong thẻ!' : 'Header đỉnh, Cột Trái Mô phỏng (width=7.2, height=6.2), Cột Phải Công thức (width=5.8, height=6.2).'}
-5. TIÊU ĐỀ INTRO DÀN ĐỀU & ĐỀ BÀI CHỐNG TRÀN BOX:
-   - Tên chủ đề Intro: Không bắt buộc viết hoa toàn bộ, ngắt dòng \n cân đối nếu dài, dùng alignment="CENTER", sau arrange BẮT BUỘC gọi for item in intro_group: item.set_x(0) để căn giữa đối xứng tuyệt đối trục X=0.
+5. TIÊU ĐỀ INTRO DÀN ĐỀU & ĐỀ BÀI CHỐNG TRÀN BOX (QUY TẮC TUYỆT ĐỐI KHÔNG IN HOA):
+   - TUYỆT ĐỐI KHÔNG viết hoa toàn bộ (ALL CAPS) ở bất kỳ đâu: Tiêu đề Intro, tên phân cảnh, pill badges, tiêu đề thẻ, đề bài và kết luận.
+   - BẮT BUỘC dùng Sentence case (chỉ viết hoa chữ cái đầu và danh từ riêng như Oxy, THPT, SGK): Ví dụ "Khảo sát sự biến thiên của hàm số", "Ví dụ minh họa", "Thực chiến", "Câu 1: Đọc bảng biến thiên", "Tổng kết bí kíp".
+   - Tên chủ đề Intro: Ngắt dòng \\n cân đối nếu dài, dùng alignment="CENTER", sau arrange BẮT BUỘC gọi for item in intro_group: item.set_x(0) để căn giữa đối xứng tuyệt đối trục X=0.
    - Khái niệm, lý thuyết: Trình bày chuẩn xác theo tài liệu PDF đính kèm (RAG), không tự ý suy diễn hay viết chung chung.
-   - Tên đề bài và câu hỏi: Không viết hoa toàn bộ, xuống dòng \n tự nhiên (7-9 từ/dòng), font_size=20-22 để không bao giờ bị to tràn box.
+   - Tên đề bài và câu hỏi: Không viết hoa toàn bộ, xuống dòng \\n tự nhiên (7-9 từ/dòng), font_size=20-22 để không bao giờ bị to tràn box.
    - Tuyệt đối KHÔNG dùng từ ngữ giật gân, sáo rỗng hay cường điệu phong cách AI.
-6. ZERO-OVERLAP & WATERMARK SAFETY:
-   - TUYỆT ĐỐI KHÔNG để biểu tượng Intro co nhỏ rồi to_corner(UL) làm watermark trôi nổi (tránh va chạm đè chữ tiêu đề)! Dọn sạch từng cảnh trước khi qua cảnh sau.
-7. QUY CHUẨN TYPOGRAPHY & FONT IN ĐẬM CHUẨN ĐẸP TRÊN ĐIỆN THOẠI:
-   - Sử dụng font="${chosenFont}" (Be Vietnam Pro) cho mọi đối tượng Text. TUYỆT ĐỐI KHÔNG dùng font Serif (Times New Roman) vì khi in đậm weight=BOLD sẽ bị răng cưa méo mó.
-   - Sử dụng weight=BOLD cho tiêu đề và weight=SEMIBOLD (hoặc BOLD chuẩn) cho các từ khóa nhấn mạnh. Nét chữ bo tròn, đường nét đồng đều, dấu thanh chuẩn tỉ lệ vàng.
+6. QUY TẮC BOX BỌC TEXT CHỨA VỪA KHÍT NỘI DUNG (SNUG & RESPONSIVE BOXES):
+   - Khung viền bao quanh (SurroundingRectangle): BẮT BUỘC dùng buff=0.12-0.15, corner_radius=0.12 để viền ôm sát vừa khít văn bản/công thức, không tràn viền, không chạm sát chữ, không quá rộng lãng phí.
+   - Thẻ huy hiệu Pill Badge: Tính chiều rộng động rect = RoundedRectangle(corner_radius=0.12, width=max(2.2, text.width + 0.5), height=text.height + 0.28).
+   - Luôn gọi fit_width(group, 7.8) trước khi đóng khung viền.
+7. QUY TẮC BỐ CỤC 4 ĐÁP ÁN TRẮC NGHIỆM THÔNG MINH (4x1, 2x2, HOẶC 1x4):
+   - Tùy độ dài thực tế của 4 đáp án A, B, C, D để bố trí gọn gàng theo 1 trong 3 dạng:
+     * DẠNG 4x1: Khi 4 đáp án đều NGẮN (<= 8 ký tự, số hoặc biến): VGroup(optA, optB, optC, optD).arrange(RIGHT, buff=0.35).
+     * DẠNG 2x2: Khi 4 đáp án có ĐỘ DÀI TRUNG BÌNH (khoảng nghiệm, tọa độ): VGroup(VGroup(optA, optB).arrange(RIGHT, buff=0.6), VGroup(optC, optD).arrange(RIGHT, buff=0.6)).arrange(DOWN, aligned_edge=LEFT, buff=0.18).
+     * DẠNG 1x4: Khi đáp án DÀI (chứa câu chữ văn bản, định lý): VGroup(optA, optB, optC, optD).arrange(DOWN, aligned_edge=LEFT, buff=0.14).
+   - Hộp khoanh đáp án: SurroundingRectangle(opt_correct, color=GREEN, buff=0.12, corner_radius=0.08, stroke_width=2.5) ôm vừa khít đáp án đúng!
+8. QUY CHUẨN TYPOGRAPHY & FONT CHỮ CHUẨN MỰC:
+   - Sử dụng font="${chosenFont}" cho mọi đối tượng Text. ${chosenFont === 'Times New Roman' ? 'Mặc định ưu tiên font có chân (Times New Roman / Liberation Serif) thanh lịch, chuẩn mực tài liệu toán học và giáo khoa.' : 'Sử dụng font không chân (Be Vietnam Pro) hiện đại, sắc nét.'}
    - Tiêu đề 28-32 BOLD, Tiêu đề Thẻ 22-24 BOLD, Công thức MathTex 24-30, Chú thích tiếng Việt 20-22. CẤM font_size < 20!
    - line_spacing=1.2 cho các đoạn Text nhiều dòng.
-8. QUY TẮC CHỈ SỐ TRÊN/DƯỚI & TIÊU ĐỀ PILL BADGE:
+9. QUY TẮC CHỈ SỐ TRÊN/DƯỚI & TIÊU ĐỀ PILL BADGE:
    - 100% công thức chứa số mũ (x^2, x^3), chỉ số dưới (x_0, x_1), đạo hàm (y') BẮT BUỘC dùng MathTex(r"..."). TUYỆT ĐỐI CẤM dùng ký tự unicode mũ (x², x³, x₁, x₀) trong Text(...).
-   - Tiêu đề Pill Badge: Dùng "VÍ DỤ MINH HỌA" hoặc "VÍ DỤ", TUYỆT ĐỐI KHÔNG dùng "VÍ DỤ GỐC".
-9. MÔ PHỎNG TIẾP TUYẾN ĐỘNG, BẢNG BIẾN THIÊN 3 TẦNG & PACING VỪA PHẢI:
-   - ValueTracker + always_redraw cho tiếp tuyến đổi màu (Xanh/Đỏ/Vàng) và thanh trạng thái status_badge real-time. Tiếp tuyến lướt mượt với run_time=2.0s đến 2.5s.
-   - PACING & NHỊP ĐỘ DỨT KHOÁT: Dừng nhẹ nhàng vừa đủ tại điểm mấu chốt (self.wait(0.8) đến self.wait(1.0) khi đổi màu tiếp tuyến, xuất hiện BBT, đóng khung đáp án). Tuyệt đối không dừng quá lâu (>1.2s - 1.5s) gây cảm giác màn hình bị đơ hoặc kéo dài lê thê.
-   - Bảng Biến Thiên 3 tầng chuẩn mực SGK Việt Nam: MathTex(r"\\begin{array}{|c|ccccccc|} ... \\end{array}", font_size=24).
-10. QUY TẮC SỬ DỤNG HÌNH ẢNH MINH HỌA (ImageMobject - CHỐNG CRASH 100%):
+   - Tiêu đề Pill Badge: Dùng "Ví dụ minh họa" hoặc "Ví dụ", TUYỆT ĐỐI KHÔNG dùng "VÍ DỤ GỐC".
+10. MÔ PHỎNG TIẾP TUYẾN ĐỘNG, BẢNG BIẾN THIÊN 3 TẦNG & PACING VỪA PHẢI:
+    - ValueTracker + always_redraw cho tiếp tuyến đổi màu (Xanh/Đỏ/Vàng) và thanh trạng thái status_badge real-time. Tiếp tuyến lướt mượt với run_time=2.0s đến 2.5s.
+    - PACING & NHỊP ĐỘ DỨT KHOÁT: Dừng nhẹ nhàng vừa đủ tại điểm mấu chốt (self.wait(0.8) đến self.wait(1.0) khi đổi màu tiếp tuyến, xuất hiện BBT, đóng khung đáp án). Tuyệt đối không dừng quá lâu (>1.2s - 1.5s) gây cảm giác màn hình bị đơ hoặc kéo dài lê thê.
+    - Bảng Biến Thiên 3 tầng chuẩn mực SGK Việt Nam: MathTex(r"\\begin{array}{|c|ccccccc|} ... \\end{array}", font_size=24).
+11. QUY TẮC SỬ DỤNG HÌNH ẢNH MINH HỌA (ImageMobject - CHỐNG CRASH 100%):
     - Khi có ảnh đính kèm (hoặc khi cần chèn ảnh minh họa): BẮT BUỘC dùng ImageMobject(r"...").
     - TUYỆT ĐỐI CẤM thêm ImageMobject vào VGroup(...) (sẽ crash TypeError!). BẮT BUỘC dùng Group(...) thay cho VGroup(...) khi có chứa ImageMobject.
     - Luôn co tỷ lệ vừa vặn thẻ: img.scale_to_fit_width(4.5) và đóng khung viền bo tròn SurroundingRectangle(img, buff=0.08, color=TEAL_A, corner_radius=0.15).
-11. 100% CÔNG THỨC LATEX HOÀN HẢO (PERFECT LATEX):
+12. 100% CÔNG THỨC LATEX HOÀN HẢO (PERFECT LATEX):
     - MỌI công thức dùng MathTex(r"...") với raw string. Đóng khung đáp số: SurroundingRectangle(result, color=GREEN, buff=0.16).
-12. Màu nền: "#0B1120".
-13. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, không viết bất kỳ lời chào hay giải thích ngoài mã.
-14. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file). (Hệ thống máy chủ sẽ tự biên dịch mã bằng lệnh: \`manim \${qualityFlag} scene.py MainScene\`, AI không được tự chạy lệnh này).`;
+13. Màu nền: "#0B1120".
+14. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, không viết bất kỳ lời chào hay giải thích ngoài mã.
+15. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file). (Hệ thống máy chủ sẽ tự biên dịch mã bằng lệnh: \`manim \${qualityFlag} scene.py MainScene\`, AI không được tự chạy lệnh này).`;
 };
 
 // =========================================================================
@@ -558,17 +594,17 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         # ======================================================================
         # PHẦN 1: MỞ ĐẦU ẤN TƯỢNG (INTRO, ~7s)
         # ======================================================================
-        badge_text = Text("${config.subject.toUpperCase()} • LUYỆN THI THPTQG", font_size=24, font=MAIN_FONT, weight=BOLD, color=TEAL_A)
+        badge_text = Text("${config.subject} • Luyện thi THPTQG", font_size=24, font=MAIN_FONT, weight=BOLD, color=TEAL_A)
         badge_intro = RoundedRectangle(
-            corner_radius=0.15, width=badge_text.width + 0.65, height=badge_text.height + 0.35,
+            corner_radius=0.15, width=badge_text.width + 0.5, height=badge_text.height + 0.28,
             color=TEAL, fill_color="#0F172A", fill_opacity=0.92, stroke_width=2.0
         ).move_to(badge_text)
         intro_badge = VGroup(badge_intro, badge_text)
 
-        # Tiêu đề chủ đề: Dàn đều, ngắt dòng nếu dài, căn giữa trục tọa độ X=0
+        # Tiêu đề chủ đề: Dàn đều, Sentence case (không in hoa toàn bộ), căn giữa trục tọa độ X=0
         clean_topic = "${config.topic}"
         intro_title = Text(clean_topic, font_size=28, weight=BOLD, color=YELLOW, line_spacing=1.2, font=MAIN_FONT, alignment="CENTER")
-        intro_box = SurroundingRectangle(intro_title, buff=0.25, color=BLUE_C, corner_radius=0.15, stroke_width=2.5)
+        intro_box = SurroundingRectangle(intro_title, buff=0.15, color=BLUE_C, corner_radius=0.12, stroke_width=2.5)
 
         intro_sub = Text("Lý thuyết trọng tâm • Mô phỏng trực quan • Chữa đề thực chiến", font_size=22, font=MAIN_FONT, color=GRAY_B)
 
@@ -591,22 +627,22 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         # ======================================================================
         # PHẦN 2: LÝ THUYẾT CỐT LÕI - 2 THẺ MÀU ĐỘC LẬP (~14s)
         # ======================================================================
-        th_header = Text("ĐỊNH LÝ DẤU ĐẠO HÀM & ĐƠN ĐIỆU", font_size=26, font=MAIN_FONT, weight=BOLD, color=YELLOW).to_edge(UP, buff=0.6)
+        th_header = Text("Định lý dấu đạo hàm và tính đơn điệu", font_size=26, font=MAIN_FONT, weight=BOLD, color=YELLOW).to_edge(UP, buff=0.6)
         th_sub = Text("Định lý liên hệ dấu y' và dáng điệu hàm số", font_size=22, font=MAIN_FONT, color=GRAY_B).next_to(th_header, DOWN, buff=0.18)
 
         card_inc = RoundedRectangle(corner_radius=0.2, width=8.4, height=4.2, color=GREEN_D, fill_color="#064E3B", fill_opacity=0.35, stroke_width=2.5)
-        t_inc_title = Text("1. HÀM SỐ ĐỒNG BIẾN (TĂNG)", font_size=24, font=MAIN_FONT, weight=BOLD, color=GREEN_B)
+        t_inc_title = Text("1. Hàm số đồng biến (tăng)", font_size=24, font=MAIN_FONT, weight=BOLD, color=GREEN_B)
         t_inc_math = MathTex(r"y' = f'(x) > 0, \\quad \\forall x \\in K", font_size=30, color=WHITE)
-        t_inc_desc1 = Text("➜ Đồ thị đi LÊN từ trái sang phải (↗)", font_size=22, font=MAIN_FONT, color=GREEN_A)
+        t_inc_desc1 = Text("➜ Đồ thị đi lên từ trái sang phải (↗)", font_size=22, font=MAIN_FONT, color=GREEN_A)
         t_inc_desc2 = Text("➜ Tiếp tuyến dốc lên: hệ số góc k = y' > 0", font_size=22, font=MAIN_FONT, color=GRAY_A)
         c_inc_group = VGroup(t_inc_title, t_inc_math, t_inc_desc1, t_inc_desc2).arrange(DOWN, aligned_edge=LEFT, buff=0.2).move_to(card_inc)
         fit_width(c_inc_group, 7.8)
         block_inc = VGroup(card_inc, c_inc_group)
 
         card_dec = RoundedRectangle(corner_radius=0.2, width=8.4, height=4.2, color=RED_D, fill_color="#7F1D1D", fill_opacity=0.35, stroke_width=2.5)
-        t_dec_title = Text("2. HÀM SỐ NGHỊCH BIẾN (GIẢM)", font_size=24, font=MAIN_FONT, weight=BOLD, color=RED_B)
+        t_dec_title = Text("2. Hàm số nghịch biến (giảm)", font_size=24, font=MAIN_FONT, weight=BOLD, color=RED_B)
         t_dec_math = MathTex(r"y' = f'(x) < 0, \\quad \\forall x \\in K", font_size=30, color=WHITE)
-        t_dec_desc1 = Text("➜ Đồ thị đi XUỐNG từ trái sang phải (↘)", font_size=22, font=MAIN_FONT, color=RED_A)
+        t_dec_desc1 = Text("➜ Đồ thị đi xuống từ trái sang phải (↘)", font_size=22, font=MAIN_FONT, color=RED_A)
         t_dec_desc2 = Text("➜ Tiếp tuyến dốc xuống: hệ số góc k = y' < 0", font_size=22, font=MAIN_FONT, color=GRAY_A)
         c_dec_group = VGroup(t_dec_title, t_dec_math, t_dec_desc1, t_dec_desc2).arrange(DOWN, aligned_edge=LEFT, buff=0.2).move_to(card_dec)
         fit_width(c_dec_group, 7.8)
@@ -624,10 +660,10 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         # PHẦN 3: DUAL-ZONE CONTAINER: ĐỒ THỊ & BẢNG BIẾN THIÊN 3 TẦNG (~38s)
         # ======================================================================
         header_card = RoundedRectangle(corner_radius=0.15, width=8.4, height=1.1, color=BLUE_D, fill_color="#1E293B", fill_opacity=0.95).to_edge(UP, buff=0.35)
-        pill = RoundedRectangle(corner_radius=0.1, width=2.4, height=0.55, color=TEAL, fill_color=TEAL_E, fill_opacity=0.85)
-        pill_txt = Text("VÍ DỤ MINH HỌA", font=MAIN_FONT, font_size=20, weight=BOLD, color=WHITE).move_to(pill)
+        pill_txt = Text("Ví dụ minh họa", font=MAIN_FONT, font_size=20, weight=BOLD, color=WHITE)
+        pill = RoundedRectangle(corner_radius=0.12, width=max(2.2, pill_txt.width + 0.5), height=pill_txt.height + 0.28, color=TEAL, fill_color=TEAL_E, fill_opacity=0.85).move_to(pill_txt)
         pill_group = VGroup(pill, pill_txt)
-        title_lbl = Text("HÀM BẬC BA:", font=MAIN_FONT, font_size=22, weight=BOLD, color=YELLOW)
+        title_lbl = Text("Hàm bậc ba:", font=MAIN_FONT, font_size=22, weight=BOLD, color=YELLOW)
         title_math = MathTex(r"y = x^3 - 3x", font_size=24, color=YELLOW)
         title_txt = VGroup(title_lbl, title_math).arrange(RIGHT, buff=0.15)
         header_content = VGroup(pill_group, title_txt).arrange(RIGHT, buff=0.22).move_to(header_card)
@@ -635,7 +671,7 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
 
         # 1. TOP CARD: MÔ PHỎNG ĐỒ THỊ & TIẾP TUYẾN CHUYỂN ĐỘNG
         top_card = RoundedRectangle(corner_radius=0.2, width=8.4, height=6.4, color="#334155", fill_color="#0F172A", fill_opacity=0.95).next_to(header_card, DOWN, buff=0.2)
-        top_title = Text("📈 ĐỒ THỊ & TIẾP TUYẾN CHUYỂN ĐỘNG", font=MAIN_FONT, font_size=22, weight=BOLD, color=TEAL_A).next_to(top_card.get_top(), DOWN, buff=0.18)
+        top_title = Text("📈 Đồ thị và tiếp tuyến chuyển động", font=MAIN_FONT, font_size=22, weight=BOLD, color=TEAL_A).next_to(top_card.get_top(), DOWN, buff=0.18)
 
         axes = Axes(
             x_range=[-2.4, 2.4, 1], y_range=[-2.8, 2.8, 1], x_length=7.2, y_length=4.0,
@@ -675,13 +711,13 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
             t = t_param.get_value()
             m = 3 * (t**2) - 3
             if m > 0.1:
-                txt, b_col, bg_col = "y' > 0 ➜ ĐỒNG BIẾN (↗)", GREEN_B, "#064E3B"
+                txt, b_col, bg_col = "y' > 0 ➜ Đồng biến (↗)", GREEN_B, "#064E3B"
             elif m < -0.1:
-                txt, b_col, bg_col = "y' < 0 ➜ NGHỊCH BIẾN (↘)", RED_B, "#7F1D1D"
+                txt, b_col, bg_col = "y' < 0 ➜ Nghịch biến (↘)", RED_B, "#7F1D1D"
             else:
-                txt, b_col, bg_col = "y' = 0 ➜ TIẾP TUYẾN NGANG", YELLOW, "#78350F"
+                txt, b_col, bg_col = "y' = 0 ➜ Tiếp tuyến nằm ngang", YELLOW, "#78350F"
             lbl = Text(txt, font=MAIN_FONT, font_size=22, weight=BOLD, color=WHITE)
-            rect = RoundedRectangle(corner_radius=0.1, width=max(5.2, lbl.width + 0.5), height=0.52, color=b_col, fill_color=bg_col, fill_opacity=0.9, stroke_width=1.8).move_to(lbl)
+            rect = RoundedRectangle(corner_radius=0.1, width=max(4.6, lbl.width + 0.5), height=lbl.height + 0.28, color=b_col, fill_color=bg_col, fill_opacity=0.9, stroke_width=1.8).move_to(lbl)
             return VGroup(rect, lbl).next_to(top_card.get_bottom(), UP, buff=0.16)
 
         status_badge = always_redraw(get_status_badge)
@@ -693,7 +729,7 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
 
         # 2. BOTTOM CARD: BẢNG BIẾN THIÊN 3 TẦNG RÕ RÀNG & KẾT LUẬN
         bottom_card = RoundedRectangle(corner_radius=0.2, width=8.4, height=6.6, color="#334155", fill_color="#1E293B", fill_opacity=0.95).next_to(top_card, DOWN, buff=0.2)
-        bot_title = Text("📊 BẢNG BIẾN THIÊN & KẾT LUẬN", font=MAIN_FONT, font_size=22, weight=BOLD, color=YELLOW).next_to(bottom_card.get_top(), DOWN, buff=0.18)
+        bot_title = Text("📊 Bảng biến thiên và kết luận", font=MAIN_FONT, font_size=22, weight=BOLD, color=YELLOW).next_to(bottom_card.get_top(), DOWN, buff=0.18)
 
         calc_deriv = MathTex(r"y' = 3x^2 - 3 = 0 \\iff x = \\pm 1", font_size=26, color=WHITE)
         bbt = MathTex(
@@ -751,16 +787,16 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         # PHẦN 4: CHỮA 2 CÂU ĐIỂN HÌNH TỪ TÀI LIỆU RAG NGUỒN (~38s)
         # ======================================================================
         qz_header_card = RoundedRectangle(corner_radius=0.15, width=8.4, height=1.1, color=BLUE_D, fill_color="#1E293B", fill_opacity=0.95).to_edge(UP, buff=0.35)
-        qz_pill = RoundedRectangle(corner_radius=0.1, width=2.6, height=0.55, color=GOLD_E, fill_color=GOLD, fill_opacity=0.9)
-        qz_pill_txt = Text("THỰC CHIẾN", font=MAIN_FONT, font_size=22, weight=BOLD, color=BLACK).move_to(qz_pill)
+        qz_pill_txt = Text("Thực chiến", font=MAIN_FONT, font_size=22, weight=BOLD, color=BLACK)
+        qz_pill = RoundedRectangle(corner_radius=0.12, width=max(2.2, qz_pill_txt.width + 0.5), height=qz_pill_txt.height + 0.28, color=GOLD_E, fill_color=GOLD, fill_opacity=0.9).move_to(qz_pill_txt)
         qz_pill_group = VGroup(qz_pill, qz_pill_txt)
-        qz_title_txt = Text("CHỮA ĐỀ THI THPTQG CHUẨN", font=MAIN_FONT, font_size=24, weight=BOLD, color=YELLOW)
+        qz_title_txt = Text("Chữa đề thi THPT Quốc gia", font=MAIN_FONT, font_size=24, weight=BOLD, color=YELLOW)
         qz_header_content = VGroup(qz_pill_group, qz_title_txt).arrange(RIGHT, buff=0.25).move_to(qz_header_card)
         self.play(FadeIn(qz_header_card), FadeIn(qz_header_content), run_time=0.5)
 
-        # 1. KHUNG TRÊN: CÂU 1 (ĐỌC BẢNG BIẾN THIÊN)
+        # 1. KHUNG TRÊN: CÂU 1 (ĐỌC BẢNG BIẾN THIÊN - MINH HỌA BỐ CỤC 4x1 KHI ĐÁP ÁN NGẮN)
         c1_card = RoundedRectangle(corner_radius=0.2, width=8.4, height=6.4, color="#334155", fill_color="#0F172A", fill_opacity=0.95).next_to(qz_header_card, DOWN, buff=0.2)
-        c1_title = Text("CÂU 1: ĐỌC BẢNG BIẾN THIÊN", font=MAIN_FONT, font_size=22, weight=BOLD, color=TEAL_A).next_to(c1_card.get_top(), DOWN, buff=0.18)
+        c1_title = Text("Câu 1: Đọc bảng biến thiên", font=MAIN_FONT, font_size=22, weight=BOLD, color=TEAL_A).next_to(c1_card.get_top(), DOWN, buff=0.18)
         c1_quest = Text("Cho hàm số f(x) có bảng biến thiên như hình dưới:", font=MAIN_FONT, font_size=22, color=WHITE)
 
         c1_bbt = MathTex(
@@ -784,6 +820,7 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         optB = MathTex(r"B.\\; (0; 1)", font_size=22, color=WHITE)
         optC = MathTex(r"C.\\; (-1; 1)", font_size=22, color=WHITE)
         optD = MathTex(r"D.\\; (-1; 0)", font_size=22, color=GREEN_B)
+        # DẠNG 4x1: 4 đáp án ngắn gọn nằm trên 1 hàng ngang
         opts_row = VGroup(optA, optB, optC, optD).arrange(RIGHT, buff=0.35)
 
         c1_sol = VGroup(
@@ -793,7 +830,7 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
 
         c1_content = VGroup(c1_quest, c1_bbt, c1_ask, opts_row, c1_sol).arrange(DOWN, buff=0.18).move_to(c1_card).shift(DOWN * 0.22)
         fit_width(c1_content, 7.8)
-        ans_c1_box = SurroundingRectangle(optD, color=GREEN, buff=0.14, corner_radius=0.1, stroke_width=2.5)
+        ans_c1_box = SurroundingRectangle(optD, color=GREEN, buff=0.12, corner_radius=0.08, stroke_width=2.5)
 
         self.play(Create(c1_card), FadeIn(c1_title), run_time=0.5)
         self.play(FadeIn(c1_quest), FadeIn(c1_bbt), FadeIn(c1_ask), run_time=1.3)
@@ -801,18 +838,22 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         self.play(Write(c1_sol), Create(ans_c1_box), run_time=1.0)
         self.wait(1.0)
 
-        # 2. KHUNG DƯỚI: CÂU 2 (XÉT DẤU ĐẠO HÀM)
+        # 2. KHUNG DƯỚI: CÂU 2 (XÉT DẤU ĐẠO HÀM - MINH HỌA BỐ CỤC 2x2 HOẶC 1x4 KHI ĐÁP ÁN DÀI)
         c2_card = RoundedRectangle(corner_radius=0.2, width=8.4, height=6.6, color="#334155", fill_color="#1E293B", fill_opacity=0.95).next_to(c1_card, DOWN, buff=0.2)
-        c2_title = Text("CÂU 2: XÉT DẤU ĐẠO HÀM", font=MAIN_FONT, font_size=22, weight=BOLD, color=YELLOW).next_to(c2_card.get_top(), DOWN, buff=0.18)
+        c2_title = Text("Câu 2: Xét dấu đạo hàm", font=MAIN_FONT, font_size=22, weight=BOLD, color=YELLOW).next_to(c2_card.get_top(), DOWN, buff=0.18)
         c2_q1 = Text("Cho hàm số", font=MAIN_FONT, font_size=22, color=WHITE)
         c2_qm = MathTex(r"y = x^3 - 3x^2.", font_size=24, color=WHITE)
         c2_q2 = Text("Mệnh đề nào dưới đây đúng?", font=MAIN_FONT, font_size=22, color=WHITE)
         c2_quest = VGroup(VGroup(c2_q1, c2_qm).arrange(RIGHT, buff=0.15), c2_q2).arrange(DOWN, aligned_edge=LEFT, buff=0.1)
 
-        c2_optA = MathTex(r"A.\\; \\text{Đồng biến trên } (0; 2)", font_size=22, color=WHITE)
-        c2_optB = MathTex(r"B.\\; \\text{Nghịch biến trên } (0; 2)", font_size=22, color=GREEN_B)
-        c2_optC = MathTex(r"C.\\; \\text{Nghịch biến trên } (-\\infty; 0)", font_size=22, color=WHITE)
-        c2_opts = VGroup(c2_optA, c2_optB, c2_optC).arrange(DOWN, aligned_edge=LEFT, buff=0.12)
+        # DẠNG 2x2: Bố cục 2 hàng x 2 cột cho các đáp án trung bình (hoặc dùng 1x4 nếu câu chữ dài)
+        c2_optA = MathTex(r"A.\\; (0; 2)", font_size=22, color=WHITE)
+        c2_optB = MathTex(r"B.\\; (-\\infty; 0)", font_size=22, color=WHITE)
+        c2_optC = MathTex(r"C.\\; (2; +\\infty)", font_size=22, color=WHITE)
+        c2_optD = MathTex(r"D.\\; (0; 2) \\;\\text{và}\\; (2; +\\infty)", font_size=22, color=GREEN_B)
+        row1 = VGroup(c2_optA, c2_optB).arrange(RIGHT, buff=0.7)
+        row2 = VGroup(c2_optC, c2_optD).arrange(RIGHT, buff=0.7)
+        c2_opts = VGroup(row1, row2).arrange(DOWN, aligned_edge=LEFT, buff=0.14)
 
         step1 = MathTex(r"\\text{Bước 1: } y' = 3x^2 - 6x = 3x(x - 2)", font_size=24, color=LIGHT_GRAY)
         step2 = MathTex(r"\\text{Bước 2: } y' = 0 \\iff x = 0 \\quad\\text{hoặc}\\quad x = 2", font_size=24, color=LIGHT_GRAY)
@@ -848,7 +889,7 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         # PHẦN 5: TỔNG KẾT & OUTRO THƯƠNG HIỆU (~8s)
         # ======================================================================
         outro_card = RoundedRectangle(corner_radius=0.25, width=8.4, height=13.6, color=GOLD_E, fill_color="#0F172A", fill_opacity=0.96).move_to(ORIGIN)
-        outro_header = Text("TỔNG KẾT BÍ KÍP ${config.topic.toUpperCase()}", font_size=30, weight=BOLD, color=YELLOW, font=MAIN_FONT)
+        outro_header = Text("Tổng kết bí kíp ${config.topic}", font_size=28, weight=BOLD, color=YELLOW, font=MAIN_FONT)
 
         p1_title = Text("1. Dấu đạo hàm quyết định chiều biến thiên:", font_size=24, font=MAIN_FONT, color=TEAL_A, weight=BOLD)
         p1_desc = Text("• f'(x) > 0 ➜ Đồng biến (Đồ thị đi lên ↗)\\n• f'(x) < 0 ➜ Nghịch biến (Đồ thị đi xuống ↘)", font_size=22, font=MAIN_FONT, color=WHITE, line_spacing=1.2)
@@ -887,7 +928,7 @@ IV. HƯỚNG DẪN RENDER VÀ QUY TẮC BẮT BUỘC:
 3. TUYỆT ĐỐI KHÔNG FadeOut toàn bộ màn hình ở cuối video. Giữ nguyên thẻ Outro "Học toán cùng Yuta".
 4. TUÂN THỦ NGUYÊN TẮC CHỐNG ĐÈ CHỮ (ZERO OVERLAP): Bố cục Khung Thẻ Container Dual-Zone chuẩn xác, dãn hàng line_spacing=1.2, gọi fit_width(group, 7.8) cho mọi khối nội dung.
 5. QUY TẮC CHỈ SỐ TRÊN/DƯỚI & CÔNG THỨC TOÁN HỌC: BẮT BUỘC 100% các chỉ số trên (số mũ x^2, x^3), chỉ số dưới (x_0, x_1), đạo hàm (y') phải dùng MathTex(r"..."). TUYỆT ĐỐI CẤM dùng ký tự unicode mũ (x², x³, x₁, x₀) trong Text(...) để tránh lỗi font vỡ glyph.
-6. TIÊU ĐỀ PILL BADGE: Sử dụng "VÍ DỤ MINH HỌA" hoặc "VÍ DỤ", TUYỆT ĐỐI KHÔNG dùng "VÍ DỤ GỐC".
+6. TIÊU ĐỀ PILL BADGE: Sử dụng "Ví dụ minh họa" hoặc "Ví dụ" (Sentence case chuẩn tiếng Việt), TUYỆT ĐỐI KHÔNG dùng "VÍ DỤ GỐC".
 7. QUY TẮC NHỊP ĐỘ DIỄN HOẠT (PACING VỪA PHẢI, MƯỢT MÀ): Tại các điểm quan sát mấu chốt (tiếp tuyến đạt cực trị y'=0 đổi màu, bảng biến thiên xuất hiện, đóng khung kết luận), dừng vừa vặn self.wait(0.8) đến self.wait(1.0). TUYỆT ĐỐI KHÔNG dừng quá lâu (>1.2s - 1.5s) làm video bị đơ hoặc kéo dài lê thê.
 8. Đóng đầy đủ ngoặc và lệnh construct(self). (Hệ thống máy chủ sẽ tự biên dịch mã bằng lệnh: \`manim \${qualityFlag} scene.py MainScene\`, AI tuyệt đối không tự chạy lệnh render này).
 9. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file, không view_file). CHỈ xuất mã nguồn văn bản trực tiếp.`;
@@ -943,6 +984,7 @@ export const generateManimRevisionPrompt = (
   const topicStr = config?.topic ? `Chủ đề: "${config.topic}"` : '';
   const isVertical = config?.format === 'vertical';
   const qualityFlag = config?.renderQuality === '1080p' ? '-qh' : config?.renderQuality === '4k' ? '-qk' : '-ql';
+  const chosenFont = getFontDirective(config?.fontStyle);
 
   return `Đóng vai Chuyên gia Diễn hoạt Manim CE & Lập trình Python Sư phạm (chuẩn c1_HamSo_DonDieu.py).
 Nhiệm vụ của bạn là đọc mã nguồn Python Manim (\`scene.py\`) đã được tạo trước đó cùng danh sách CÁC LỖI VÀ YÊU CẦU ĐIỀU CHỈNH từ người dùng, sau đó VIẾT LẠI MÃ PYTHON HOÀN CHỈNH TỪ ĐẦU để sửa triệt để các lỗi và render lại video.
@@ -951,6 +993,7 @@ I. THÔNG TIN BÀI HỌC:
 - ${subjectStr}
 - ${topicStr}
 - Định dạng: ${isVertical ? 'DỌC 9:16 (TikTok / Shorts)' : 'NGANG 16:9 (YouTube)'}
+- Font chữ chỉ định: "${chosenFont}"
 
 II. DANH SÁCH LỖI VÀ YÊU CẦU ĐIỀU CHỈNH TỪ NGƯỜI DÙNG:
 """
@@ -966,9 +1009,10 @@ IV. YÊU CẦU THỰC THI BẮT BUỘC:
 1. Đọc kỹ từng góp ý, câu từ cần sửa, hoặc lỗi bố cục được ghi trong mục II.
 2. Viết lại TOÀN BỘ file mã nguồn Manim Python (\`scene.py\`) từ đầu, kế thừa cấu trúc 5 PHÂN CẢNH CHUẨN MỰC:
    - Intro -> Lý thuyết các thẻ màu -> Dual-Zone Mô phỏng động tiếp tuyến đổi màu & BBT 3 tầng -> Chữa đề RAG thực chiến Đa Hiệp (Multi-Round Arena: mỗi hiệp 2 câu trên Top/Bottom Card, FadeOut dọn sạch màn hình giữa các hiệp để chữa từ 2 đến 6+ câu mà vẫn đảm bảo Zero-Overlap 100% và cỡ chữ lớn >= 22) -> Thẻ Outro thương hiệu (giữ nguyên self.wait(1.5)). Khớp nối tổng thời lượng video với thời lượng yêu cầu.
-3. Giữ vững quy chuẩn CHỐNG ĐÈ CHỮ (ZERO OVERLAP), áp dụng Khung Thẻ Container Dual-Zone lấp đầy 93% màn hình, dãn dòng \`line_spacing=1.2\`, gọi fit_width(group, 7.8) cho mọi khối nội dung trong thẻ, font_size lớn rõ nét (Tiêu đề 28-32 BOLD, Thẻ 22-24, MathTex 24-30, Text tiếng Việt 20-22). BẮT BUỘC dùng font Sans-serif "Be Vietnam Pro" (hoặc "Inter"), TUYỆT ĐỐI KHÔNG dùng font Serif (Times New Roman) để chữ in đậm không bị răng cưa hay méo dấu tiếng Việt.
-4. QUY TẮC CHỈ SỐ TRÊN/DƯỚI & PILL BADGE: 100% chỉ số trên/dưới dùng MathTex(r"..."), CẤM dùng unicode trong Text. Dùng "VÍ DỤ MINH HỌA" thay cho "VÍ DỤ GỐC".
-5. NHỊP ĐỘ DIỄN HOẠT (PACING VỪA PHẢI, MƯỢT MÀ): Dừng vừa vặn self.wait(0.8) - self.wait(1.0) tại điểm mấu chốt, đổi màu tiếp tuyến và BBT, giữ Outro self.wait(1.5). TUYỆT ĐỐI KHÔNG dừng quá lâu (>1.2s - 1.5s) gây cảm giác màn hình bị đơ hoặc kéo dài lê thê.
-6. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, không viết lời chào hay giải thích ngoài mã.
-7. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file). (Hệ thống máy chủ sẽ tự biên dịch mã bằng lệnh: \`manim \${qualityFlag} scene.py MainScene\`, AI không được tự chạy lệnh này).`;
+3. Giữ vững quy chuẩn CHỐNG ĐÈ CHỮ (ZERO OVERLAP), áp dụng Khung Thẻ Container Dual-Zone lấp đầy 93% màn hình, dãn dòng \`line_spacing=1.2\`, gọi fit_width(group, 7.8) cho mọi khối nội dung trong thẻ, font_size lớn rõ nét (Tiêu đề 28-32 BOLD, Thẻ 22-24, MathTex 24-30, Text tiếng Việt 20-22). Dùng font "${chosenFont}". TUYỆT ĐỐI KHÔNG IN HOA (Sentence case chuẩn tiếng Việt cho mọi tiêu đề, thẻ, badges, câu hỏi và đề bài).
+4. QUY TẮC BOX VỪA KHÍT & BỐ CỤC 4 ĐÁP ÁN: Khung viền SurroundingRectangle(buff=0.12-0.15) ôm vừa khít nội dung, không tràn và không quá thừa. Tùy độ dài 4 đáp án A, B, C, D để bố trí dạng 4x1 (ngắn <= 8 ký tự), 2x2 (trung bình, khoảng nghiệm/tọa độ), hoặc 1x4 (dài, mệnh đề). ans_box = SurroundingRectangle(opt, buff=0.12) vừa khít đáp án đúng.
+5. QUY TẮC CHỈ SỐ TRÊN/DƯỚI & PILL BADGE: 100% chỉ số trên/dưới dùng MathTex(r"..."), CẤM dùng unicode trong Text. Dùng "Ví dụ minh họa" hoặc "Ví dụ", TUYỆT ĐỐI KHÔNG dùng "VÍ DỤ GỐC".
+6. NHỊP ĐỘ DIỄN HOẠT (PACING VỪA PHẢI, MƯỢT MÀ): Dừng vừa vặn self.wait(0.8) - self.wait(1.0) tại điểm mấu chốt, đổi màu tiếp tuyến và BBT, giữ Outro self.wait(1.5). TUYỆT ĐỐI KHÔNG dừng quá lâu (>1.2s - 1.5s) gây cảm giác màn hình bị đơ hoặc kéo dài lê thê.
+7. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, không viết lời chào hay giải thích ngoài mã.
+8. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ công cụ hay tool lệnh nào (không run_command, không write_to_file). (Hệ thống máy chủ sẽ tự biên dịch mã bằng lệnh: \`manim \${qualityFlag} scene.py MainScene\`, AI không được tự chạy lệnh này).`;
 };

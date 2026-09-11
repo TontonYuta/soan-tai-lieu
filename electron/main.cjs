@@ -2676,7 +2676,12 @@ YÊU CẦU BẮT BUỘC KHÔNG ĐƯỢC BỎ QUA (TUÂN THỦ KIẾN TRÚC 5 PH�
    - Phần 4: Chữa đề thi RAG thực chiến Đa Hiệp (Multi-Round Arena: mỗi hiệp 2 câu trên Top/Bottom Card, FadeOut dọn sạch màn hình giữa các hiệp để chữa từ 2 đến 6+ câu mà vẫn đảm bảo Zero-Overlap 100% và cỡ chữ lớn >= 22).
    - Phần 5: Thẻ Outro tổng kết thương hiệu "Học toán cùng Yuta" (height=13.6, width=8.4) - BẮT BUỘC kết thúc bằng self.wait(1.5) giữ nguyên màn hình, TUYỆT ĐỐI KHÔNG FadeOut làm đen màn hình!
 6. BẮT BUỘC HÀM fit_width(group, 7.8) trên mọi khối nội dung mobject trong thẻ để triệt tiêu lỗi tràn viền.
-7. BẮT BUỘC FONT_SIZE LỚN DỄ ĐỌC TRÊN ĐIỆN THOẠI: TUYỆT ĐỐI KHÔNG dùng font_size nhỏ dưới 20! Mọi chữ tiếng Việt font_size=20-22, công thức MathTex font_size=24-30, tiêu đề 28-32 BOLD. Dùng font "Be Vietnam Pro" (hoặc "Inter"), không dùng font Serif.
+7. QUY CHUẨN TYPOGRAPHY, FONT & BỐ CỤC:
+   - Font chữ mặc định có chân: Dùng font="Times New Roman" (hoặc "Liberation Serif") cho mọi đối tượng Text; nếu người dùng chọn sans thì dùng "Be Vietnam Pro".
+   - TUYỆT ĐỐI KHÔNG IN HOA (Sentence case): Tiêu đề, thẻ, badges, câu hỏi và đề bài chỉ viết hoa chữ cái đầu và danh từ riêng.
+   - BOX BỌC TEXT VỪA KHÍT: SurroundingRectangle(buff=0.12-0.15), huy hiệu RoundedRectangle(width=max(2.2, text.width + 0.5)).
+   - BỐ CỤC 4 ĐÁP ÁN THÍCH ỨNG: Dạng 4x1 (ngắn <= 8 ký tự), 2x2 (trung bình, khoảng nghiệm), hoặc 1x4 (dài). ans_box = SurroundingRectangle(opt, buff=0.12) vừa khít.
+   - Cỡ chữ lớn dễ đọc: Mọi chữ tiếng Việt font_size=20-22, MathTex font_size=24-30, tiêu đề 28-32 BOLD. TUYỆT ĐỐI KHÔNG DÙNG FONT_SIZE DƯỚI 20!
 8. 100% công thức MathTex(r"...") dùng raw string r"...".
 9. TUYỆT ĐỐI CHỈ XUẤT MÃ PYTHON TRONG KHỐI \`\`\`python ... \`\`\`, KHÔNG VIẾT LỜI CHÀO HAY GIẢI THÍCH NGOÀI MÃ!
 10. TUYỆT ĐỐI KHÔNG GỌI BẤT KỲ TOOL NÀO (KHÔNG run_command, KHÔNG write_to_file, KHÔNG view_file). KHÔNG TỰ CHẠY LỆNH RENDER. Hệ thống sẽ tự biên dịch mã bằng lệnh: \`manim ${qualityFlag} scene.py MainScene\`.`;
@@ -4074,7 +4079,7 @@ YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ KIẾN TRÚC 5 PHÂN CẢNH V�
    - Phân số \\frac{a}{b}, căn thức \\sqrt{x}, tích phân \\int, đạo hàm \\frac{df}{dx}, vector \\vec{u}.
    - Biến đổi toán học nhiều dòng dùng môi trường aligned: MathTex(r"\\begin{aligned} ... &= ... \\\\ &= ... \\end{aligned}").
    - Đóng khung nổi bật đáp số / kết quả cuối cùng: SurroundingRectangle(result, color=GREEN, buff=0.16, corner_radius=0.12).
-   - Tuyệt đối KHÔNG viết tiếng Việt có dấu trực tiếp trong MathTex; tiếng Việt dùng Text("...", font="Be Vietnam Pro").
+   - Tuyệt đối KHÔNG viết tiếng Việt có dấu trực tiếp trong MathTex; tiếng Việt dùng Text("...", font="Times New Roman").
 4. MÔ PHỎNG TOÁN HỌC TRỰC QUAN SINH ĐỘNG (VISUAL SIMULATION):
    - Phân cảnh giải toán BẮT BUỘC có mô phỏng hình ảnh động: Hệ trục tọa độ Axes (x_length=7.2, y_length=4.0), đồ thị axes.plot(...), điểm Dot di chuyển trên đường cong bằng ValueTracker, tiếp tuyến trượt đổi màu theo hệ số góc f'(x) và thanh trạng thái real-time always_redraw.
 5. BỐ CỤC KHUNG THẺ CONTAINER (DUAL-ZONE) LẤP ĐẦY 93% MÀN HÌNH (TRIỆT TIÊU KHOẢNG TRỐNG ĐEN):
@@ -4084,7 +4089,12 @@ YÊU CẦU KỸ THUẬT BẮT BUỘC (TUÂN THỦ KIẾN TRÚC 5 PHÂN CẢNH V�
    - Dùng TransformMatchingTex khi biến đổi công thức đại số.
    - Dùng LaggedStart khi xuất hiện danh sách hoặc các phần tử nối tiếp.
    - Có khoảng dừng self.wait(0.8 đến 1.0s) sau các công thức trọng tâm để người xem kịp quan sát.
-7. Màu nền "#0B1120", toàn bộ Text dùng font="Be Vietnam Pro".
+7. QUY CHUẨN FONT & BỐ CỤC:
+   - Toàn bộ Text dùng font="Times New Roman" (hoặc "Liberation Serif") có chân làm mặc định (hoặc "Be Vietnam Pro" nếu chọn sans).
+   - TUYỆT ĐỐI KHÔNG IN HOA (Sentence case chuẩn tiếng Việt cho mọi tiêu đề, thẻ, badges, câu hỏi và đề bài).
+   - Khung viền bọc text chứa vừa khít: SurroundingRectangle(buff=0.12-0.15) và RoundedRectangle(width=max(2.2, text.width + 0.5)).
+   - Bố cục 4 đáp án thông minh theo độ dài: 4x1 (ngắn <= 8 ký tự), 2x2 (trung bình), hoặc 1x4 (dài). ans_box = SurroundingRectangle(opt, buff=0.12) vừa khít.
+   - Màu nền "#0B1120".
 8. Cảnh Outro: Thẻ Card tổng kết toàn màn hình (height=13.6, width=8.4), giữ nguyên màn hình (self.wait(1.5)), TUYỆT ĐỐI KHÔNG DÙNG FadeOut(*self.mobjects) làm đen màn hình.
 9. TUYỆT ĐỐI CHỈ XUẤT DUY NHẤT 1 KHỐI MÃ PYTHON trong \`\`\`python ... \`\`\`, không viết bất kỳ lời chào hay giải thích ngoài mã.
 Lệnh render cuối file: \`manim ${qualityFlag} scene.py MainScene\`.`;

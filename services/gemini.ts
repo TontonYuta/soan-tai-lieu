@@ -10,7 +10,8 @@ import {
   generateManimRevisionPrompt,
   extractAttachedImageDirective,
   parseDurationToSeconds,
-  getExerciseAndRoundPlan
+  getExerciseAndRoundPlan,
+  getFontDirective
 } from "./prompts/manim";
 import { generateVideoScriptPrompt } from "./prompts/script";
 import { generateBatPrompt } from "./prompts/bat";
@@ -33,5 +34,6 @@ export {
   generateProjectPrompt,
   extractAttachedImageDirective,
   parseDurationToSeconds,
-  getExerciseAndRoundPlan
+  getExerciseAndRoundPlan,
+  getFontDirective
 };

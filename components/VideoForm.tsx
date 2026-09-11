@@ -48,7 +48,7 @@ const VideoForm: React.FC<VideoFormProps> = ({
     details: '',
     hookType: 'visual_intuition',
     simulationMode: 'calculus',
-    fontStyle: 'sans',
+    fontStyle: 'serif',
     isSeries: false,
     seriesCount: 3,
     seriesOutline: '',
