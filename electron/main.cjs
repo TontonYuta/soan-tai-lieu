@@ -782,6 +782,106 @@ function prepareManimPythonCode(code) {
     processed = processed.replace(/```(?:python|py)?/gi, '').replace(/```/g, '').trim();
   }
 
+  // TỰ ĐỘNG KHẮC PHỤC LỖI KÝ TỰ ESCAPE & CHUỖI BỊ ĐỨT ĐOẠN DO PROMPT
+  // 1. Phục hồi các ký tự điều khiển (control characters) vô tình bị unescape
+  processed = processed.replace(/\x0corall/g, '\\forall');
+  processed = processed.replace(/\x0c/g, '\\f');
+  processed = processed.replace(/\x08egin/g, '\\begin');
+  processed = processed.replace(/\x08/g, '\\b');
+  processed = processed.replace(/\r?\nenewcommand/g, '\\renewcommand');
+  processed = processed.replace(/[\t\x09]\s*ext\{/g, '\\text{');
+
+  // 2. Nối chuỗi bị xuống dòng bất hợp lệ giữa chừng (\nearrow bị thành \n earrow)
+  processed = processed.replace(/MathTex\(\s*r"([^"]*)\r?\n\s*earrow\)"/g, 'MathTex(r"$1\\\\nearrow)"');
+  processed = processed.replace(/\(\s*\r?\n\s*earrow\)/g, '(\\\\nearrow)');
+  processed = processed.replace(/&\s*\r?\n\s*earrow/g, '& \\\\nearrow');
+  processed = processed.replace(/searrow\s*&\s*&\s*\r?\n\s*earrow/g, '\\\\searrow & & \\\\nearrow');
+
+  // 3. Khôi phục các lệnh và môi trường LaTeX bị thiếu dấu gạch chéo ngược
+  processed = processed.replace(/(?<!\\)begin\{array\}/g, '\\begin{array}');
+  processed = processed.replace(/(?<!\\)end\{array\}/g, '\\end{array}');
+  processed = processed.replace(/(?<!\\)hline/g, '\\hline');
+  processed = processed.replace(/(?<!\\)renewcommand\{/g, '\\renewcommand{');
+  processed = processed.replace(/(?<!\\)arraystretch/g, '\\arraystretch');
+  processed = processed.replace(/;Longrightarrow;/g, '\\;\\Longrightarrow\\;');
+  processed = processed.replace(/;\s*\\text\{/g, '\\;\\text{');
+  processed = processed.replace(/(?<!\\)searrow/g, '\\searrow');
+  processed = processed.replace(/(?<!\\)nearrow/g, '\\nearrow');
+  processed = processed.replace(/(?<!\\)mathbf\{/g, '\\mathbf{');
+  processed = processed.replace(/(?<!\\)infty/g, '\\infty');
+  processed = processed.replace(/(?<!\\)iff/g, '\\iff');
+  processed = processed.replace(/(?<!\\)quad/g, '\\quad');
+  processed = processed.replace(/(?<!\\)forall/g, '\\forall');
+  processed = processed.replace(/(?<=\s)pm(?=\s|\d)/g, '\\pm');
+
+  // 4. Sửa ngắt dòng hàng trong bảng array: dòng kết thúc bằng 1 dấu \ thành 2 dấu \\
+  processed = processed.replace(/(\\begin\{array\}[\s\S]*?\\end\{array\})/g, (m) => {
+    return m.replace(/(?<!\\)\\\s*$/gm, '\\\\');
+  });
+
+  // 5. Khắc phục lỗi SyntaxError: unterminated string literal khi chuỗi Text("...") bị xuống dòng bất hợp lệ
+  const rawSplitLines = processed.split(/\r?\n/);
+  const sanitizedLines = [];
+  let inTripleDQuote = false;
+  let inTripleSQuote = false;
+  let lIdx = 0;
+  while (lIdx < rawSplitLines.length) {
+    let curLine = rawSplitLines[lIdx];
+    let inDQuote = false;
+    let inSQuote = false;
+    let charIdx = 0;
+    while (charIdx < curLine.length) {
+      if (!inDQuote && !inSQuote) {
+        if (curLine.slice(charIdx, charIdx + 3) === '"""') {
+          inTripleDQuote = !inTripleDQuote;
+          charIdx += 3;
+          continue;
+        } else if (curLine.slice(charIdx, charIdx + 3) === "'''") {
+          inTripleSQuote = !inTripleSQuote;
+          charIdx += 3;
+          continue;
+        }
+      }
+      if (inTripleDQuote || inTripleSQuote) {
+        charIdx++;
+        continue;
+      }
+      const c = curLine[charIdx];
+      if (c === '\\') {
+        charIdx += 2;
+        continue;
+      }
+      if (c === '"' && !inSQuote) {
+        inDQuote = !inDQuote;
+      } else if (c === "'" && !inDQuote) {
+        inSQuote = !inSQuote;
+      }
+      charIdx++;
+    }
+
+    if (inDQuote && !inTripleDQuote && lIdx + 1 < rawSplitLines.length) {
+      const nextLine = rawSplitLines[lIdx + 1];
+      if (/^\s*earrow/.test(nextLine)) {
+        curLine = curLine + '\\nearrow' + nextLine.replace(/^\s*earrow/, '');
+      } else {
+        curLine = curLine + '\\n' + nextLine.trimStart();
+      }
+      rawSplitLines[lIdx + 1] = curLine;
+      lIdx++;
+      continue;
+    } else if (inSQuote && !inTripleSQuote && lIdx + 1 < rawSplitLines.length && !curLine.trim().startsWith('#')) {
+      const nextLine = rawSplitLines[lIdx + 1];
+      curLine = curLine + '\\n' + nextLine.trimStart();
+      rawSplitLines[lIdx + 1] = curLine;
+      lIdx++;
+      continue;
+    }
+
+    sanitizedLines.push(curLine);
+    lIdx++;
+  }
+  processed = sanitizedLines.join('\n');
+
   // Loại bỏ các dòng dang dở do bị cắt cụt token ở cuối file
   const lines = processed.split(/\r?\n/);
   while (lines.length > 0) {

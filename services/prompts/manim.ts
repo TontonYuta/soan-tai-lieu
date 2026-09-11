@@ -461,8 +461,8 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         intro_sub = Text("Lý thuyết trọng tâm • Mô phỏng trực quan • Chữa đề thực chiến", font_size=22, font=MAIN_FONT, color=GRAY_B)
 
         intro_core_rule = VGroup(
-            MathTex(r"y' > 0 \;\Longrightarrow\; \text{Đồng biến } (\nearrow)", font_size=28, color=GREEN_B),
-            MathTex(r"y' < 0 \;\Longrightarrow\; \text{Nghịch biến } (\searrow)", font_size=28, color=RED_B)
+            MathTex(r"y' > 0 \\;\\Longrightarrow\\; \\text{Đồng biến } (\\nearrow)", font_size=28, color=GREEN_B),
+            MathTex(r"y' < 0 \\;\\Longrightarrow\\; \\text{Nghịch biến } (\\searrow)", font_size=28, color=RED_B)
         ).arrange(DOWN, buff=0.22)
 
         intro_group = VGroup(intro_badge, VGroup(intro_title, intro_box), intro_sub, intro_core_rule).arrange(DOWN, buff=0.4).move_to(ORIGIN)
@@ -484,7 +484,7 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
 
         card_inc = RoundedRectangle(corner_radius=0.2, width=8.4, height=4.2, color=GREEN_D, fill_color="#064E3B", fill_opacity=0.35, stroke_width=2.5)
         t_inc_title = Text("1. HÀM SỐ ĐỒNG BIẾN (TĂNG)", font_size=24, font=MAIN_FONT, weight=BOLD, color=GREEN_B)
-        t_inc_math = MathTex(r"y' = f'(x) > 0, \quad \forall x \in K", font_size=30, color=WHITE)
+        t_inc_math = MathTex(r"y' = f'(x) > 0, \\quad \\forall x \\in K", font_size=30, color=WHITE)
         t_inc_desc1 = Text("➜ Đồ thị đi LÊN từ trái sang phải (↗)", font_size=22, font=MAIN_FONT, color=GREEN_A)
         t_inc_desc2 = Text("➜ Tiếp tuyến dốc lên: hệ số góc k = y' > 0", font_size=22, font=MAIN_FONT, color=GRAY_A)
         c_inc_group = VGroup(t_inc_title, t_inc_math, t_inc_desc1, t_inc_desc2).arrange(DOWN, aligned_edge=LEFT, buff=0.2).move_to(card_inc)
@@ -493,7 +493,7 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
 
         card_dec = RoundedRectangle(corner_radius=0.2, width=8.4, height=4.2, color=RED_D, fill_color="#7F1D1D", fill_opacity=0.35, stroke_width=2.5)
         t_dec_title = Text("2. HÀM SỐ NGHỊCH BIẾN (GIẢM)", font_size=24, font=MAIN_FONT, weight=BOLD, color=RED_B)
-        t_dec_math = MathTex(r"y' = f'(x) < 0, \quad \forall x \in K", font_size=30, color=WHITE)
+        t_dec_math = MathTex(r"y' = f'(x) < 0, \\quad \\forall x \\in K", font_size=30, color=WHITE)
         t_dec_desc1 = Text("➜ Đồ thị đi XUỐNG từ trái sang phải (↘)", font_size=22, font=MAIN_FONT, color=RED_A)
         t_dec_desc2 = Text("➜ Tiếp tuyến dốc xuống: hệ số góc k = y' < 0", font_size=22, font=MAIN_FONT, color=GRAY_A)
         c_dec_group = VGroup(t_dec_title, t_dec_math, t_dec_desc1, t_dec_desc2).arrange(DOWN, aligned_edge=LEFT, buff=0.2).move_to(card_dec)
@@ -583,26 +583,26 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         bottom_card = RoundedRectangle(corner_radius=0.2, width=8.4, height=6.6, color="#334155", fill_color="#1E293B", fill_opacity=0.95).next_to(top_card, DOWN, buff=0.2)
         bot_title = Text("📊 BẢNG BIẾN THIÊN & KẾT LUẬN", font=MAIN_FONT, font_size=22, weight=BOLD, color=YELLOW).next_to(bottom_card.get_top(), DOWN, buff=0.18)
 
-        calc_deriv = MathTex(r"y' = 3x^2 - 3 = 0 \iff x = \pm 1", font_size=26, color=WHITE)
+        calc_deriv = MathTex(r"y' = 3x^2 - 3 = 0 \\iff x = \\pm 1", font_size=26, color=WHITE)
         bbt = MathTex(
-            r"""\renewcommand{\arraystretch}{1.35}
-            \begin{array}{|c|ccccccc|}
-            \hline
-            x & -\infty & & -1 & & 1 & & +\infty \\
-            \hline
-            y' & & + & 0 & - & 0 & + & \\
-            \hline
-            & & & 2 & & & & +\infty \\
-            y & & \nearrow & & \searrow & & \nearrow & \\
-            & -\infty & & & & -2 & & \\
-            \hline
-            \end{array}""",
+            r"""\\renewcommand{\\arraystretch}{1.35}
+            \\begin{array}{|c|ccccccc|}
+            \\hline
+            x & -\\infty & & -1 & & 1 & & +\\infty \\\\
+            \\hline
+            y' & & + & 0 & - & 0 & + & \\\\
+            \\hline
+            & & & 2 & & & & +\\infty \\\\
+            y & & \\nearrow & & \\searrow & & \\nearrow & \\\\
+            & -\\infty & & & & -2 & & \\\\
+            \\hline
+            \\end{array}""",
             font_size=24, color=WHITE
         )
 
         t_res_inc = VGroup(
             Text("• y' > 0 ➜ Đồng biến trên:", font_size=22, font=MAIN_FONT, color=GREEN_B, weight=BOLD),
-            MathTex(r"(-\infty; -1) \;\text{và}\; (1; +\infty)", font_size=24, color=WHITE)
+            MathTex(r"(-\\infty; -1) \\;\\text{và}\\; (1; +\\infty)", font_size=24, color=WHITE)
         ).arrange(RIGHT, buff=0.15)
 
         t_res_dec = VGroup(
@@ -652,31 +652,31 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         c1_quest = Text("Cho hàm số f(x) có bảng biến thiên như hình dưới:", font=MAIN_FONT, font_size=22, color=WHITE)
 
         c1_bbt = MathTex(
-            r"""\renewcommand{\arraystretch}{1.3}
-            \begin{array}{|c|ccccccccc|}
-            \hline
-            x & -\infty & & -1 & & 0 & & 1 & & +\infty \\
-            \hline
-            f'(x) & & - & 0 & + & 0 & - & 0 & + & \\
-            \hline
-            & +\infty & & & & 0 & & & & +\infty \\
-            f(x) & & \searrow & & \nearrow & & \searrow & & \nearrow & \\
-            & & & -1 & & & & -1 & & \\
-            \hline
-            \end{array}""",
+            r"""\\renewcommand{\\arraystretch}{1.3}
+            \\begin{array}{|c|ccccccccc|}
+            \\hline
+            x & -\\infty & & -1 & & 0 & & 1 & & +\\infty \\\\
+            \\hline
+            f'(x) & & - & 0 & + & 0 & - & 0 & + & \\\\
+            \\hline
+            & +\\infty & & & & 0 & & & & +\\infty \\\\
+            f(x) & & \\searrow & & \\nearrow & & \\searrow & & \\nearrow & \\\\
+            & & & -1 & & & & -1 & & \\\\
+            \\hline
+            \\end{array}""",
             font_size=22, color=WHITE
         )
 
         c1_ask = Text("Hỏi: Hàm số đã cho đồng biến trên khoảng nào?", font=MAIN_FONT, font_size=22, color=YELLOW)
-        optA = MathTex(r"A.\; (-\infty; -1)", font_size=22, color=WHITE)
-        optB = MathTex(r"B.\; (0; 1)", font_size=22, color=WHITE)
-        optC = MathTex(r"C.\; (-1; 1)", font_size=22, color=WHITE)
-        optD = MathTex(r"D.\; (-1; 0)", font_size=22, color=GREEN_B)
+        optA = MathTex(r"A.\\; (-\\infty; -1)", font_size=22, color=WHITE)
+        optB = MathTex(r"B.\\; (0; 1)", font_size=22, color=WHITE)
+        optC = MathTex(r"C.\\; (-1; 1)", font_size=22, color=WHITE)
+        optD = MathTex(r"D.\\; (-1; 0)", font_size=22, color=GREEN_B)
         opts_row = VGroup(optA, optB, optC, optD).arrange(RIGHT, buff=0.35)
 
         c1_sol = VGroup(
             Text("➜ f'(x) > 0 và đồ thị đi lên trên (-1; 0). Chọn", font=MAIN_FONT, font_size=22, color=GREEN_B, weight=BOLD),
-            MathTex(r"\mathbf{D}", font_size=24, color=GREEN)
+            MathTex(r"\\mathbf{D}", font_size=24, color=GREEN)
         ).arrange(RIGHT, buff=0.15)
 
         c1_content = VGroup(c1_quest, c1_bbt, c1_ask, opts_row, c1_sol).arrange(DOWN, buff=0.18).move_to(c1_card).shift(DOWN * 0.22)
@@ -697,21 +697,21 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         c2_q2 = Text("Mệnh đề nào dưới đây đúng?", font=MAIN_FONT, font_size=22, color=WHITE)
         c2_quest = VGroup(VGroup(c2_q1, c2_qm).arrange(RIGHT, buff=0.15), c2_q2).arrange(DOWN, aligned_edge=LEFT, buff=0.1)
 
-        c2_optA = MathTex(r"A.\; \text{Đồng biến trên } (0; 2)", font_size=22, color=WHITE)
-        c2_optB = MathTex(r"B.\; \text{Nghịch biến trên } (0; 2)", font_size=22, color=GREEN_B)
-        c2_optC = MathTex(r"C.\; \text{Nghịch biến trên } (-\infty; 0)", font_size=22, color=WHITE)
+        c2_optA = MathTex(r"A.\\; \\text{Đồng biến trên } (0; 2)", font_size=22, color=WHITE)
+        c2_optB = MathTex(r"B.\\; \\text{Nghịch biến trên } (0; 2)", font_size=22, color=GREEN_B)
+        c2_optC = MathTex(r"C.\\; \\text{Nghịch biến trên } (-\\infty; 0)", font_size=22, color=WHITE)
         c2_opts = VGroup(c2_optA, c2_optB, c2_optC).arrange(DOWN, aligned_edge=LEFT, buff=0.12)
 
-        step1 = MathTex(r"\text{Bước 1: } y' = 3x^2 - 6x = 3x(x - 2)", font_size=24, color=LIGHT_GRAY)
-        step2 = MathTex(r"\text{Bước 2: } y' = 0 \iff x = 0 \quad\text{hoặc}\quad x = 2", font_size=24, color=LIGHT_GRAY)
+        step1 = MathTex(r"\\text{Bước 1: } y' = 3x^2 - 6x = 3x(x - 2)", font_size=24, color=LIGHT_GRAY)
+        step2 = MathTex(r"\\text{Bước 2: } y' = 0 \\iff x = 0 \\quad\\text{hoặc}\\quad x = 2", font_size=24, color=LIGHT_GRAY)
         step3 = VGroup(
             Text("Bước 3 (Trong trái ngoài cùng, a = 3 > 0):", font=MAIN_FONT, font_size=22, color=YELLOW),
-            MathTex(r"y' < 0 \iff x \in (0; 2)", font_size=24, color=WHITE)
+            MathTex(r"y' < 0 \\iff x \\in (0; 2)", font_size=24, color=WHITE)
         ).arrange(RIGHT, buff=0.15)
 
         c2_concl = VGroup(
             Text("➜ Hàm số nghịch biến trên (0; 2). Chọn", font=MAIN_FONT, font_size=22, color=GREEN_B, weight=BOLD),
-            MathTex(r"\mathbf{B}", font_size=24, color=GREEN)
+            MathTex(r"\\mathbf{B}", font_size=24, color=GREEN)
         ).arrange(RIGHT, buff=0.15)
 
         c2_content = VGroup(c2_quest, c2_opts, step1, step2, step3, c2_concl).arrange(DOWN, aligned_edge=LEFT, buff=0.16).move_to(c2_card).shift(DOWN * 0.22)
@@ -739,11 +739,11 @@ class MainScene(${config.mathType === '3d_geometry' ? 'ThreeDScene' : 'Scene'}):
         outro_header = Text("TỔNG KẾT BÍ KÍP ${config.topic.toUpperCase()}", font_size=30, weight=BOLD, color=YELLOW, font=MAIN_FONT)
 
         p1_title = Text("1. Dấu đạo hàm quyết định chiều biến thiên:", font_size=24, font=MAIN_FONT, color=TEAL_A, weight=BOLD)
-        p1_desc = Text("• f'(x) > 0 ➜ Đồng biến (Đồ thị đi lên ↗)\n• f'(x) < 0 ➜ Nghịch biến (Đồ thị đi xuống ↘)", font_size=22, font=MAIN_FONT, color=WHITE, line_spacing=1.2)
+        p1_desc = Text("• f'(x) > 0 ➜ Đồng biến (Đồ thị đi lên ↗)\\n• f'(x) < 0 ➜ Nghịch biến (Đồ thị đi xuống ↘)", font_size=22, font=MAIN_FONT, color=WHITE, line_spacing=1.2)
         b_p1 = VGroup(p1_title, p1_desc).arrange(DOWN, aligned_edge=LEFT, buff=0.15)
 
         p2_title = Text("2. Đọc Đồ thị & Bảng Biến Thiên:", font_size=24, font=MAIN_FONT, color=TEAL_A, weight=BOLD)
-        p2_desc = Text("• Đọc chiều biến thiên theo hướng từ TRÁI sang PHẢI\n• Luôn kết luận khoảng đơn điệu theo trục x", font_size=22, font=MAIN_FONT, color=WHITE, line_spacing=1.2)
+        p2_desc = Text("• Đọc chiều biến thiên theo hướng từ TRÁI sang PHẢI\\n• Luôn kết luận khoảng đơn điệu theo trục x", font_size=22, font=MAIN_FONT, color=WHITE, line_spacing=1.2)
         b_p2 = VGroup(p2_title, p2_desc).arrange(DOWN, aligned_edge=LEFT, buff=0.15)
 
         p3_title = Text("3. Bài toán cho công thức hàm số:", font_size=24, font=MAIN_FONT, color=TEAL_A, weight=BOLD)
