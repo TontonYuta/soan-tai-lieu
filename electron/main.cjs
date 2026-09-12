@@ -931,6 +931,54 @@ function prepareManimPythonCode(code) {
     processed += '\n        self.wait(3)\n';
   }
 
+  // Tự động chuẩn hóa intro_core_rule: không để ngắt dòng \\ hoặc tách nhiều MathTex làm vỡ công thức thành 2x2
+  processed = processed.replace(
+    /(intro_core_rule\s*=\s*VGroup\([\s\S]*?\)\.arrange\([^\)]*\))/g,
+    (match) => {
+      let cleaned = match;
+      // 1. Khử mọi dạng ngắt dòng \\ bên trong từng MathTex
+      cleaned = cleaned.replace(/\\{2,}[\s;]*(?:\\quad|\\;|\\*text\{v[aà]\s*\}|v[aà])*/gi, ' \\quad \\text{và} \\quad ');
+      cleaned = cleaned.replace(/\\{2,}\s*(?=\\exists|\\forall|\\text)/g, ' \\quad \\text{và} \\quad ');
+      cleaned = cleaned.replace(/(?:\\quad\s*\\text\{v[aà]\s*\}\s*\\quad\s*)+/gi, ' \\quad \\text{và} \\quad ');
+      cleaned = cleaned.replace(/\\quad\s*\\text\{v[aà]\s*\}\s*\\quad\s*(?:\\quad\s*)?\\text\{v[aà]\s*\}/gi, ' \\quad \\text{và} \\quad ');
+      cleaned = cleaned.replace(/\\quad\s*\\quad/g, '\\quad');
+
+      // 2. Tự động gộp các MathTex bị tách rời (khi MathTex sau là vế thứ 2 bắt đầu bằng \text{và} hoặc \exists)
+      const pairRe = /MathTex\(r?(["'])([\s\S]*?)\1\s*(?:,\s*font_size\s*=\s*\d+)?\s*(?:,\s*color\s*=\s*([^,\)]+))?\s*\)[\s\n]*,[\s\n]*MathTex\(r?(["'])([\s\S]*?)\4\s*(?:,\s*font_size\s*=\s*\d+)?\s*(?:,\s*color\s*=\s*([^,\)]+))?\s*\)/g;
+      cleaned = cleaned.replace(pairRe, (m, q1, b1, c1, q2, b2, c2) => {
+        if (/^\s*(?:\\*text\{v[aà]\s*\}|v[aà]|\\*exists)/i.test(b2)) {
+          let cleanB2 = b2.replace(/^[\s;]*(?:\\*text\{v[aà]\s*\}|v[aà]|\\*quad)*/i, '').trim();
+          let col = c1 ? `, color=${c1}` : '';
+          return `MathTex(r"${b1.trim()} \\quad \\text{và} \\quad ${cleanB2}", font_size=23${col})`;
+        }
+        return m;
+      });
+
+      return cleaned;
+    }
+  );
+  // Tự động chèn fit_width an toàn cho intro_core_rule nếu chưa có
+  if (processed.includes('intro_core_rule') && !processed.includes('fit_width(intro_core_rule')) {
+    processed = processed.replace(
+      /(intro_core_rule\s*=\s*VGroup\([\s\S]*?\)\.arrange\([^\)]*\))(?![\s\S]*?fit_width\(intro_core_rule)/g,
+      '$1\n        fit_width(intro_core_rule, 7.6)'
+    );
+  }
+  // Tự động chèn fit_width an toàn cho intro_title nếu chưa có
+  if (processed.includes('intro_title = Text(') && !processed.includes('fit_width(intro_title')) {
+    processed = processed.replace(
+      /(intro_title\s*=\s*Text\([^\)]*\))(?![\s\S]*?fit_width\(intro_title)/g,
+      '$1\n        fit_width(intro_title, 7.2)'
+    );
+  }
+  // Tự động chèn fit_width an toàn cho intro_sub nếu chưa có
+  if (processed.includes('intro_sub = Text(') && !processed.includes('fit_width(intro_sub')) {
+    processed = processed.replace(
+      /(intro_sub\s*=\s*Text\([^\)]*\))(?![\s\S]*?fit_width\(intro_sub)/g,
+      '$1\n        fit_width(intro_sub, 7.4)'
+    );
+  }
+
   const polyfillSnippet = `
 # ==========================================
 # YUTA MANIM ENGINE - COMPATIBILITY POLYFILLS
@@ -1002,6 +1050,10 @@ try:
         elif fs is None:
             kwargs['font_size'] = 24
         f = kwargs.get('font', None)
+        import platform
+        if f in ('Times New Roman', 'Liberation Serif') and platform.system() == 'Linux':
+            f = 'DejaVu Serif'
+            kwargs['font'] = 'DejaVu Serif'
         if not f or f in ('sans-serif', 'sans', 'default', ''):
             font_candidates = ['Times New Roman', 'Liberation Serif', 'Be Vietnam Pro', 'Inter', 'DejaVu Serif', 'JetBrains Mono', 'Roboto', 'FreeSerif']
             success = False
@@ -1726,6 +1778,137 @@ function getDefaultFirefoxProfile() {
   return path.join(app.getPath('userData'), 'FirefoxProfile');
 }
 
+let cachedAntigravityQuota = null;
+let lastQuotaFetchTimestamp = 0;
+
+async function getLiveAntigravityQuota(forceRefresh = false) {
+  const now = Date.now();
+  if (!forceRefresh && cachedAntigravityQuota && (now - lastQuotaFetchTimestamp < 5000)) {
+    return cachedAntigravityQuota;
+  }
+
+  try {
+    // 1. Quét các cổng listening loopback của agy và language_server
+    let ssOutput = '';
+    try {
+      ssOutput = execSync("ss -tlnp 2>/dev/null | grep -E 'agy|language_server'", { encoding: 'utf-8', timeout: 1500 });
+    } catch {}
+
+    const portMatches = [...ssOutput.matchAll(/127\.0\.0\.1:(\d+)/g)].map(m => parseInt(m[1], 10));
+    const candidatePorts = [...new Set(portMatches)];
+
+    // 2. Tìm CSRF Token nếu language_server yêu cầu
+    let csrfToken = '';
+    try {
+      const psOutput = execSync("ps -eo cmd 2>/dev/null | grep language_server_linux_x64 | grep -v grep", { encoding: 'utf-8', timeout: 1500 });
+      const csrfMatch = psOutput.match(/--csrf_token\s+([a-zA-Z0-9\-]+)/);
+      if (csrfMatch) csrfToken = csrfMatch[1];
+    } catch {}
+
+    for (const port of candidatePorts) {
+      try {
+        const result = await new Promise((resolve, reject) => {
+          const headers = { 'Content-Type': 'application/json' };
+          if (csrfToken) headers['x-codeium-csrf-token'] = csrfToken;
+
+          const req = http.request({
+            hostname: '127.0.0.1',
+            port: port,
+            path: '/exa.language_server_pb.LanguageServerService/RetrieveUserQuotaSummary',
+            method: 'POST',
+            headers: headers,
+            timeout: 1200
+          }, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+              if (res.statusCode === 200) {
+                try { resolve(JSON.parse(data)); } catch (e) { reject(e); }
+              } else {
+                reject(new Error(`Status ${res.statusCode}`));
+              }
+            });
+          });
+          req.on('error', reject);
+          req.on('timeout', () => { req.destroy(); reject(new Error('timeout')); });
+          req.write('{}');
+          req.end();
+        });
+
+        if (result && result.response && Array.isArray(result.response.groups)) {
+          const geminiGroup = result.response.groups.find(g => g.displayName && g.displayName.includes('Gemini')) || result.response.groups[0];
+          const claudeGroup = result.response.groups.find(g => g.displayName && (g.displayName.includes('Claude') || g.displayName.includes('GPT')));
+
+          const weeklyBucket = geminiGroup?.buckets?.find(b => b.window === 'weekly' || (b.bucketId && b.bucketId.includes('weekly')));
+          const fiveHourBucket = geminiGroup?.buckets?.find(b => b.window === '5h' || (b.bucketId && b.bucketId.includes('5h')));
+
+          const claudeWeekly = claudeGroup?.buckets?.find(b => b.window === 'weekly' || (b.bucketId && b.bucketId.includes('weekly')));
+          const claude5h = claudeGroup?.buckets?.find(b => b.window === '5h' || (b.bucketId && b.bucketId.includes('5h')));
+
+          const weeklyPct = weeklyBucket ? Math.round(weeklyBucket.remainingFraction * 100) : 100;
+          const fiveHourPct = fiveHourBucket ? Math.round(fiveHourBucket.remainingFraction * 100) : 100;
+
+          let statusText = '🟢 Khả dụng (Live Antigravity Quota)';
+          if (fiveHourPct <= 10 || weeklyPct <= 10) {
+            statusText = '🔴 Quota sắp hết (< 10%)';
+          } else if (fiveHourPct <= 25 || weeklyPct <= 25) {
+            statusText = '🟡 Quota ở mức thấp (< 25%)';
+          }
+
+          cachedAntigravityQuota = {
+            source: 'live_agent',
+            port: port,
+            weekly: weeklyPct,
+            fiveHour: fiveHourPct,
+            weeklyDesc: weeklyBucket?.description || '',
+            fiveHourDesc: fiveHourBucket?.description || '',
+            weeklyResetTime: weeklyBucket?.resetTime || '',
+            fiveHourResetTime: fiveHourBucket?.resetTime || '',
+            claudeWeekly: claudeWeekly ? Math.round(claudeWeekly.remainingFraction * 100) : 100,
+            claude5h: claude5h ? Math.round(claude5h.remainingFraction * 100) : 100,
+            status: statusText,
+            engine: 'Google Antigravity Live Engine',
+            limitDesc: '5h / 1w',
+            groups: result.response.groups,
+            generalDesc: result.response.description || '',
+            lastUpdated: new Date().toISOString()
+          };
+          lastQuotaFetchTimestamp = Date.now();
+          return cachedAntigravityQuota;
+        }
+      } catch (e) {
+        // Thử cổng tiếp theo
+      }
+    }
+  } catch (err) {}
+
+  // Fallback an toàn khi agent/language server chưa khởi động
+  let conversationCount = 0;
+  try {
+    const brainDir = path.join(os.homedir(), '.gemini', 'antigravity-cli', 'brain');
+    if (fs.existsSync(brainDir)) {
+      conversationCount = fs.readdirSync(brainDir).length;
+    }
+  } catch {}
+
+  const fiveHour = Math.max(35, Math.min(100, 100 - (conversationCount % 6) * 5));
+  const weekly = Math.max(45, Math.min(100, 100 - Math.floor(conversationCount / 3) * 2));
+
+  cachedAntigravityQuota = {
+    source: 'fallback_estimate',
+    weekly: weekly,
+    fiveHour: fiveHour,
+    claudeWeekly: 100,
+    claude5h: 100,
+    status: '🟢 Khả dụng (Antigravity Agent Active)',
+    engine: 'Google Antigravity CLI',
+    limitDesc: '5h / 1w',
+    lastUpdated: new Date().toISOString()
+  };
+  lastQuotaFetchTimestamp = Date.now();
+  return cachedAntigravityQuota;
+}
+
 function startInternalServer(callback) {
   const distDir = path.join(__dirname, '..', 'dist');
   const downloadsDir = getDownloadsDir();
@@ -1760,27 +1943,12 @@ function startInternalServer(callback) {
       return;
     }
 
-    // 1.5. API: Antigravity Quota Status
+    // 1.5. API: Antigravity Quota Status (Đồng bộ trực tiếp Real-Time từ Antigravity Loopback RPC)
     if (pathname === '/api/antigravity/quota' && req.method === 'GET') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      let conversationCount = 0;
-      try {
-        const brainDir = path.join(os.homedir(), '.gemini', 'antigravity', 'brain');
-        if (fs.existsSync(brainDir)) {
-          conversationCount = fs.readdirSync(brainDir).length;
-        }
-      } catch {}
-
-      const fiveHour = Math.max(35, Math.min(100, 100 - (conversationCount % 6) * 5));
-      const weekly = Math.max(45, Math.min(100, 100 - Math.floor(conversationCount / 3) * 2));
-
-      res.end(JSON.stringify({
-        weekly: weekly,
-        fiveHour: fiveHour,
-        status: '🟢 Khả dụng (Antigravity Agent Active)',
-        engine: 'Google Antigravity CLI',
-        limitDesc: '5h / 1w'
-      }));
+      const forceRefresh = parsedUrl.searchParams.get('refresh') === 'true';
+      const quotaData = await getLiveAntigravityQuota(forceRefresh);
+      res.end(JSON.stringify(quotaData));
       return;
     }
 

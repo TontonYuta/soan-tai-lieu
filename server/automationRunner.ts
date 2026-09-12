@@ -627,6 +627,53 @@ export class AutomationRunner {
     // Tự động triệt tiêu lỗi watermark UL va chạm tiêu đề
     processed = processed.replace(/\b([a-zA-Z0-9_]*symbol[a-zA-Z0-9_]*)\.animate(?:\.[a-zA-Z0-9_]+\([^)]*\))*\.to_corner\(UL(?:,\s*buff=[^)]*)?\)/g, 'FadeOut($1)');
     processed = processed.replace(/\\text\{([^}]*?)(\\nearrow|\\searrow)([^}]*?)\}/g, '\\text{$1} $2 \\text{$3}');
+    // Tự động chuẩn hóa intro_core_rule: không để ngắt dòng \\ hoặc tách nhiều MathTex làm vỡ công thức thành 2x2
+    processed = processed.replace(
+      /(intro_core_rule\s*=\s*VGroup\([\s\S]*?\)\.arrange\([^\)]*\))/g,
+      (match) => {
+        let cleaned = match;
+        // 1. Khử mọi dạng ngắt dòng \\ bên trong từng MathTex
+        cleaned = cleaned.replace(/\\{2,}[\s;]*(?:\\quad|\\;|\\*text\{v[aà]\s*\}|v[aà])*/gi, ' \\quad \\text{và} \\quad ');
+        cleaned = cleaned.replace(/\\{2,}\s*(?=\\exists|\\forall|\\text)/g, ' \\quad \\text{và} \\quad ');
+        cleaned = cleaned.replace(/(?:\\quad\s*\\text\{v[aà]\s*\}\s*\\quad\s*)+/gi, ' \\quad \\text{và} \\quad ');
+        cleaned = cleaned.replace(/\\quad\s*\\text\{v[aà]\s*\}\s*\\quad\s*(?:\\quad\s*)?\\text\{v[aà]\s*\}/gi, ' \\quad \\text{và} \\quad ');
+        cleaned = cleaned.replace(/\\quad\s*\\quad/g, '\\quad');
+
+        // 2. Tự động gộp các MathTex bị tách rời (khi MathTex sau là vế thứ 2 bắt đầu bằng \text{và} hoặc \exists)
+        const pairRe = /MathTex\(r?(["'])([\s\S]*?)\1\s*(?:,\s*font_size\s*=\s*\d+)?\s*(?:,\s*color\s*=\s*([^,\)]+))?\s*\)[\s\n]*,[\s\n]*MathTex\(r?(["'])([\s\S]*?)\4\s*(?:,\s*font_size\s*=\s*\d+)?\s*(?:,\s*color\s*=\s*([^,\)]+))?\s*\)/g;
+        cleaned = cleaned.replace(pairRe, (m, q1, b1, c1, q2, b2, c2) => {
+          if (/^\s*(?:\\*text\{v[aà]\s*\}|v[aà]|\\*exists)/i.test(b2)) {
+            let cleanB2 = b2.replace(/^[\s;]*(?:\\*text\{v[aà]\s*\}|v[aà]|\\*quad)*/i, '').trim();
+            let col = c1 ? `, color=${c1}` : '';
+            return `MathTex(r"${b1.trim()} \\quad \\text{và} \\quad ${cleanB2}", font_size=23${col})`;
+          }
+          return m;
+        });
+
+        return cleaned;
+      }
+    );
+    // Tự động chèn fit_width an toàn cho intro_core_rule nếu chưa có
+    if (processed.includes('intro_core_rule') && !processed.includes('fit_width(intro_core_rule')) {
+      processed = processed.replace(
+        /(intro_core_rule\s*=\s*VGroup\([\s\S]*?\)\.arrange\([^\)]*\))(?![\s\S]*?fit_width\(intro_core_rule)/g,
+        '$1\n        fit_width(intro_core_rule, 7.6)'
+      );
+    }
+    // Tự động chèn fit_width an toàn cho intro_title nếu chưa có
+    if (processed.includes('intro_title = Text(') && !processed.includes('fit_width(intro_title')) {
+      processed = processed.replace(
+        /(intro_title\s*=\s*Text\([^\)]*\))(?![\s\S]*?fit_width\(intro_title)/g,
+        '$1\n        fit_width(intro_title, 7.2)'
+      );
+    }
+    // Tự động chèn fit_width an toàn cho intro_sub nếu chưa có
+    if (processed.includes('intro_sub = Text(') && !processed.includes('fit_width(intro_sub')) {
+      processed = processed.replace(
+        /(intro_sub\s*=\s*Text\([^\)]*\))(?![\s\S]*?fit_width\(intro_sub)/g,
+        '$1\n        fit_width(intro_sub, 7.4)'
+      );
+    }
 
     const polyfillSnippet = `# ==========================================
 # YUTA MANIM ENGINE - COMPATIBILITY POLYFILLS
@@ -698,6 +745,10 @@ try:
         elif fs is None:
             kwargs['font_size'] = 24
         f = kwargs.get('font', None)
+        import platform
+        if f in ('Times New Roman', 'Liberation Serif') and platform.system() == 'Linux':
+            f = 'DejaVu Serif'
+            kwargs['font'] = 'DejaVu Serif'
         if not f or f in ('sans-serif', 'sans', 'default', ''):
             font_candidates = ['Times New Roman', 'Liberation Serif', 'Be Vietnam Pro', 'Inter', 'DejaVu Serif', 'JetBrains Mono', 'Roboto', 'FreeSerif']
             success = False

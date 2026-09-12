@@ -5,7 +5,7 @@ import {
   FolderOpen, Monitor, Sparkles, Code, Subtitles, Film, ListVideo,
   Clock, Cpu, Volume2, Mic, Zap, Edit3, RefreshCw, Terminal, Bot
 } from 'lucide-react';
-import { AutomationClient, AutomationProgress } from '../services/automationClient';
+import { AutomationClient, AutomationProgress, AntigravityQuotaData } from '../services/automationClient';
 import { generateManimRevisionPrompt, generateLatexRevisionPrompt } from '../services/gemini';
 
 interface AutomationModalProps {
@@ -82,9 +82,11 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
   const fileInputLatexRef = useRef<HTMLInputElement | null>(null);
 
   // Quota & Limit State (Antigravity Dynamic Quota)
+  const [quotaData, setQuotaData] = useState<AntigravityQuotaData | null>(null);
   const [quotaWeekly, setQuotaWeekly] = useState<number>(98);
   const [quota5h, setQuota5h] = useState<number>(95);
   const [quotaStatus, setQuotaStatus] = useState<string>('🟢 Khả dụng (Antigravity Active)');
+  const [isSyncingQuota, setIsSyncingQuota] = useState<boolean>(false);
 
   // Bấm giờ thời gian làm task (Task Stopwatch Timer)
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
@@ -220,6 +222,21 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
     }
   }, [externalHeadless]);
 
+  const syncQuota = async (force = false) => {
+    setIsSyncingQuota(true);
+    try {
+      const data = await AutomationClient.getQuota(force);
+      if (data) {
+        setQuotaData(data);
+        setQuotaWeekly(data.weekly);
+        setQuota5h(data.fiveHour);
+        setQuotaStatus(data.status);
+      }
+    } catch {} finally {
+      setIsSyncingQuota(false);
+    }
+  };
+
   // Đồng bộ nhà cung cấp AI và Quota mỗi khi mở Modal
   useEffect(() => {
     if (isOpen) {
@@ -233,13 +250,9 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
       setAiUrl(targetUrl);
 
       // Cập nhật Hạn ngạch Antigravity Quota
-      AutomationClient.getQuota().then(data => {
-        if (data) {
-          setQuotaWeekly(data.weekly);
-          setQuota5h(data.fiveHour);
-          setQuotaStatus(data.status);
-        }
-      }).catch(() => {});
+      syncQuota(true);
+      const quotaInterval = setInterval(() => syncQuota(false), 20000);
+      return () => clearInterval(quotaInterval);
     }
   }, [isOpen]);
 
@@ -425,7 +438,7 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
       addLog(`Chế độ Chuỗi Playlist: Sản xuất tự động ${seriesCount || detectedSeriesCount || 3} tập video MP4 liên hoàn.`);
     }
     if (attachedPdfPath) {
-      addLog(`Tài liệu RAG đính kèm: ${attachedPdfName || 'document.pdf'}`);
+      addLog(`Tài liệu đính kèm: ${attachedPdfName || 'document.pdf'}`);
     }
     if (enableVoice === true) {
       const voiceLabel = (voiceName && voiceName.includes('NamMinh')) ? 'Nam Minh (Nam)' : 'Hoài My (Nữ)';
@@ -889,24 +902,85 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
 
           {/* Antigravity Quota Compact Indicator (Trích xuất phần trăm hạn ngạch) */}
           {(selectedAi === 'antigravity' || selectedAi === 'gemini') && (
-            <div className="p-3 bg-[#FFED66]/30 border-2 border-black flex flex-wrap items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-2 font-black uppercase text-black">
-                <Zap className="w-4 h-4 text-purple-700 stroke-[3]" />
-                <span>⚡ Hạn Ngạch Antigravity Quota (Còn Lại):</span>
+            <div className="p-3 bg-[#FFED66]/30 border-2 border-black space-y-2 text-xs">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2 font-black uppercase text-black">
+                  <Zap className="w-4 h-4 text-purple-700 stroke-[3] fill-purple-700" />
+                  <span>⚡ Hạn Ngạch Quota Antigravity Real-Time:</span>
+                  {quotaData?.source === 'live_agent' && (
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 border border-emerald-600">
+                      Live RPC (Port {quotaData.port})
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 flex-wrap font-mono">
+                  {/* Hàng tuần */}
+                  <div 
+                    className={`flex items-center gap-1.5 font-black px-3 py-1 border border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] ${
+                      quotaWeekly <= 10 ? 'bg-red-600 text-white animate-pulse' : quotaWeekly <= 25 ? 'bg-amber-500 text-black' : 'bg-emerald-600 text-white'
+                    }`} 
+                    title={quotaData?.weeklyDesc || 'Hạn ngạch tuần 1w còn lại'}
+                  >
+                    <span className="text-[10px] font-sans font-bold opacity-90">Hàng tuần (1w):</span>
+                    <span className="text-sm">{quotaWeekly}%</span>
+                  </div>
+
+                  {/* 5 Tiếng */}
+                  <div 
+                    className={`flex items-center gap-1.5 font-black px-3 py-1 border border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] ${
+                      quota5h <= 10 ? 'bg-red-600 text-white animate-pulse' : quota5h <= 25 ? 'bg-amber-500 text-black' : 'bg-emerald-600 text-white'
+                    }`} 
+                    title={quotaData?.fiveHourDesc || 'Hạn ngạch 5 tiếng 5h còn lại'}
+                  >
+                    <span className="text-[10px] font-sans font-bold opacity-90">5 Tiếng (5h):</span>
+                    <span className="text-sm">{quota5h}%</span>
+                  </div>
+
+                  {/* Claude / GPT (nếu có thông tin) */}
+                  {quotaData?.claudeWeekly !== undefined && (
+                    <div 
+                      className="hidden sm:flex items-center gap-1.5 bg-indigo-600 text-white font-black px-3 py-1 border border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]"
+                      title="Hạn ngạch nhóm mô hình Claude 3.7/Sonnet & GPT-OSS"
+                    >
+                      <span className="text-[10px] text-indigo-100 font-sans font-bold">Claude/GPT:</span>
+                      <span className="text-sm">{quotaData.claudeWeekly}%</span>
+                    </div>
+                  )}
+
+                  {/* Trạng thái */}
+                  <div className="flex items-center gap-1.5 bg-white text-black font-bold px-2.5 py-1 border border-black text-xs">
+                    <span className="text-emerald-700 font-black">{quotaStatus}</span>
+                  </div>
+
+                  {/* Nút Sync làm mới Quota */}
+                  <button
+                    type="button"
+                    onClick={() => syncQuota(true)}
+                    disabled={isSyncingQuota}
+                    className="flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-[#FFED66] border border-black text-xs font-black uppercase shadow-[1px_1px_0_0_rgba(0,0,0,1)] cursor-pointer disabled:opacity-50"
+                    title="Bấm để đồng bộ dữ liệu Quota mới nhất trực tiếp từ Antigravity"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${isSyncingQuota ? 'animate-spin text-purple-700' : ''}`} />
+                    <span>{isSyncingQuota ? 'Đang sync...' : 'Sync Quota'}</span>
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-2 flex-wrap font-mono">
-                <div className="flex items-center gap-1.5 bg-emerald-600 text-white font-black px-3 py-1 border border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]" title="Hạn ngạch tuần 1w còn lại">
-                  <span className="text-[10px] text-emerald-100 font-sans font-bold">Hàng tuần (1w):</span>
-                  <span className="text-sm">{quotaWeekly}%</span>
+
+              {/* Thông tin mô tả chi tiết thời gian hồi phục */}
+              {(quotaData?.fiveHourDesc || quotaData?.weeklyDesc) && (
+                <div className="text-[11px] font-semibold text-gray-700 flex flex-wrap items-center gap-x-4 gap-y-1 bg-white/70 p-1.5 border border-black/20">
+                  {quotaData.fiveHourDesc && (
+                    <span className="flex items-center gap-1 text-slate-800">
+                      <span>⏱️ <strong>5 Tiếng:</strong> {quotaData.fiveHourDesc}</span>
+                    </span>
+                  )}
+                  {quotaData.weeklyDesc && (
+                    <span className="flex items-center gap-1 text-slate-800">
+                      <span>📅 <strong>Hàng tuần:</strong> {quotaData.weeklyDesc}</span>
+                    </span>
+                  )}
                 </div>
-                <div className="flex items-center gap-1.5 bg-emerald-600 text-white font-black px-3 py-1 border border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]" title="Hạn ngạch 5 tiếng 5h còn lại">
-                  <span className="text-[10px] text-emerald-100 font-sans font-bold">5 Tiếng (5h):</span>
-                  <span className="text-sm">{quota5h}%</span>
-                </div>
-                <div className="flex items-center gap-1.5 bg-white text-black font-bold px-2.5 py-1 border border-black text-xs">
-                  <span className="text-emerald-700 font-black">{quotaStatus}</span>
-                </div>
-              </div>
+              )}
             </div>
           )}
 

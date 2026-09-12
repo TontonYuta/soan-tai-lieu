@@ -10,8 +10,10 @@ import {
   generateManimRevisionPrompt,
   extractAttachedImageDirective,
   parseDurationToSeconds,
+  detectOptimalDurationFromPdf,
   getExerciseAndRoundPlan,
-  getFontDirective
+  getFontDirective,
+  inspectManimCode
 } from "./prompts/manim";
 import { generateVideoScriptPrompt } from "./prompts/script";
 import { generateBatPrompt } from "./prompts/bat";
@@ -34,6 +36,8 @@ export {
   generateProjectPrompt,
   extractAttachedImageDirective,
   parseDurationToSeconds,
+  detectOptimalDurationFromPdf,
   getExerciseAndRoundPlan,
-  getFontDirective
+  getFontDirective,
+  inspectManimCode
 };

@@ -75,11 +75,45 @@ export interface NetworkInfo {
   mobileIp?: string;
 }
 
+export interface AntigravityQuotaBucket {
+  bucketId: string;
+  displayName: string;
+  description?: string;
+  window?: string;
+  remainingFraction: number;
+  resetTime?: string;
+}
+
+export interface AntigravityQuotaGroup {
+  displayName: string;
+  description?: string;
+  buckets: AntigravityQuotaBucket[];
+}
+
+export interface AntigravityQuotaData {
+  weekly: number;
+  fiveHour: number;
+  status: string;
+  source?: 'live_agent' | 'fallback_estimate';
+  port?: number;
+  weeklyDesc?: string;
+  fiveHourDesc?: string;
+  weeklyResetTime?: string;
+  fiveHourResetTime?: string;
+  claudeWeekly?: number;
+  claude5h?: number;
+  engine?: string;
+  limitDesc?: string;
+  groups?: AntigravityQuotaGroup[];
+  generalDesc?: string;
+  lastUpdated?: string;
+}
+
 export interface SharedAutomationState {
   isRunning: boolean;
-  progress: AutomationProgress;
+  progress: AutomationProgress | null;
   logs: string[];
-  startTime?: number;
+  updatedAt: number;
   isMobileConnected?: boolean;
   mobileDeviceName?: string;
 }
@@ -207,13 +241,20 @@ export class AutomationClient {
     }
   }
 
-  public static async getQuota(): Promise<{ weekly: number; fiveHour: number; status: string }> {
+  public static async getQuota(forceRefresh = false): Promise<AntigravityQuotaData> {
     try {
-      const res = await fetch('/api/antigravity/quota');
+      const url = forceRefresh ? '/api/antigravity/quota?refresh=true' : '/api/antigravity/quota';
+      const res = await fetch(url);
       if (!res.ok) throw new Error();
       return await res.json();
     } catch {
-      return { weekly: 98, fiveHour: 95, status: '🟢 Khả dụng (Antigravity Agent Active)' };
+      return {
+        weekly: 98,
+        fiveHour: 95,
+        status: '🟢 Khả dụng (Antigravity Agent Active)',
+        engine: 'Google Antigravity CLI',
+        limitDesc: '5h / 1w'
+      };
     }
   }
 

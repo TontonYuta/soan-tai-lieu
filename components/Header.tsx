@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { FileEdit, Sparkles, Smartphone, Pin } from 'lucide-react';
+import { FileEdit, Sparkles, Smartphone, Pin, Zap } from 'lucide-react';
 import MobileAccessModal from './MobileAccessModal';
-import { AutomationClient, NetworkInfo } from '../services/automationClient';
+import { AutomationClient, NetworkInfo, AntigravityQuotaData } from '../services/automationClient';
 
 interface HeaderProps {
   onSwitchToMobile?: () => void;
@@ -12,6 +12,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ onSwitchToMobile, globalPinnedPdf, isGlobalRagActive = true }) => {
   const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);
   const [networkInfo, setNetworkInfo] = useState<NetworkInfo | null>(null);
+  const [quotaData, setQuotaData] = useState<AntigravityQuotaData | null>(null);
 
   useEffect(() => {
     const fetchInfo = () => {
@@ -19,9 +20,19 @@ const Header: React.FC<HeaderProps> = ({ onSwitchToMobile, globalPinnedPdf, isGl
         .then(data => setNetworkInfo(data))
         .catch(() => {});
     };
+    const fetchQuota = () => {
+      AutomationClient.getQuota()
+        .then(data => setQuotaData(data))
+        .catch(() => {});
+    };
     fetchInfo();
+    fetchQuota();
     const interval = setInterval(fetchInfo, 3000);
-    return () => clearInterval(interval);
+    const quotaInterval = setInterval(fetchQuota, 15000);
+    return () => {
+      clearInterval(interval);
+      clearInterval(quotaInterval);
+    };
   }, []);
 
   return (
@@ -69,6 +80,26 @@ const Header: React.FC<HeaderProps> = ({ onSwitchToMobile, globalPinnedPdf, isGl
                    <Smartphone className="w-4 h-4 stroke-[3]" />
                    <span className="hidden md:inline">Giao Diện Remote Mobile</span>
                  </button>
+               )}
+
+               {quotaData && (
+                 <div
+                   className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 bg-[#FFED66] text-black font-black uppercase text-xs border-4 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all cursor-default select-none"
+                   title={`Hạn ngạch Antigravity Quota Live: Hàng tuần ${quotaData.weekly}%, 5 Tiếng ${quotaData.fiveHour}% (${quotaData.status})`}
+                 >
+                   <Zap className="w-3.5 h-3.5 text-purple-700 stroke-[3] fill-purple-700" />
+                   <span className="text-[11px]">Quota:</span>
+                   <span className={`text-[10px] px-1.5 py-0.2 border border-black font-mono font-black ${
+                     quotaData.weekly <= 10 ? 'bg-red-600 text-white animate-pulse' : quotaData.weekly <= 25 ? 'bg-amber-400 text-black' : 'bg-emerald-600 text-white'
+                   }`}>
+                     {quotaData.weekly}% 1w
+                   </span>
+                   <span className={`text-[10px] px-1.5 py-0.2 border border-black font-mono font-black ${
+                     quotaData.fiveHour <= 10 ? 'bg-red-600 text-white animate-pulse' : quotaData.fiveHour <= 25 ? 'bg-amber-400 text-black' : 'bg-emerald-600 text-white'
+                   }`}>
+                     {quotaData.fiveHour}% 5h
+                   </span>
+                 </div>
                )}
 
                <button 

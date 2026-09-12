@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Video as VideoIcon, Clock, Users, Layout, Wand2, Info, 
   Code, ChevronDown, BookOpen, Film, Smartphone, 
@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { VideoConfig, GenerationStatus, AttachedPdfData } from '../types';
 import { AI_PROVIDERS, getProviderUrl } from './AutomationModal';
+import { detectOptimalDurationFromPdf, OptimalPdfVideoPlan } from '../services/prompts/manim';
 import PdfUploadZone from './PdfUploadZone';
 import ImageUploadZone from './ImageUploadZone';
 import SubjectBadgePicker from './SubjectBadgePicker';
@@ -81,6 +82,12 @@ const VideoForm: React.FC<VideoFormProps> = ({
   const isLoading = status === GenerationStatus.LOADING;
   const isVertical = config.format === 'vertical';
   const isSeries = Boolean(config.isSeries);
+
+  const effectivePdf = config.attachedPdf || (isGlobalRagActive ? globalPinnedPdf : null);
+  const optimalPlan: OptimalPdfVideoPlan | null = useMemo(() => {
+    if (!effectivePdf?.text && !effectivePdf?.fileName) return null;
+    return detectOptimalDurationFromPdf(effectivePdf);
+  }, [effectivePdf]);
 
   const handleAiChange = (newAi: string) => {
     setSelectedAi(newAi);
@@ -256,6 +263,7 @@ const VideoForm: React.FC<VideoFormProps> = ({
                     <label className={labelClass}>{isSeries ? 'Thời lượng mỗi tập' : 'Thời lượng'}</label>
                     <div className="flex gap-1 flex-wrap">
                       {[
+                        { label: optimalPlan ? `⚡ ${optimalPlan.durationSec}s (Tự động)` : '⚡ Tự động theo tài liệu', val: optimalPlan ? optimalPlan.durationLabel : 'Tự động theo tài liệu (Auto)' },
                         { label: '60s', val: '60 giây (Shorts)' },
                         { label: '120s', val: '120 giây (2 Phút)' },
                         { label: '180s', val: '180 giây (3 Phút)' },
@@ -264,10 +272,15 @@ const VideoForm: React.FC<VideoFormProps> = ({
                         <button
                           key={pill.label}
                           type="button"
-                          onClick={() => handleChange('duration', pill.val)}
+                          onClick={() => {
+                            handleChange('duration', pill.val);
+                            if (pill.val.includes('Tự động') && optimalPlan) {
+                              handleChange('exerciseCount', optimalPlan.exerciseCount);
+                            }
+                          }}
                           className={`text-[10px] font-black px-1.5 py-0.5 border border-black rounded-none transition-all cursor-pointer ${
-                            config.duration === pill.val 
-                              ? 'bg-[#FFE600] text-black shadow-[1px_1px_0_0_rgba(0,0,0,1)]' 
+                            config.duration === pill.val || (pill.val.includes('Tự động') && config.duration.includes('Tự động'))
+                              ? 'bg-[#FFE600] text-black shadow-[1px_1px_0_0_rgba(0,0,0,1)] font-extrabold' 
                               : 'bg-white text-gray-700 hover:bg-gray-100'
                           }`}
                         >
@@ -289,6 +302,49 @@ const VideoForm: React.FC<VideoFormProps> = ({
                   </div>
                 </div>
               </div>
+
+              {/* Smart Adaptive Duration & Topic Badge from PDF */}
+              {optimalPlan && (
+                <div className="p-3 bg-[#FEF08A] border-2 border-black flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-[2px_2px_0_0_rgba(0,0,0,1)]">
+                  <div className="flex items-start gap-2">
+                    <Sparkles className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                    <div>
+                      <div className="text-xs font-black uppercase text-black flex items-center gap-1.5 flex-wrap">
+                        <span>⚡ Phân tích tự động từ tài liệu:</span>
+                        <span className="bg-black text-white px-1.5 py-0.5 text-[10px] font-mono">{effectivePdf?.fileName}</span>
+                      </div>
+                      <div className="text-[11px] text-gray-800 font-medium mt-0.5">
+                        {optimalPlan.reason}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleChange('duration', optimalPlan.durationLabel);
+                        handleChange('exerciseCount', optimalPlan.exerciseCount);
+                        if (optimalPlan.inferredTopic && (!config.topic || config.topic.includes('Tích phân'))) {
+                          handleChange('topic', optimalPlan.inferredTopic);
+                        }
+                      }}
+                      className="px-2.5 py-1 bg-black text-white text-xs font-black uppercase border border-black hover:bg-gray-800 transition-all cursor-pointer shadow-[1px_1px_0_0_rgba(0,0,0,1)]"
+                    >
+                      Áp dụng ({optimalPlan.durationSec}s • {optimalPlan.exerciseCount} câu)
+                    </button>
+                    {optimalPlan.inferredTopic && config.topic !== optimalPlan.inferredTopic && (
+                      <button
+                        type="button"
+                        onClick={() => handleChange('topic', optimalPlan.inferredTopic)}
+                        className="px-2 py-1 bg-white text-black text-[11px] font-black uppercase border border-black hover:bg-gray-100 transition-all cursor-pointer shadow-[1px_1px_0_0_rgba(0,0,0,1)]"
+                        title={`Đặt chủ đề thành "${optimalPlan.inferredTopic}"`}
+                      >
+                        Lấy chủ đề: {optimalPlan.inferredTopic.slice(0, 18)}...
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Cấu hình Số câu bài tập thực chiến theo dạng bài */}
@@ -476,7 +532,7 @@ const VideoForm: React.FC<VideoFormProps> = ({
                 </button>
               </div>
               <p className="text-[10px] text-gray-600 font-bold mt-1">
-                ✨ *Tự động ngắt dòng line_spacing=1.2, căn chỉnh khoảng cách chữ chuẩn xác, chống đè lấp 100%.*
+                ✨ *Tự động fit_width chống tràn viền, công thức Intro 2 dòng đơn chuẩn mực (chống vỡ dòng 2x2), căn chỉnh khoảng cách chữ chuẩn xác.*
               </p>
             </div>
 
@@ -622,7 +678,7 @@ const VideoForm: React.FC<VideoFormProps> = ({
               )}
             </div>
 
-            {/* PDF Upload RAG Zone for Video */}
+            {/* PDF Upload Zone for Video */}
             <div className="pt-2">
               <PdfUploadZone
                 attachedPdf={config.attachedPdf || null}
@@ -630,8 +686,8 @@ const VideoForm: React.FC<VideoFormProps> = ({
                 isGlobalRagActive={isGlobalRagActive}
                 onPdfChange={(pdfData) => handleChange('attachedPdf', pdfData || undefined)}
                 onSetGlobalPin={onSetGlobalPin}
-                title="Đính Kèm File PDF Tham Khảo Cho Video (RAG / Bài Toán / Đồ Thị):"
-                description="AI sẽ trích xuất bài toán, hình vẽ, định lý hoặc đồ thị từ file PDF đính kèm để lập trình hoạt cảnh Manim CE bám sát nội dung."
+                title="Đính Kèm File PDF Học Tập & Đề Thi Gốc Cho Video:"
+                description="Hệ thống sẽ tự động phân tích độ dài tài liệu để đề xuất thời lượng video tối ưu, trích xuất chính xác bài toán, định lý và giảng dạy tự nhiên (không để lộ từ ngữ meta)."
               />
             </div>
 
