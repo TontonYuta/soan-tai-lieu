@@ -31,10 +31,8 @@ import {
   generateWorksheetPrompt, 
   generateSimilarPrompt,
   generateManimStoryboardPrompt,
-  generateManimCodePrompt,
-  generateVideoManimPrompt, 
+  generateVideoManimPrompt,
   generateVideoScriptPrompt, 
-  generateBatPrompt,
   generateProjectPrompt
 } from './services/gemini';
 import { 
@@ -452,28 +450,30 @@ const App: React.FC = () => {
           isGlobalRagActive={isGlobalRagActive}
         />
       
-      <Suspense fallback={null}>
-        <AutomationModal 
-          isOpen={isAutomationOpen} 
-          onClose={() => setIsAutomationOpen(false)} 
-          initialTabMode={automationTabMode}
-          promptContent={promptContent} 
-          headless={headless}
-          onToggleHeadless={handleHeadlessToggle}
-          attachedPdfPath={activeAttachedPdf?.path}
-          attachedPdfName={activeAttachedPdf?.name}
-          isSeries={videoExtraConfig.isSeries}
-          seriesCount={videoExtraConfig.seriesCount}
-          seriesOutline={videoExtraConfig.seriesOutline}
-          enableVoice={videoExtraConfig.enableVoice}
-          voiceName={videoExtraConfig.voiceName}
-          voiceSpeed={videoExtraConfig.voiceSpeed}
-          topic={contextMetadata?.topic}
-          subject={contextMetadata?.subject}
-          duration={videoExtraConfig.duration}
-          exerciseCount={videoExtraConfig.exerciseCount}
-        />
-      </Suspense>
+      {isAutomationOpen && (
+        <Suspense fallback={null}>
+          <AutomationModal 
+            isOpen={isAutomationOpen} 
+            onClose={() => setIsAutomationOpen(false)} 
+            initialTabMode={automationTabMode}
+            promptContent={promptContent} 
+            headless={headless}
+            onToggleHeadless={handleHeadlessToggle}
+            attachedPdfPath={activeAttachedPdf?.path}
+            attachedPdfName={activeAttachedPdf?.name}
+            isSeries={videoExtraConfig.isSeries}
+            seriesCount={videoExtraConfig.seriesCount}
+            seriesOutline={videoExtraConfig.seriesOutline}
+            enableVoice={videoExtraConfig.enableVoice}
+            voiceName={videoExtraConfig.voiceName}
+            voiceSpeed={videoExtraConfig.voiceSpeed}
+            topic={contextMetadata?.topic}
+            subject={contextMetadata?.subject}
+            duration={videoExtraConfig.duration}
+            exerciseCount={videoExtraConfig.exerciseCount}
+          />
+        </Suspense>
+      )}
 
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">

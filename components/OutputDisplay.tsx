@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Copy, Check, ExternalLink, Terminal, AlertCircle, Bot, Zap, 
   ShieldCheck, Download, Play, FileCode, Sparkles, Volume2, 
@@ -69,11 +69,13 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({
   const downloadFile = (filename: string, text: string) => {
     const element = document.createElement('a');
     const file = new Blob([text], { type: 'text/plain;charset=utf-8' });
-    element.href = URL.createObjectURL(file);
+    const url = URL.createObjectURL(file);
+    element.href = url;
     element.download = filename;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
+    URL.revokeObjectURL(url);
     setDownloaded(filename);
     setTimeout(() => setDownloaded(null), 2500);
   };
@@ -88,23 +90,34 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({
     return raw;
   };
 
-  // Xác định định dạng kết quả
-  const isManim = content.includes('from manim import') || 
-                  content.includes('class MainScene') || 
-                  content.includes('ThreeDScene') || 
-                  content.includes('Manim') || 
-                  content.includes('VOICEOVER_SCRIPT') ||
-                  content.includes('scene.py') ||
-                  content.includes('KỊCH BẢN SƯ PHẠM') ||
-                  Boolean(videoConfig);
-  const isLatex = !isManim && (content.includes('\\documentclass') || content.includes('\\begin{document}') || content.includes('\\usepackage'));
-  const isVideoScript = !isManim && (content.includes('KỊCH BẢN VIDEO') || content.includes('BẢNG PHÂN CẢNH') || (content.includes('| Thời gian |') && content.includes('Manim Visual')));
-  const isBat = content.includes('@echo off') || content.includes('chcp 65001');
+  // Xác định định dạng kết quả (memoized)
+  const isManim = useMemo(() => {
+    return content.includes('from manim import') || 
+           content.includes('class MainScene') || 
+           content.includes('ThreeDScene') || 
+           content.includes('Manim') || 
+           content.includes('VOICEOVER_SCRIPT') ||
+           content.includes('scene.py') ||
+           content.includes('KỊCH BẢN SƯ PHẠM') ||
+           Boolean(videoConfig);
+  }, [content, videoConfig]);
 
-  // Quản lý các chế độ sub-tab prompt cho video Manim
-  const turn1Prompt = videoConfig ? generateManimStoryboardPrompt(videoConfig) : '';
-  const turn2Prompt = videoConfig ? generateManimCodePrompt(videoConfig) : '';
-  const combinedPrompt = videoConfig ? generateVideoManimPrompt(videoConfig) : '';
+  const isLatex = useMemo(() => {
+    return !isManim && (content.includes('\\documentclass') || content.includes('\\begin{document}') || content.includes('\\usepackage'));
+  }, [isManim, content]);
+
+  const isVideoScript = useMemo(() => {
+    return !isManim && (content.includes('KỊCH BẢN VIDEO') || content.includes('BẢNG PHÂN CẢNH') || (content.includes('| Thời gian |') && content.includes('Manim Visual')));
+  }, [isManim, content]);
+
+  const isBat = useMemo(() => {
+    return content.includes('@echo off') || content.includes('chcp 65001');
+  }, [content]);
+
+  // Quản lý các chế độ sub-tab prompt cho video Manim (memoized để tránh tái sinh nặng nề)
+  const turn1Prompt = useMemo(() => videoConfig ? generateManimStoryboardPrompt(videoConfig) : '', [videoConfig]);
+  const turn2Prompt = useMemo(() => videoConfig ? generateManimCodePrompt(videoConfig) : '', [videoConfig]);
+  const combinedPrompt = useMemo(() => videoConfig ? generateVideoManimPrompt(videoConfig) : '', [videoConfig]);
 
   // Trình đọc thử lời thoại TTS (Web Speech API)
   const handleToggleTTS = () => {

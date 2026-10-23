@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { FileEdit, Sparkles, Smartphone, Pin, Zap } from 'lucide-react';
-import MobileAccessModal from './MobileAccessModal';
+const MobileAccessModal = lazy(() => import('./MobileAccessModal'));
 import { AutomationClient, NetworkInfo, AntigravityQuotaData } from '../services/automationClient';
 
 interface HeaderProps {
@@ -139,10 +139,14 @@ const Header: React.FC<HeaderProps> = ({ onSwitchToMobile, globalPinnedPdf, isGl
         </div>
       </header>
 
-      <MobileAccessModal
-        isOpen={isMobileModalOpen}
-        onClose={() => setIsMobileModalOpen(false)}
-      />
+      {isMobileModalOpen && (
+        <Suspense fallback={null}>
+          <MobileAccessModal
+            isOpen={isMobileModalOpen}
+            onClose={() => setIsMobileModalOpen(false)}
+          />
+        </Suspense>
+      )}
     </>
   );
 };

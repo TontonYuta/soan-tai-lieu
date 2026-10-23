@@ -659,11 +659,13 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
   const handleDownloadTextFile = (filename: string, text: string) => {
     const element = document.createElement('a');
     const file = new Blob([text], { type: 'text/plain;charset=utf-8' });
-    element.href = URL.createObjectURL(file);
+    const url = URL.createObjectURL(file);
+    element.href = url;
     element.download = filename;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
+    URL.revokeObjectURL(url);
   };
 
   const handleOpenPdfFile = async () => {
