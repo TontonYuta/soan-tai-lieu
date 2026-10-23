@@ -7,6 +7,10 @@ import {
 } from 'lucide-react';
 import { AutomationClient, AutomationProgress, AntigravityQuotaData } from '../services/automationClient';
 import { generateManimRevisionPrompt, generateLatexRevisionPrompt } from '../services/gemini';
+import { AntigravityQuotaPanel } from './automation/AntigravityQuotaPanel';
+import { LogConsole } from './automation/LogConsole';
+import { PlaylistBar } from './automation/PlaylistBar';
+import { RerenderTab } from './automation/RerenderTab';
 
 interface AutomationModalProps {
   isOpen: boolean;
@@ -900,89 +904,16 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
             </div>
           </div>
 
-          {/* Antigravity Quota Compact Indicator (Trích xuất phần trăm hạn ngạch) */}
-          {(selectedAi === 'antigravity' || selectedAi === 'gemini') && (
-            <div className="p-3 bg-[#FFED66]/30 border-2 border-black space-y-2 text-xs">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2 font-black uppercase text-black">
-                  <Zap className="w-4 h-4 text-purple-700 stroke-[3] fill-purple-700" />
-                  <span>⚡ Hạn Ngạch Quota Antigravity Real-Time:</span>
-                  {quotaData?.source === 'live_agent' && (
-                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 border border-emerald-600">
-                      Live RPC (Port {quotaData.port})
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 flex-wrap font-mono">
-                  {/* Hàng tuần */}
-                  <div 
-                    className={`flex items-center gap-1.5 font-black px-3 py-1 border border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] ${
-                      quotaWeekly <= 10 ? 'bg-red-600 text-white animate-pulse' : quotaWeekly <= 25 ? 'bg-amber-500 text-black' : 'bg-emerald-600 text-white'
-                    }`} 
-                    title={quotaData?.weeklyDesc || 'Hạn ngạch tuần 1w còn lại'}
-                  >
-                    <span className="text-[10px] font-sans font-bold opacity-90">Hàng tuần (1w):</span>
-                    <span className="text-sm">{quotaWeekly}%</span>
-                  </div>
-
-                  {/* 5 Tiếng */}
-                  <div 
-                    className={`flex items-center gap-1.5 font-black px-3 py-1 border border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] ${
-                      quota5h <= 10 ? 'bg-red-600 text-white animate-pulse' : quota5h <= 25 ? 'bg-amber-500 text-black' : 'bg-emerald-600 text-white'
-                    }`} 
-                    title={quotaData?.fiveHourDesc || 'Hạn ngạch 5 tiếng 5h còn lại'}
-                  >
-                    <span className="text-[10px] font-sans font-bold opacity-90">5 Tiếng (5h):</span>
-                    <span className="text-sm">{quota5h}%</span>
-                  </div>
-
-                  {/* Claude / GPT (nếu có thông tin) */}
-                  {quotaData?.claudeWeekly !== undefined && (
-                    <div 
-                      className="hidden sm:flex items-center gap-1.5 bg-indigo-600 text-white font-black px-3 py-1 border border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]"
-                      title="Hạn ngạch nhóm mô hình Claude 3.7/Sonnet & GPT-OSS"
-                    >
-                      <span className="text-[10px] text-indigo-100 font-sans font-bold">Claude/GPT:</span>
-                      <span className="text-sm">{quotaData.claudeWeekly}%</span>
-                    </div>
-                  )}
-
-                  {/* Trạng thái */}
-                  <div className="flex items-center gap-1.5 bg-white text-black font-bold px-2.5 py-1 border border-black text-xs">
-                    <span className="text-emerald-700 font-black">{quotaStatus}</span>
-                  </div>
-
-                  {/* Nút Sync làm mới Quota */}
-                  <button
-                    type="button"
-                    onClick={() => syncQuota(true)}
-                    disabled={isSyncingQuota}
-                    className="flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-[#FFED66] border border-black text-xs font-black uppercase shadow-[1px_1px_0_0_rgba(0,0,0,1)] cursor-pointer disabled:opacity-50"
-                    title="Bấm để đồng bộ dữ liệu Quota mới nhất trực tiếp từ Antigravity"
-                  >
-                    <RefreshCw className={`w-3.5 h-3.5 ${isSyncingQuota ? 'animate-spin text-purple-700' : ''}`} />
-                    <span>{isSyncingQuota ? 'Đang sync...' : 'Sync Quota'}</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Thông tin mô tả chi tiết thời gian hồi phục */}
-              {(quotaData?.fiveHourDesc || quotaData?.weeklyDesc) && (
-                <div className="text-[11px] font-semibold text-gray-700 flex flex-wrap items-center gap-x-4 gap-y-1 bg-white/70 p-1.5 border border-black/20">
-                  {quotaData.fiveHourDesc && (
-                    <span className="flex items-center gap-1 text-slate-800">
-                      <span>⏱️ <strong>5 Tiếng:</strong> {quotaData.fiveHourDesc}</span>
-                    </span>
-                  )}
-                  {quotaData.weeklyDesc && (
-                    <span className="flex items-center gap-1 text-slate-800">
-                      <span>📅 <strong>Hàng tuần:</strong> {quotaData.weeklyDesc}</span>
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+          {/* Antigravity Quota Compact Indicator */}
+          <AntigravityQuotaPanel
+            selectedAi={selectedAi}
+            quotaData={quotaData}
+            quotaWeekly={quotaWeekly}
+            quota5h={quota5h}
+            quotaStatus={quotaStatus}
+            isSyncingQuota={isSyncingQuota}
+            onSyncQuota={syncQuota}
+          />
 
           {/* Hidden File Input cho việc import file .py */}
           <input
@@ -1034,275 +965,30 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
             </button>
           </div>
 
-          {/* KHỐI RERENDER TÀI LIỆU PDF LATEX ĐỘC LẬP KHI CHỌN TAB RERENDER */}
-          {!isManimTask && activeTabMode === 'rerender' && (
-            <div className="bg-[#00CECB]/15 border-4 border-black p-4 shadow-[6px_6px_0_0_rgba(0,0,0,1)] space-y-3 animate-in fade-in">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-black stroke-[3] fill-black" />
-                  <h4 className="text-sm font-black uppercase text-black tracking-wider">
-                    ⚡ Rerender Tài Liệu PDF Trực Tiếp (Biên Dịch pdflatex Siêu Tốc)
-                  </h4>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-black uppercase bg-black text-[#00CECB] px-2 py-0.5 border border-black font-mono">
-                    Local pdflatex • Biên Dịch Siêu Tốc ~1s • Không tốn Quota AI
-                  </span>
-                </div>
-              </div>
-
-              <p className="text-xs font-bold text-black">
-                Dán mã nguồn LaTeX đã chỉnh sửa bằng tay hoặc tải file <code>tailieu.tex</code> từ máy tính lên. Hệ thống sẽ sử dụng trình biên dịch <code>pdflatex</code> cục bộ để xuất file PDF ngay lập tức mà không cần gọi lại AI.
-              </p>
-
-              {/* Thanh thao tác và chế độ biên dịch */}
-              <div className="flex items-center justify-between flex-wrap gap-2 p-2 bg-white border-2 border-black">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-black uppercase text-black">⚙️ Chế độ:</span>
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      disabled={isRunning}
-                      onClick={() => setRenderMode('local')}
-                      className={`px-2.5 py-1 border-2 border-black text-xs font-black uppercase transition-all cursor-pointer ${
-                        renderMode === 'local'
-                          ? 'bg-[#A3E635] text-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]'
-                          : 'bg-gray-100 text-gray-700 hover:bg-white'
-                      }`}
-                      title="Biên dịch tức thì bằng pdflatex cục bộ trên máy tính (khuyên dùng)"
-                    >
-                      ⚡ pdflatex Cục Bộ (~1s)
-                    </button>
-                    <button
-                      type="button"
-                      disabled={isRunning}
-                      onClick={() => setRenderMode('overleaf')}
-                      className={`px-2.5 py-1 border-2 border-black text-xs font-black uppercase transition-all cursor-pointer ${
-                        renderMode === 'overleaf'
-                          ? 'bg-[#FFED66] text-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]'
-                          : 'bg-gray-100 text-gray-700 hover:bg-white'
-                      }`}
-                      title="Đẩy mã nguồn lên Overleaf để biên dịch trực tuyến"
-                    >
-                      🌐 Overleaf Cloud
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={handlePasteClipboardLatex}
-                    className="px-2.5 py-1 bg-white hover:bg-[#FFED66] border border-black text-[11px] font-black uppercase cursor-pointer shadow-[1px_1px_0_0_rgba(0,0,0,1)]"
-                  >
-                    📋 Dán Từ Clipboard
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => fileInputLatexRef.current?.click()}
-                    className="px-2.5 py-1 bg-white hover:bg-[#FFED66] border border-black text-[11px] font-black uppercase cursor-pointer shadow-[1px_1px_0_0_rgba(0,0,0,1)]"
-                  >
-                    📂 Tải File .tex Lên
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (progress.latexCode) {
-                        setCustomLatexCode(progress.latexCode);
-                      } else if (promptContent) {
-                        const match = promptContent.match(/```(?:latex)?\s*([\s\S]*?\\begin\{document\}[\s\S]*?)```/i) ||
-                                      promptContent.match(/```(?:latex)?\s*([\s\S]*?\\documentclass[\s\S]*?)```/i);
-                        if (match && match[1]) {
-                          setCustomLatexCode(match[1].trim());
-                        } else if (promptContent.includes('\\documentclass') || promptContent.includes('\\begin{document}')) {
-                          setCustomLatexCode(promptContent.trim());
-                        }
-                      }
-                    }}
-                    className="px-2.5 py-1 bg-white hover:bg-[#FFED66] border border-black text-[11px] font-black uppercase cursor-pointer"
-                  >
-                    🔄 Lấy Mã LaTeX Gốc
-                  </button>
-                </div>
-              </div>
-
-              {/* Trình soạn thảo Code LaTeX */}
-              <div className="relative">
-                <textarea
-                  value={customLatexCode}
-                  onChange={(e) => setCustomLatexCode(e.target.value)}
-                  placeholder="Dán hoặc viết mã nguồn LaTeX (tailieu.tex) tại đây... Bắt đầu bằng: \documentclass{article}"
-                  className="w-full h-64 p-3 bg-[#0f172a] text-[#86efac] font-mono text-xs border-2 border-black focus:outline-none selection:bg-[#FFED66] selection:text-black resize-y leading-relaxed"
-                  spellCheck={false}
-                />
-                <span className="absolute right-3 bottom-3 text-[10px] font-mono bg-black text-[#A3E635] px-2 py-0.5 border border-black">
-                  {customLatexCode.length} ký tự
-                </span>
-              </div>
-
-              {/* Nút thực thi Rerender PDF */}
-              <div className="flex items-center justify-between flex-wrap gap-2 pt-1">
-                <div className="flex items-center gap-2">
-                  {progress.pdfUrl && (
-                    <a
-                      href={progress.pdfUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center gap-1.5 px-3 py-2 bg-[#A3E635] text-black border-2 border-black text-xs font-black uppercase shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:bg-[#86EFAC] cursor-pointer"
-                    >
-                      <Eye className="w-4 h-4 stroke-[3]" />
-                      <span>👁️ Mở Xem PDF Vừa Xuất</span>
-                    </a>
-                  )}
-                </div>
-
-                <button
-                  type="button"
-                  disabled={isRunning || !customLatexCode.trim()}
-                  onClick={() => handleRerenderLatexDirect()}
-                  className={`flex items-center gap-2 px-5 py-3 border-[3px] border-black text-xs font-black uppercase tracking-wider shadow-[4px_4px_0_0_rgba(0,0,0,1)] transition-all cursor-pointer ${
-                    isRunning || !customLatexCode.trim()
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed border-gray-400 shadow-none'
-                      : 'bg-[#A3E635] hover:bg-[#86EFAC] text-black active:translate-x-[2px] active:translate-y-[2px] active:shadow-none'
-                  }`}
-                >
-                  <Zap className="w-4 h-4 stroke-[3] fill-black" />
-                  <span>⚡ Bắt Đầu Rerender PDF Ngay (Biên Dịch Offline)</span>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* KHỐI RERENDER NHANH ĐỘC LẬP KHI CHỌN TAB RERENDER */}
-          {isManimTask && activeTabMode === 'rerender' && (
-            <div className="bg-[#00CECB]/15 border-4 border-black p-4 shadow-[6px_6px_0_0_rgba(0,0,0,1)] space-y-3 animate-in fade-in">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-black stroke-[3] fill-black" />
-                  <h4 className="text-sm font-black uppercase text-black tracking-wider">
-                    ⚡ Rerender Video Manim Trực Tiếp (Tối Ưu Thời Gian Kiểm Thử)
-                  </h4>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-black uppercase bg-black text-[#00CECB] px-2 py-0.5 border border-black font-mono">
-                    Local Offline Render • Không tốn Quota AI
-                  </span>
-                </div>
-              </div>
-
-              <p className="text-xs font-bold text-black">
-                Dán mã Manim Python đã sửa bằng tay hoặc tải file <code>scene.py</code> từ máy tính lên. Chọn chất lượng <strong>480p</strong> để render siêu tốc trong 15-30 giây kiểm tra nhanh bố cục trước khi xuất bản 1080p.
-              </p>
-
-              {/* Thanh chọn chất lượng Render */}
-              <div className="flex items-center justify-between flex-wrap gap-2 p-2 bg-white border-2 border-black">
-                <div className="flex items-center gap-1.5 text-xs font-black uppercase text-black">
-                  <span>🎬 Chọn chất lượng render:</span>
-                </div>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <button
-                    type="button"
-                    disabled={isRunning}
-                    onClick={() => setRerenderQuality('480p')}
-                    className={`px-3 py-1.5 border-2 border-black text-xs font-black uppercase transition-all cursor-pointer flex items-center gap-1 ${
-                      rerenderQuality === '480p'
-                        ? 'bg-[#A3E635] text-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]'
-                        : 'bg-gray-100 text-gray-700 hover:bg-white'
-                    }`}
-                    title="Render cực nhanh (-ql: 480p 15fps), khuyên dùng để kiểm thử nhanh chuyển động và bố cục"
-                  >
-                    <span>⚡ 480p (Rất nhanh ~15s - Test)</span>
-                  </button>
-                  <button
-                    type="button"
-                    disabled={isRunning}
-                    onClick={() => setRerenderQuality('720p')}
-                    className={`px-3 py-1.5 border-2 border-black text-xs font-black uppercase transition-all cursor-pointer flex items-center gap-1 ${
-                      rerenderQuality === '720p'
-                        ? 'bg-[#FFED66] text-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]'
-                        : 'bg-gray-100 text-gray-700 hover:bg-white'
-                    }`}
-                    title="Render chuẩn HD (-qm: 720p 30fps)"
-                  >
-                    <span>🎬 720p (HD Chuẩn)</span>
-                  </button>
-                  <button
-                    type="button"
-                    disabled={isRunning}
-                    onClick={() => setRerenderQuality('1080p')}
-                    className={`px-3 py-1.5 border-2 border-black text-xs font-black uppercase transition-all cursor-pointer flex items-center gap-1 ${
-                      rerenderQuality === '1080p'
-                        ? 'bg-[#9333EA] text-white shadow-[2px_2px_0_0_rgba(0,0,0,1)]'
-                        : 'bg-gray-100 text-gray-700 hover:bg-white'
-                    }`}
-                    title="Render độ nét cao (-qh: 1080p 60fps), dành cho video chính thức"
-                  >
-                    <span>🌟 1080p (Full HD Chuẩn Nét)</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Nút thao tác nhanh với Code */}
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <span className="text-[11px] font-black uppercase font-mono text-gray-700">
-                  Mã Python Manim (scene.py) - {customPythonCode.length} ký tự
-                </span>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={handlePasteClipboard}
-                    className="px-2.5 py-1 bg-white hover:bg-[#FFED66] border border-black text-[11px] font-black uppercase cursor-pointer shadow-[1px_1px_0_0_rgba(0,0,0,1)]"
-                  >
-                    📋 Dán Từ Clipboard
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="px-2.5 py-1 bg-white hover:bg-[#FFED66] border border-black text-[11px] font-black uppercase cursor-pointer shadow-[1px_1px_0_0_rgba(0,0,0,1)]"
-                  >
-                    📂 Tải File .py Lên
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (progress.manimCode) {
-                        setCustomPythonCode(progress.manimCode);
-                      }
-                    }}
-                    disabled={!progress.manimCode}
-                    className="px-2.5 py-1 bg-white hover:bg-[#FFED66] border border-black text-[11px] font-black uppercase cursor-pointer disabled:opacity-40"
-                  >
-                    🔄 Lấy Code Gốc
-                  </button>
-                </div>
-              </div>
-
-              {/* Trình soạn thảo Code Python */}
-              <textarea
-                value={customPythonCode}
-                onChange={(e) => setCustomPythonCode(e.target.value)}
-                placeholder="Dán hoặc viết mã nguồn Manim Python (scene.py) tại đây... Bắt đầu bằng: from manim import *"
-                className="w-full h-64 p-3 bg-[#0f172a] text-[#38bdf8] font-mono text-xs border-2 border-black focus:outline-none selection:bg-[#FFED66] selection:text-black resize-y leading-relaxed"
-                spellCheck={false}
-              />
-
-              <div className="flex items-center justify-end gap-2 pt-1">
-                <button
-                  type="button"
-                  disabled={isRunning || !customPythonCode.trim()}
-                  onClick={() => handleRerenderDirect()}
-                  className={`flex items-center gap-2 px-5 py-3 border-[3px] border-black text-xs font-black uppercase tracking-wider shadow-[4px_4px_0_0_rgba(0,0,0,1)] transition-all cursor-pointer ${
-                    isRunning || !customPythonCode.trim()
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed border-gray-400 shadow-none'
-                      : 'bg-[#A3E635] hover:bg-[#86EFAC] text-black active:translate-x-[2px] active:translate-y-[2px] active:shadow-none'
-                  }`}
-                >
-                  <Zap className="w-4 h-4 stroke-[3] fill-black" />
-                  <span>⚡ Bắt Đầu Rerender Ngay ({rerenderQuality.toUpperCase()})</span>
-                </button>
-              </div>
-            </div>
-          )}
+          {/* Rerender Tab (LaTeX / Manim) */}
+          <RerenderTab
+            isManimTask={isManimTask}
+            activeTabMode={activeTabMode}
+            isRunning={isRunning}
+            renderMode={renderMode}
+            setRenderMode={setRenderMode}
+            rerenderQuality={rerenderQuality}
+            setRerenderQuality={setRerenderQuality}
+            customLatexCode={customLatexCode}
+            setCustomLatexCode={setCustomLatexCode}
+            customPythonCode={customPythonCode}
+            setCustomPythonCode={setCustomPythonCode}
+            pdfUrl={progress.pdfUrl}
+            manimCode={progress.manimCode}
+            latexCode={progress.latexCode}
+            promptContent={promptContent}
+            onRerenderLatexDirect={handleRerenderLatexDirect}
+            onRerenderDirect={handleRerenderDirect}
+            onPasteClipboardLatex={handlePasteClipboardLatex}
+            onPasteClipboard={handlePasteClipboard}
+            fileInputRef={fileInputRef}
+            fileInputLatexRef={fileInputLatexRef}
+          />
 
           {/* Stepper Visualization */}
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
@@ -1527,51 +1213,12 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
 
 
 
-            {/* Terminal Window Header Bar */}
-            <div className="flex items-center justify-between bg-black text-[#A3E635] px-3 py-1.5 border-4 border-b-0 border-black font-mono text-xs font-black uppercase">
-              <div className="flex items-center gap-2">
-                <Terminal className="w-4 h-4 text-[#A3E635] stroke-[3]" />
-                <span>🖥️ Real-Time System Log ({logs.length} dòng)</span>
-                {isRunning && (
-                  <span className="w-2 h-2 rounded-full bg-[#A3E635] animate-ping ml-1" />
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(logs.join('\n'));
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
-                  }}
-                  className="px-2 py-0.5 bg-[#FFED66] text-black border border-black text-[10px] font-sans font-black uppercase hover:bg-yellow-300 transition-all cursor-pointer"
-                >
-                  {copied ? '✓ Đã Copy Log' : 'Copy All Logs'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLogs([])}
-                  className="px-2 py-0.5 bg-[#FF5E5B] text-white border border-black text-[10px] font-sans font-black uppercase hover:bg-red-600 transition-all cursor-pointer"
-                >
-                  Xóa Log
-                </button>
-              </div>
-            </div>
-
-            {/* Terminal Window Content */}
-            <div ref={terminalRef} className="bg-[#18181b] border-4 border-black p-3 font-mono text-xs text-[#A3E635] h-48 overflow-y-auto space-y-1.5 shadow-[4px_4px_0_0_rgba(0,0,0,1)] select-text">
-              {logs.length === 0 ? (
-                <div className="text-gray-500 italic py-4 text-center">
-                  [Hệ thống sẵn sàng. Nhấn "BẮT ĐẦU CHẠY 1-CLICK" để xem log giám sát thời gian thực...]
-                </div>
-              ) : (
-                logs.map((log, idx) => (
-                  <div key={idx} className="leading-relaxed border-b border-gray-800/60 pb-1 whitespace-pre-wrap font-mono">
-                    {log}
-                  </div>
-                ))
-              )}
-            </div>
+            {/* Terminal Window Header Bar & Content */}
+            <LogConsole
+              logs={logs}
+              isRunning={isRunning}
+              onClearLogs={() => setLogs([])}
+            />
           </div>
 
           {/* Success Area: Action & Downloads */}
@@ -1679,35 +1326,11 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
                   </div>
 
                   {/* THANH ĐIỀU HƯỚNG TẬP TRONG PLAYLIST */}
-                  {hasPlaylist && (
-                    <div className="bg-[#FFED66] border-4 border-black p-3 shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-black uppercase text-black flex items-center gap-2">
-                          <ListVideo className="w-4 h-4 stroke-[3]" />
-                          Danh Sách Phát Playlist ({(progress.playlistVideos || []).length} Tập Đã Sản Xuất)
-                        </span>
-                        <span className="text-[10px] font-black uppercase bg-black text-white px-2 py-0.5 border border-black font-mono">
-                          Đang phát: Tập {selectedPlaylistIndex + 1}/{(progress.playlistVideos || []).length}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                        {(progress.playlistVideos || []).map((item, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => setSelectedPlaylistIndex(idx)}
-                            className={`px-3 py-2 border-2 border-black text-xs font-black uppercase transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
-                              selectedPlaylistIndex === idx
-                                ? 'bg-black text-[#FFED66] shadow-none translate-x-[2px] translate-y-[2px]'
-                                : 'bg-white text-black hover:bg-[#FF90E8] shadow-[2px_2px_0_0_rgba(0,0,0,1)]'
-                            }`}
-                          >
-                            <Play className={`w-3.5 h-3.5 stroke-[3] ${selectedPlaylistIndex === idx ? 'fill-[#FFED66]' : ''}`} />
-                            <span>Tập {item.episode || (idx + 1)}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  <PlaylistBar
+                    playlistVideos={progress.playlistVideos}
+                    selectedIndex={selectedPlaylistIndex}
+                    onSelectIndex={setSelectedPlaylistIndex}
+                  />
 
                   {/* Video Live Player (nếu render thành công) */}
                   {currentVideoUrl && (

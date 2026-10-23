@@ -13,6 +13,7 @@
     "preview": "vite preview",
     "lint": "tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
+    "generate:icons": "node scripts/generate_icons.cjs",
     "electron:dev": "vite build && electron electron/main.cjs --no-sandbox",
     "build:linux": "vite build && electron-builder --linux --x64",
     "build:appimage": "vite build && electron-builder --linux AppImage",
