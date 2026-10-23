@@ -124,7 +124,11 @@ export class AutomationClient {
 
   public static setSavedPin(pin: string) {
     this.savedPin = pin;
-    localStorage.setItem('yuta_security_pin', pin);
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem('yuta_security_pin', pin);
+      } catch {}
+    }
   }
 
   public static getSavedPin(): string {
