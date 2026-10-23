@@ -29,6 +29,7 @@ var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: tru
 // server/serverCore.ts
 var serverCore_exports = {};
 __export(serverCore_exports, {
+  createCoreApiHandler: () => createCoreApiHandler,
   getLiveAntigravityQuota: () => getLiveAntigravityQuota,
   startStandaloneServer: () => startStandaloneServer
 });
@@ -3618,7 +3619,7 @@ async function getLiveAntigravityQuota(forceRefresh = false) {
   lastQuotaFetchTimestamp = Date.now();
   return cachedAntigravityQuota;
 }
-function startStandaloneServer(options = {}) {
+function createCoreApiHandler(options = {}) {
   const downloadsDir = options.downloadsDir || import_path2.default.join(import_os2.default.homedir(), "Downloads");
   if (!import_fs2.default.existsSync(downloadsDir)) {
     import_fs2.default.mkdirSync(downloadsDir, { recursive: true });
@@ -3678,7 +3679,7 @@ function startStandaloneServer(options = {}) {
       }
     }
   }
-  const server = import_http.default.createServer(async (req, res) => {
+  return async function handleCoreRequest(req, res, next) {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Security-Pin");
@@ -3691,6 +3692,9 @@ function startStandaloneServer(options = {}) {
     const host = req.headers.host || "127.0.0.1";
     const parsedUrl = new URL(req.url || "/", `http://${host}`);
     const pathname = parsedUrl.pathname;
+    if (next && !pathname.startsWith("/api/") && !pathname.startsWith("/downloads")) {
+      return next();
+    }
     if (pathname.startsWith("/downloads")) {
       const rawRelPath = pathname.replace(/^\/downloads\/?/, "").split("?")[0];
       const relPath = decodeURIComponent(rawRelPath);
@@ -4070,8 +4074,7 @@ function startStandaloneServer(options = {}) {
         }
         if (lanIp !== "127.0.0.1") break;
       }
-      const addr = server.address();
-      const currentPort = typeof addr === "object" && addr ? addr.port : options.port || 3e3;
+      const currentPort = req.socket && req.socket.localPort ? req.socket.localPort : options.port || 3e3;
       const isConnected = Date.now() - lastMobileActivity.timestamp < 12e3;
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(
@@ -4091,8 +4094,7 @@ function startStandaloneServer(options = {}) {
     }
     if (pathname === "/api/system/tunnel/start" && req.method === "POST") {
       try {
-        const addr = server.address();
-        const currentPort = typeof addr === "object" && addr ? addr.port : options.port || 3e3;
+        const currentPort = req.socket && req.socket.localPort ? req.socket.localPort : options.port || 3e3;
         const wanUrl = await startWanTunnel(currentPort);
         res.writeHead(200, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ success: true, wanUrl }));
@@ -4169,8 +4171,17 @@ function startStandaloneServer(options = {}) {
         return;
       }
     }
+    if (next) {
+      return next();
+    }
     res.writeHead(404, { "Content-Type": "text/plain" });
     res.end("Not Found");
+  };
+}
+function startStandaloneServer(options = {}) {
+  const handler = createCoreApiHandler(options);
+  const server = import_http.default.createServer((req, res) => {
+    handler(req, res);
   });
   const targetPort = options.port !== void 0 ? options.port : 0;
   server.listen(targetPort, options.host || "0.0.0.0", () => {
@@ -4184,6 +4195,7 @@ function startStandaloneServer(options = {}) {
 }
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
+  createCoreApiHandler,
   getLiveAntigravityQuota,
   startStandaloneServer
 });

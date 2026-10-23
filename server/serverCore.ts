@@ -218,7 +218,13 @@ export interface StandaloneServerOptions {
   onReady?: (port: number) => void;
 }
 
-export function startStandaloneServer(options: StandaloneServerOptions = {}): http.Server {
+export type CoreApiHandler = (
+  req: http.IncomingMessage,
+  res: http.ServerResponse,
+  next?: () => void
+) => Promise<void> | void;
+
+export function createCoreApiHandler(options: StandaloneServerOptions = {}): CoreApiHandler {
   const downloadsDir = options.downloadsDir || path.join(os.homedir(), 'Downloads');
   if (!fs.existsSync(downloadsDir)) {
     fs.mkdirSync(downloadsDir, { recursive: true });
@@ -288,7 +294,11 @@ export function startStandaloneServer(options: StandaloneServerOptions = {}): ht
     }
   }
 
-  const server = http.createServer(async (req, res) => {
+  return async function handleCoreRequest(
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    next?: () => void
+  ) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Security-Pin');
@@ -304,6 +314,11 @@ export function startStandaloneServer(options: StandaloneServerOptions = {}): ht
     const host = req.headers.host || '127.0.0.1';
     const parsedUrl = new URL(req.url || '/', `http://${host}`);
     const pathname = parsedUrl.pathname;
+
+    // If running under Connect/Vite dev middleware, delegate non-API and non-download routes immediately
+    if (next && !pathname.startsWith('/api/') && !pathname.startsWith('/downloads')) {
+      return next();
+    }
 
     // 1. Phục vụ tĩnh thư mục Downloads (/downloads/...) với Range Streaming & CWE-22 defense
     if (pathname.startsWith('/downloads')) {
@@ -707,8 +722,7 @@ export function startStandaloneServer(options: StandaloneServerOptions = {}): ht
         }
         if (lanIp !== '127.0.0.1') break;
       }
-      const addr = server.address();
-      const currentPort = typeof addr === 'object' && addr ? addr.port : (options.port || 3000);
+      const currentPort = req.socket && req.socket.localPort ? req.socket.localPort : (options.port || 3000);
       const isConnected = Date.now() - lastMobileActivity.timestamp < 12000;
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(
@@ -730,8 +744,7 @@ export function startStandaloneServer(options: StandaloneServerOptions = {}): ht
     // 13. API: WAN Tunnel
     if (pathname === '/api/system/tunnel/start' && req.method === 'POST') {
       try {
-        const addr = server.address();
-        const currentPort = typeof addr === 'object' && addr ? addr.port : (options.port || 3000);
+        const currentPort = req.socket && req.socket.localPort ? req.socket.localPort : (options.port || 3000);
         const wanUrl = await startWanTunnel(currentPort);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, wanUrl }));
@@ -817,8 +830,19 @@ export function startStandaloneServer(options: StandaloneServerOptions = {}): ht
       }
     }
 
+    if (next) {
+      return next();
+    }
+
     res.writeHead(404, { 'Content-Type': 'text/plain' });
     res.end('Not Found');
+  };
+}
+
+export function startStandaloneServer(options: StandaloneServerOptions = {}): http.Server {
+  const handler = createCoreApiHandler(options);
+  const server = http.createServer((req, res) => {
+    handler(req, res);
   });
 
   const targetPort = options.port !== undefined ? options.port : 0;
