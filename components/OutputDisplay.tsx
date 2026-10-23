@@ -5,13 +5,8 @@ import {
   VolumeX, Subtitles, FileText, Monitor, Film, Edit3
 } from 'lucide-react';
 import { GenerationStatus, VideoConfig } from '../types';
-import { 
-  generateManimStoryboardPrompt, 
-  generateManimCodePrompt, 
-  generateVideoManimPrompt,
-  generateManimRevisionPrompt
-} from '../services/prompts/manim';
-import { generateLatexRevisionPrompt } from '../services/gemini';
+
+const ManimPromptModes = React.lazy(() => import('./output/ManimPromptModes'));
 
 interface OutputDisplayProps {
   content: string;
@@ -37,7 +32,6 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({
   const [isPlayingTTS, setIsPlayingTTS] = useState(false);
   const [revisionFeedback, setRevisionFeedback] = useState('');
   const [latexRevisionFeedback, setLatexRevisionFeedback] = useState('');
-  const [manimTab, setManimTab] = useState<'turn1' | 'turn2' | 'combined'>('turn1');
 
   useEffect(() => {
     // Dừng âm thanh nếu nội dung đổi hoặc unmount
@@ -113,11 +107,6 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({
   const isBat = useMemo(() => {
     return content.includes('@echo off') || content.includes('chcp 65001');
   }, [content]);
-
-  // Quản lý các chế độ sub-tab prompt cho video Manim (memoized để tránh tái sinh nặng nề)
-  const turn1Prompt = useMemo(() => videoConfig ? generateManimStoryboardPrompt(videoConfig) : '', [videoConfig]);
-  const turn2Prompt = useMemo(() => videoConfig ? generateManimCodePrompt(videoConfig) : '', [videoConfig]);
-  const combinedPrompt = useMemo(() => videoConfig ? generateVideoManimPrompt(videoConfig) : '', [videoConfig]);
 
   // Trình đọc thử lời thoại TTS (Web Speech API)
   const handleToggleTTS = () => {
@@ -454,52 +443,11 @@ pause
         </div>
       </div>
 
-      {/* Multi-Turn Manim Prompt Mode Switcher */}
+      {/* Multi-Turn Manim Prompt Mode Switcher (Lazy Loaded on Demand) */}
       {videoConfig && (
-        <div className="bg-[#f1f5f9] border-b-2 border-black px-4 py-2 flex items-center justify-between gap-2 flex-wrap">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-black stroke-[3]" />
-            <span className="text-xs font-black uppercase text-black tracking-wider">Chế độ Prompt Video:</span>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <button
-              type="button"
-              onClick={() => {
-                setManimTab('turn1');
-                if (onSelectPrompt && turn1Prompt) onSelectPrompt(turn1Prompt);
-              }}
-              className={`px-3 py-1 text-xs font-black uppercase border-2 border-black transition-all cursor-pointer ${
-                manimTab === 'turn1' ? 'bg-[#A3E635] text-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]' : 'bg-white text-black hover:bg-[#FFED66]'
-              }`}
-            >
-              🎬 [Lượt 1] Kịch Bản & Lời Thoại
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setManimTab('turn2');
-                if (onSelectPrompt && turn2Prompt) onSelectPrompt(turn2Prompt);
-              }}
-              className={`px-3 py-1 text-xs font-black uppercase border-2 border-black transition-all cursor-pointer ${
-                manimTab === 'turn2' ? 'bg-[#00CECB] text-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]' : 'bg-white text-black hover:bg-[#FFED66]'
-              }`}
-            >
-              💻 [Lượt 2] Lệnh Sinh Code
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setManimTab('combined');
-                if (onSelectPrompt && combinedPrompt) onSelectPrompt(combinedPrompt);
-              }}
-              className={`px-3 py-1 text-xs font-black uppercase border-2 border-black transition-all cursor-pointer ${
-                manimTab === 'combined' ? 'bg-[#FFED66] text-black shadow-[2px_2px_0_0_rgba(0,0,0,1)]' : 'bg-white text-black hover:bg-[#FFED66]'
-              }`}
-            >
-              ⚡ [Prompt Gộp] 1-Shot
-            </button>
-          </div>
-        </div>
+        <React.Suspense fallback={null}>
+          <ManimPromptModes videoConfig={videoConfig} onSelectPrompt={onSelectPrompt} />
+        </React.Suspense>
       )}
 
       {/* Compiler Notice & Quick Download Bar */}
@@ -662,8 +610,9 @@ pause
             />
             <div className="flex items-center justify-end gap-2">
               <button
-                onClick={() => {
+                onClick={async () => {
                   if (!revisionFeedback.trim() || !onSelectPrompt) return;
+                  const { generateManimRevisionPrompt } = await import('../services/prompts/manim');
                   const revPrompt = generateManimRevisionPrompt(videoConfig, extractCode(content, 'python'), revisionFeedback);
                   onSelectPrompt(revPrompt);
                   setRevisionFeedback('');
@@ -719,8 +668,9 @@ pause
                 </button>
               )}
               <button
-                onClick={() => {
+                onClick={async () => {
                   if (!latexRevisionFeedback.trim() || !onSelectPrompt) return;
+                  const { generateLatexRevisionPrompt } = await import('../services/prompts/latex-rules');
                   const revPrompt = generateLatexRevisionPrompt(null, extractCode(content, 'latex'), latexRevisionFeedback);
                   onSelectPrompt(revPrompt);
                   setLatexRevisionFeedback('');

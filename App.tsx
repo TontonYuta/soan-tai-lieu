@@ -25,17 +25,6 @@ const FormLoadingFallback: React.FC = () => (
 );
 import { AutomationClient } from './services/automationClient';
 import { 
-  generateExamPrompt, 
-  generateLearningPrompt, 
-  generateRoadmapPrompt, 
-  generateWorksheetPrompt, 
-  generateSimilarPrompt,
-  generateManimStoryboardPrompt,
-  generateVideoManimPrompt,
-  generateVideoScriptPrompt, 
-  generateProjectPrompt
-} from './services/gemini';
-import { 
   ExamConfig, 
   LearningConfig, 
   RoadmapConfig, 
@@ -224,8 +213,9 @@ const App: React.FC = () => {
     } else {
       setActiveAttachedPdf(null);
     }
-    setTimeout(() => {
+    setTimeout(async () => {
         try {
+            const { generateExamPrompt } = await import('./services/prompts/exam');
             setPromptContent(generateExamPrompt(finalConfig));
             setContextMetadata({ topic: finalConfig.topic, subject: finalConfig.subject, grade: finalConfig.grade });
             setLearningContext(`Đề thi: ${finalConfig.topic}`);
@@ -247,8 +237,9 @@ const App: React.FC = () => {
     } else {
       setActiveAttachedPdf(null);
     }
-    setTimeout(() => {
+    setTimeout(async () => {
         try {
+            const { generateLearningPrompt } = await import('./services/prompts/learning');
             setPromptContent(generateLearningPrompt(finalConfig));
             setContextMetadata({ topic: finalConfig.topic, subject: finalConfig.subject, grade: finalConfig.grade });
             setLearningContext(`Bài học: ${finalConfig.topic}`);
@@ -270,8 +261,9 @@ const App: React.FC = () => {
     } else {
       setActiveAttachedPdf(null);
     }
-    setTimeout(() => {
+    setTimeout(async () => {
         try {
+            const { generateRoadmapPrompt } = await import('./services/prompts/roadmap');
             setPromptContent(generateRoadmapPrompt(finalConfig));
             setContextMetadata({ topic: finalConfig.topic, subject: finalConfig.subject, grade: 'Hệ thống' });
             setLearningContext(`Lộ trình: ${finalConfig.topic}`);
@@ -293,8 +285,9 @@ const App: React.FC = () => {
     } else {
       setActiveAttachedPdf(null);
     }
-    setTimeout(() => {
+    setTimeout(async () => {
         try {
+            const { generateWorksheetPrompt } = await import('./services/prompts/worksheet');
             setPromptContent(generateWorksheetPrompt(finalConfig));
             setContextMetadata({ topic: finalConfig.topic, subject: finalConfig.subject, grade: finalConfig.grade });
             setLearningContext(`Bài tập: ${finalConfig.topic}`);
@@ -316,8 +309,9 @@ const App: React.FC = () => {
     } else {
       setActiveAttachedPdf(null);
     }
-    setTimeout(() => {
+    setTimeout(async () => {
         try {
+            const { generateSimilarPrompt } = await import('./services/prompts/similar');
             setPromptContent(generateSimilarPrompt(finalConfig));
             setContextMetadata({ topic: finalConfig.topic, subject: finalConfig.subject, grade: finalConfig.grade || '12' });
             setLearningContext(`Bài tập tương tự: ${finalConfig.topic}`);
@@ -354,8 +348,9 @@ const App: React.FC = () => {
     }
     setStatus(GenerationStatus.LOADING);
     setError(null);
-    setTimeout(() => {
+    setTimeout(async () => {
         try {
+            const { generateVideoScriptPrompt } = await import('./services/prompts/script');
             setPromptContent(generateVideoScriptPrompt(finalConfig));
             setContextMetadata({ topic: finalConfig.topic, subject: finalConfig.subject, grade: finalConfig.audience });
             setLearningContext(`Video Script: ${finalConfig.topic}`);
@@ -388,8 +383,9 @@ const App: React.FC = () => {
     });
     setStatus(GenerationStatus.LOADING);
     setError(null);
-    setTimeout(() => {
+    setTimeout(async () => {
         try {
+            const { generateManimStoryboardPrompt } = await import('./services/prompts/manim');
             setPromptContent(generateManimStoryboardPrompt(finalConfig));
             setContextMetadata({ topic: finalConfig.topic, subject: finalConfig.subject, grade: finalConfig.audience });
             setLearningContext(finalConfig.isSeries ? `Chuỗi Playlist (${finalConfig.seriesCount || 3} Tập): ${finalConfig.topic}` : `Video Manim: ${finalConfig.topic}`);
@@ -412,8 +408,9 @@ const App: React.FC = () => {
       setActiveAttachedPdf(null);
     }
 
-    setTimeout(() => {
+    setTimeout(async () => {
       try {
+        const { generateProjectPrompt } = await import('./services/prompts/project');
         setPromptContent(generateProjectPrompt(finalConfig));
         setContextMetadata({ topic: finalConfig.title, subject: finalConfig.major || 'Đồ án / Đề tài', grade: finalConfig.projectType });
         setLearningContext(`Đồ án / Đề tài: ${finalConfig.title}`);
@@ -672,7 +669,10 @@ const App: React.FC = () => {
               {activeTab === 'roadmap' && (
                 <RoadmapForm 
                   onSubmit={handleRoadmapGenerate} 
-                  onDirectAutomate={(cfg) => handleDirectAutomate(generateRoadmapPrompt(cfg), { topic: cfg.topic, subject: cfg.subject }, 'Lộ trình')}
+                  onDirectAutomate={async (cfg) => {
+                    const { generateRoadmapPrompt } = await import('./services/prompts/roadmap');
+                    handleDirectAutomate(generateRoadmapPrompt(cfg), { topic: cfg.topic, subject: cfg.subject }, 'Lộ trình');
+                  }}
                   status={status} 
                   globalPinnedPdf={globalPinnedPdf}
                   isGlobalRagActive={isGlobalRagActive}
@@ -683,7 +683,10 @@ const App: React.FC = () => {
               {activeTab === 'learning' && (
                 <LearningForm 
                   onSubmit={handleLearningGenerate} 
-                  onDirectAutomate={(cfg) => handleDirectAutomate(generateLearningPrompt(cfg), { topic: cfg.topic, subject: cfg.subject, grade: cfg.grade }, 'Bài học')}
+                  onDirectAutomate={async (cfg) => {
+                    const { generateLearningPrompt } = await import('./services/prompts/learning');
+                    handleDirectAutomate(generateLearningPrompt(cfg), { topic: cfg.topic, subject: cfg.subject, grade: cfg.grade }, 'Bài học');
+                  }}
                   status={status} 
                   initialContext={learningContext || undefined}
                   contextTopic={contextMetadata?.topic}
@@ -698,7 +701,10 @@ const App: React.FC = () => {
               {activeTab === 'worksheet' && (
                 <WorksheetForm 
                   onSubmit={handleWorksheetGenerate} 
-                  onDirectAutomate={(cfg) => handleDirectAutomate(generateWorksheetPrompt(cfg), { topic: cfg.topic, subject: cfg.subject, grade: cfg.grade }, 'Phiếu bài tập')}
+                  onDirectAutomate={async (cfg) => {
+                    const { generateWorksheetPrompt } = await import('./services/prompts/worksheet');
+                    handleDirectAutomate(generateWorksheetPrompt(cfg), { topic: cfg.topic, subject: cfg.subject, grade: cfg.grade }, 'Phiếu bài tập');
+                  }}
                   status={status} 
                   contextTopic={contextMetadata?.topic}
                   contextSubject={contextMetadata?.subject}
@@ -712,7 +718,10 @@ const App: React.FC = () => {
               {activeTab === 'similar' && (
                 <SimilarExerciseForm
                   onSubmit={handleSimilarGenerate}
-                  onDirectAutomate={(cfg) => handleDirectAutomate(generateSimilarPrompt(cfg), { topic: cfg.topic, subject: cfg.subject, grade: cfg.grade }, 'Bài tập tương tự')}
+                  onDirectAutomate={async (cfg) => {
+                    const { generateSimilarPrompt } = await import('./services/prompts/similar');
+                    handleDirectAutomate(generateSimilarPrompt(cfg), { topic: cfg.topic, subject: cfg.subject, grade: cfg.grade }, 'Bài tập tương tự');
+                  }}
                   status={status}
                   contextTopic={contextMetadata?.topic}
                   contextSubject={contextMetadata?.subject}
@@ -726,7 +735,10 @@ const App: React.FC = () => {
               {activeTab === 'exam' && (
                 <ExamForm 
                   onSubmit={handleExamGenerate} 
-                  onDirectAutomate={(cfg) => handleDirectAutomate(generateExamPrompt(cfg), { topic: cfg.topic, subject: cfg.subject, grade: cfg.grade }, 'Đề thi')}
+                  onDirectAutomate={async (cfg) => {
+                    const { generateExamPrompt } = await import('./services/prompts/exam');
+                    handleDirectAutomate(generateExamPrompt(cfg), { topic: cfg.topic, subject: cfg.subject, grade: cfg.grade }, 'Đề thi');
+                  }}
                   status={status} 
                   initialContext={learningContext || undefined}
                   contextTopic={contextMetadata?.topic}
@@ -741,7 +753,7 @@ const App: React.FC = () => {
               {activeTab === 'video' && (
                 <VideoForm 
                   onSubmitManim={handleVideoManimGenerate}
-                  onDirectAutomateManim={(cfg) => {
+                  onDirectAutomateManim={async (cfg) => {
                     const effectivePdf = cfg.attachedPdf || (isGlobalRagActive ? globalPinnedPdf || undefined : undefined);
                     const finalCfg = { ...cfg, attachedPdf: effectivePdf };
                     setCurrentVideoConfig(finalCfg);
@@ -760,6 +772,7 @@ const App: React.FC = () => {
                       duration: finalCfg.duration,
                       exerciseCount: finalCfg.exerciseCount,
                     });
+                    const { generateVideoManimPrompt } = await import('./services/prompts/manim');
                     handleDirectAutomate(
                       generateVideoManimPrompt(finalCfg), 
                       { topic: finalCfg.topic, subject: finalCfg.subject, grade: finalCfg.audience }, 

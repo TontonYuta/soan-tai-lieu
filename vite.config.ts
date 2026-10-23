@@ -27,8 +27,11 @@ export default defineConfig(({ mode }) => {
               if (id.includes('node_modules/lucide-react/')) {
                 return 'vendor-icons';
               }
+              if (id.includes('/services/prompts/manim/')) {
+                return 'prompts-manim';
+              }
               if (id.includes('/services/prompts/')) {
-                return 'prompts-engine';
+                return 'prompts-latex';
               }
             },
           },
