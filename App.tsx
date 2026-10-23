@@ -1,17 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import Header from './components/Header';
-import ExamForm from './components/ExamForm';
-import LearningForm from './components/LearningForm';
-import RoadmapForm from './components/RoadmapForm';
-import WorksheetForm from './components/WorksheetForm';
-import SimilarExerciseForm from './components/SimilarExerciseForm';
-import VideoForm from './components/VideoForm';
-import ProjectForm from './components/ProjectForm';
 import OutputDisplay from './components/OutputDisplay';
-import AutomationModal from './components/AutomationModal';
-import MobileRemoteHub from './components/MobileRemoteHub';
 import ErrorBoundary from './components/ErrorBoundary';
 import GlobalPinnedPdfBar from './components/GlobalPinnedPdfBar';
+
+// Lazy-loaded Tab Forms & Modals for high-speed First Contentful Paint
+const ExamForm = lazy(() => import('./components/ExamForm'));
+const LearningForm = lazy(() => import('./components/LearningForm'));
+const RoadmapForm = lazy(() => import('./components/RoadmapForm'));
+const WorksheetForm = lazy(() => import('./components/WorksheetForm'));
+const SimilarExerciseForm = lazy(() => import('./components/SimilarExerciseForm'));
+const VideoForm = lazy(() => import('./components/VideoForm'));
+const ProjectForm = lazy(() => import('./components/ProjectForm'));
+const AutomationModal = lazy(() => import('./components/AutomationModal'));
+const MobileRemoteHub = lazy(() => import('./components/MobileRemoteHub'));
+
+const FormLoadingFallback: React.FC = () => (
+  <div className="bg-white border-4 border-black p-8 shadow-[6px_6px_0_0_rgba(0,0,0,1)] flex items-center justify-center space-x-3 animate-pulse">
+    <div className="w-4 h-4 bg-black rounded-none animate-ping" />
+    <span className="text-xs font-black uppercase tracking-wider text-black">
+      Đang tải giao diện soạn thảo...
+    </span>
+  </div>
+);
 import { AutomationClient } from './services/automationClient';
 import { 
   generateExamPrompt, 
@@ -181,7 +192,18 @@ const App: React.FC = () => {
   }, [isMobileView]);
 
   if (isMobileView) {
-    return <MobileRemoteHub onSwitchToDesktop={handleSwitchToDesktop} />;
+    return (
+      <Suspense fallback={
+        <div className="min-h-screen bg-[#FFED66] flex flex-col items-center justify-center p-6 text-center space-y-3">
+          <div className="w-8 h-8 border-4 border-black border-t-transparent animate-spin rounded-full" />
+          <span className="text-sm font-black uppercase text-black tracking-wider">
+            📱 Đang khởi tạo trung tâm điều khiển di động...
+          </span>
+        </div>
+      }>
+        <MobileRemoteHub onSwitchToDesktop={handleSwitchToDesktop} />
+      </Suspense>
+    );
   }
 
   const handleHeadlessToggle = (val: boolean) => {
@@ -430,26 +452,28 @@ const App: React.FC = () => {
           isGlobalRagActive={isGlobalRagActive}
         />
       
-      <AutomationModal 
-        isOpen={isAutomationOpen} 
-        onClose={() => setIsAutomationOpen(false)} 
-        initialTabMode={automationTabMode}
-        promptContent={promptContent} 
-        headless={headless}
-        onToggleHeadless={handleHeadlessToggle}
-        attachedPdfPath={activeAttachedPdf?.path}
-        attachedPdfName={activeAttachedPdf?.name}
-        isSeries={videoExtraConfig.isSeries}
-        seriesCount={videoExtraConfig.seriesCount}
-        seriesOutline={videoExtraConfig.seriesOutline}
-        enableVoice={videoExtraConfig.enableVoice}
-        voiceName={videoExtraConfig.voiceName}
-        voiceSpeed={videoExtraConfig.voiceSpeed}
-        topic={contextMetadata?.topic}
-        subject={contextMetadata?.subject}
-        duration={videoExtraConfig.duration}
-        exerciseCount={videoExtraConfig.exerciseCount}
-      />
+      <Suspense fallback={null}>
+        <AutomationModal 
+          isOpen={isAutomationOpen} 
+          onClose={() => setIsAutomationOpen(false)} 
+          initialTabMode={automationTabMode}
+          promptContent={promptContent} 
+          headless={headless}
+          onToggleHeadless={handleHeadlessToggle}
+          attachedPdfPath={activeAttachedPdf?.path}
+          attachedPdfName={activeAttachedPdf?.name}
+          isSeries={videoExtraConfig.isSeries}
+          seriesCount={videoExtraConfig.seriesCount}
+          seriesOutline={videoExtraConfig.seriesOutline}
+          enableVoice={videoExtraConfig.enableVoice}
+          voiceName={videoExtraConfig.voiceName}
+          voiceSpeed={videoExtraConfig.voiceSpeed}
+          topic={contextMetadata?.topic}
+          subject={contextMetadata?.subject}
+          duration={videoExtraConfig.duration}
+          exerciseCount={videoExtraConfig.exerciseCount}
+        />
+      </Suspense>
 
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -642,125 +666,126 @@ const App: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* Left Column: Form */}
+          {/* Left Column: Form (Lazy-loaded via Suspense) */}
           <div className="lg:col-span-6 space-y-6">
-            {activeTab === 'roadmap' && (
-              <RoadmapForm 
-                onSubmit={handleRoadmapGenerate} 
-                onDirectAutomate={(cfg) => handleDirectAutomate(generateRoadmapPrompt(cfg), { topic: cfg.topic, subject: cfg.subject }, 'Lộ trình')}
-                status={status} 
-                globalPinnedPdf={globalPinnedPdf}
-                isGlobalRagActive={isGlobalRagActive}
-                onSetGlobalPin={handleSetGlobalPinnedPdf}
-              />
-            )}
+            <Suspense fallback={<FormLoadingFallback />}>
+              {activeTab === 'roadmap' && (
+                <RoadmapForm 
+                  onSubmit={handleRoadmapGenerate} 
+                  onDirectAutomate={(cfg) => handleDirectAutomate(generateRoadmapPrompt(cfg), { topic: cfg.topic, subject: cfg.subject }, 'Lộ trình')}
+                  status={status} 
+                  globalPinnedPdf={globalPinnedPdf}
+                  isGlobalRagActive={isGlobalRagActive}
+                  onSetGlobalPin={handleSetGlobalPinnedPdf}
+                />
+              )}
 
-            {activeTab === 'learning' && (
-              <LearningForm 
-                onSubmit={handleLearningGenerate} 
-                onDirectAutomate={(cfg) => handleDirectAutomate(generateLearningPrompt(cfg), { topic: cfg.topic, subject: cfg.subject, grade: cfg.grade }, 'Bài học')}
-                status={status} 
-                initialContext={learningContext || undefined}
-                contextTopic={contextMetadata?.topic}
-                contextSubject={contextMetadata?.subject}
-                contextGrade={contextMetadata?.grade}
-                globalPinnedPdf={globalPinnedPdf}
-                isGlobalRagActive={isGlobalRagActive}
-                onSetGlobalPin={handleSetGlobalPinnedPdf}
-              />
-            )}
+              {activeTab === 'learning' && (
+                <LearningForm 
+                  onSubmit={handleLearningGenerate} 
+                  onDirectAutomate={(cfg) => handleDirectAutomate(generateLearningPrompt(cfg), { topic: cfg.topic, subject: cfg.subject, grade: cfg.grade }, 'Bài học')}
+                  status={status} 
+                  initialContext={learningContext || undefined}
+                  contextTopic={contextMetadata?.topic}
+                  contextSubject={contextMetadata?.subject}
+                  contextGrade={contextMetadata?.grade}
+                  globalPinnedPdf={globalPinnedPdf}
+                  isGlobalRagActive={isGlobalRagActive}
+                  onSetGlobalPin={handleSetGlobalPinnedPdf}
+                />
+              )}
 
-            {activeTab === 'worksheet' && (
-              <WorksheetForm 
-                onSubmit={handleWorksheetGenerate} 
-                onDirectAutomate={(cfg) => handleDirectAutomate(generateWorksheetPrompt(cfg), { topic: cfg.topic, subject: cfg.subject, grade: cfg.grade }, 'Phiếu bài tập')}
-                status={status} 
-                contextTopic={contextMetadata?.topic}
-                contextSubject={contextMetadata?.subject}
-                contextGrade={contextMetadata?.grade}
-                globalPinnedPdf={globalPinnedPdf}
-                isGlobalRagActive={isGlobalRagActive}
-                onSetGlobalPin={handleSetGlobalPinnedPdf}
-              />
-            )}
+              {activeTab === 'worksheet' && (
+                <WorksheetForm 
+                  onSubmit={handleWorksheetGenerate} 
+                  onDirectAutomate={(cfg) => handleDirectAutomate(generateWorksheetPrompt(cfg), { topic: cfg.topic, subject: cfg.subject, grade: cfg.grade }, 'Phiếu bài tập')}
+                  status={status} 
+                  contextTopic={contextMetadata?.topic}
+                  contextSubject={contextMetadata?.subject}
+                  contextGrade={contextMetadata?.grade}
+                  globalPinnedPdf={globalPinnedPdf}
+                  isGlobalRagActive={isGlobalRagActive}
+                  onSetGlobalPin={handleSetGlobalPinnedPdf}
+                />
+              )}
 
-            {activeTab === 'similar' && (
-              <SimilarExerciseForm
-                onSubmit={handleSimilarGenerate}
-                onDirectAutomate={(cfg) => handleDirectAutomate(generateSimilarPrompt(cfg), { topic: cfg.topic, subject: cfg.subject, grade: cfg.grade }, 'Bài tập tương tự')}
-                status={status}
-                contextTopic={contextMetadata?.topic}
-                contextSubject={contextMetadata?.subject}
-                contextGrade={contextMetadata?.grade}
-                globalPinnedPdf={globalPinnedPdf}
-                isGlobalRagActive={isGlobalRagActive}
-                onSetGlobalPin={handleSetGlobalPinnedPdf}
-              />
-            )}
+              {activeTab === 'similar' && (
+                <SimilarExerciseForm
+                  onSubmit={handleSimilarGenerate}
+                  onDirectAutomate={(cfg) => handleDirectAutomate(generateSimilarPrompt(cfg), { topic: cfg.topic, subject: cfg.subject, grade: cfg.grade }, 'Bài tập tương tự')}
+                  status={status}
+                  contextTopic={contextMetadata?.topic}
+                  contextSubject={contextMetadata?.subject}
+                  contextGrade={contextMetadata?.grade}
+                  globalPinnedPdf={globalPinnedPdf}
+                  isGlobalRagActive={isGlobalRagActive}
+                  onSetGlobalPin={handleSetGlobalPinnedPdf}
+                />
+              )}
 
-            {activeTab === 'exam' && (
-              <ExamForm 
-                onSubmit={handleExamGenerate} 
-                onDirectAutomate={(cfg) => handleDirectAutomate(generateExamPrompt(cfg), { topic: cfg.topic, subject: cfg.subject, grade: cfg.grade }, 'Đề thi')}
-                status={status} 
-                initialContext={learningContext || undefined}
-                contextTopic={contextMetadata?.topic}
-                contextSubject={contextMetadata?.subject}
-                contextGrade={contextMetadata?.grade}
-                globalPinnedPdf={globalPinnedPdf}
-                isGlobalRagActive={isGlobalRagActive}
-                onSetGlobalPin={handleSetGlobalPinnedPdf}
-              />
-            )}
+              {activeTab === 'exam' && (
+                <ExamForm 
+                  onSubmit={handleExamGenerate} 
+                  onDirectAutomate={(cfg) => handleDirectAutomate(generateExamPrompt(cfg), { topic: cfg.topic, subject: cfg.subject, grade: cfg.grade }, 'Đề thi')}
+                  status={status} 
+                  initialContext={learningContext || undefined}
+                  contextTopic={contextMetadata?.topic}
+                  contextSubject={contextMetadata?.subject}
+                  contextGrade={contextMetadata?.grade}
+                  globalPinnedPdf={globalPinnedPdf}
+                  isGlobalRagActive={isGlobalRagActive}
+                  onSetGlobalPin={handleSetGlobalPinnedPdf}
+                />
+              )}
 
+              {activeTab === 'video' && (
+                <VideoForm 
+                  onSubmitManim={handleVideoManimGenerate}
+                  onDirectAutomateManim={(cfg) => {
+                    const effectivePdf = cfg.attachedPdf || (isGlobalRagActive ? globalPinnedPdf || undefined : undefined);
+                    const finalCfg = { ...cfg, attachedPdf: effectivePdf };
+                    setCurrentVideoConfig(finalCfg);
+                    if (effectivePdf) {
+                      setActiveAttachedPdf({ path: effectivePdf.tempPath, name: effectivePdf.fileName });
+                    } else {
+                      setActiveAttachedPdf(null);
+                    }
+                    setVideoExtraConfig({
+                      isSeries: finalCfg.isSeries,
+                      seriesCount: finalCfg.seriesCount,
+                      seriesOutline: finalCfg.seriesOutline || finalCfg.details,
+                      enableVoice: finalCfg.enableVoice,
+                      voiceName: finalCfg.voiceName,
+                      voiceSpeed: finalCfg.voiceSpeed,
+                      duration: finalCfg.duration,
+                      exerciseCount: finalCfg.exerciseCount,
+                    });
+                    handleDirectAutomate(
+                      generateVideoManimPrompt(finalCfg), 
+                      { topic: finalCfg.topic, subject: finalCfg.subject, grade: finalCfg.audience }, 
+                      finalCfg.isSeries ? `Chuỗi Playlist (${finalCfg.seriesCount || 3} Tập)` : 'Video Manim'
+                    );
+                  }}
+                  status={status} 
+                  contextTopic={contextMetadata?.topic}
+                  contextSubject={contextMetadata?.subject}
+                  globalPinnedPdf={globalPinnedPdf}
+                  isGlobalRagActive={isGlobalRagActive}
+                  onSetGlobalPin={handleSetGlobalPinnedPdf}
+                />
+              )}
 
-            {activeTab === 'video' && (
-              <VideoForm 
-                onSubmitManim={handleVideoManimGenerate}
-                onDirectAutomateManim={(cfg) => {
-                  const effectivePdf = cfg.attachedPdf || (isGlobalRagActive ? globalPinnedPdf || undefined : undefined);
-                  const finalCfg = { ...cfg, attachedPdf: effectivePdf };
-                  setCurrentVideoConfig(finalCfg);
-                  if (effectivePdf) {
-                    setActiveAttachedPdf({ path: effectivePdf.tempPath, name: effectivePdf.fileName });
-                  } else {
-                    setActiveAttachedPdf(null);
-                  }
-                  setVideoExtraConfig({
-                    isSeries: finalCfg.isSeries,
-                    seriesCount: finalCfg.seriesCount,
-                    seriesOutline: finalCfg.seriesOutline || finalCfg.details,
-                    enableVoice: finalCfg.enableVoice,
-                    voiceName: finalCfg.voiceName,
-                    voiceSpeed: finalCfg.voiceSpeed,
-                    duration: finalCfg.duration,
-                    exerciseCount: finalCfg.exerciseCount,
-                  });
-                  handleDirectAutomate(
-                    generateVideoManimPrompt(finalCfg), 
-                    { topic: finalCfg.topic, subject: finalCfg.subject, grade: finalCfg.audience }, 
-                    finalCfg.isSeries ? `Chuỗi Playlist (${finalCfg.seriesCount || 3} Tập)` : 'Video Manim'
-                  );
-                }}
-                status={status} 
-                contextTopic={contextMetadata?.topic}
-                contextSubject={contextMetadata?.subject}
-                globalPinnedPdf={globalPinnedPdf}
-                isGlobalRagActive={isGlobalRagActive}
-                onSetGlobalPin={handleSetGlobalPinnedPdf}
-              />
-            )}
-
-            {activeTab === 'project' && (
-              <ProjectForm 
-                onSubmit={handleProjectGenerate}
-                onDirectAutomate={handleDirectProjectAutomate}
-                status={status}
-                globalPinnedPdf={globalPinnedPdf}
-                isGlobalRagActive={isGlobalRagActive}
-                onSetGlobalPin={handleSetGlobalPinnedPdf}
-              />
-            )}
+              {activeTab === 'project' && (
+                <ProjectForm 
+                  onSubmit={handleProjectGenerate}
+                  onDirectAutomate={handleDirectProjectAutomate}
+                  status={status}
+                  globalPinnedPdf={globalPinnedPdf}
+                  isGlobalRagActive={isGlobalRagActive}
+                  onSetGlobalPin={handleSetGlobalPinnedPdf}
+                />
+              )}
+            </Suspense>
           </div>
 
           {/* Right Column: Output */}

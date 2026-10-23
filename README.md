@@ -131,10 +131,11 @@ manim -pqh scene.py MainScene
 │   ├── LearningForm.tsx        # Form tạo bài học lý thuyết
 │   ├── RoadmapForm.tsx          # Form tạo lộ trình A-Z
 │   ├── VideoForm.tsx           # Form tạo kịch bản & Manim video Shorts/YouTube
-│   ├── BatForm.tsx             # Form tạo file script tự động hóa Windows .bat
+│   ├── ProjectForm.tsx         # Form tạo đồ án & báo cáo nghiên cứu
+│   ├── AutomationModal.tsx     # Modal điều khiển tự động hóa 1-Click
+│   ├── automation/             # Micro-modules tự động hóa (Quota, Console, Rerender)
 │   ├── OutputDisplay.tsx       # Khung hiển thị, copy prompt & tải file 1-click
-│   ├── Header.tsx              # Header thanh điều hướng
-│   └── ReadmeModal.tsx         # Modal hướng dẫn sử dụng chi tiết
+│   └── Header.tsx              # Header thanh điều hướng
 ├── services/                   # Dịch vụ sinh Prompts & Quy tắc LaTeX
 │   ├── prompts/
 │   │   ├── latex-rules.ts      # Quy tắc kỹ thuật pdfLaTeX, TikZ, pgfplots & Templates
