@@ -698,5 +698,6 @@ IV. YÊU CẦU THỰC THI BẮT BUỘC:
 };
 `;
 
-fs.writeFileSync("/home/tontonyuta/soan-tai-lieu/services/prompts/manim.ts", newCode, "utf-8");
+const targetManimTs = path.resolve(__dirname, "..", "services", "prompts", "manim.ts");
+fs.writeFileSync(targetManimTs, newCode, "utf-8");
 console.log("✓ Successfully written services/prompts/manim.ts");

@@ -45,10 +45,20 @@ export function vitePluginAutomation(): Plugin {
         fs.mkdirSync(downloadsDir, { recursive: true });
       }
 
-      // 1. API: Phục vụ tĩnh các file tải về (/downloads/...) với HTTP 206 Range Streaming
+      // 1. API: Phục vụ tĩnh các file tải về (/downloads/...) với HTTP 206 Range Streaming (Bảo vệ chống Path Traversal CWE-22)
       server.middlewares.use('/downloads', (req, res, next) => {
-        const relPath = decodeURIComponent(req.url?.replace(/^\//, '') || '');
-        const filePath = path.join(downloadsDir, relPath);
+        const rawRelPath = (req.url || '').split('?')[0].replace(/^\/+/, '');
+        const relPath = decodeURIComponent(rawRelPath);
+        const resolvedDownloadsDir = path.resolve(downloadsDir);
+        const filePath = path.resolve(resolvedDownloadsDir, relPath);
+
+        // Chặn đứng tấn công Path Traversal: đường dẫn bắt buộc phải nằm trong downloadsDir
+        if (!filePath.startsWith(resolvedDownloadsDir + path.sep) && filePath !== resolvedDownloadsDir) {
+          res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+          res.end('Access Denied: Path Traversal Detected (CWE-22)');
+          return;
+        }
+
         if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
           const ext = path.extname(filePath).toLowerCase();
           const stat = fs.statSync(filePath);

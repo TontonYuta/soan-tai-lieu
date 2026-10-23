@@ -8,11 +8,11 @@ const { spawn, exec, execSync } = require('child_process');
 // Tự động bổ sung các thư mục venv & bin hệ thống vào process.env.PATH cho mọi child_process
 const homeDir = os.homedir();
 const extraPaths = [
-  path.join('/home/tontonyuta/soan-tai-lieu', '.venv', 'bin'),
+  path.join(process.cwd(), '.venv', 'bin'),
+  path.join(__dirname, '..', '.venv', 'bin'),
   path.join(homeDir, '.TinyTeX', 'bin', 'x86_64-linux'),
   path.join(homeDir, '.venv', 'bin'),
   path.join(homeDir, '.local', 'bin'),
-  path.join(process.cwd(), '.venv', 'bin'),
   '/usr/local/bin',
   '/usr/bin',
   '/bin',
@@ -271,7 +271,6 @@ function getVenvPaths() {
     path.resolve(process.cwd(), '.venv'),
     path.resolve(__dirname, '..', '.venv'),
     path.resolve(__dirname, '..', '..', '.venv'),
-    path.resolve('/home/tontonyuta/soan-tai-lieu', '.venv'),
     path.resolve(os.homedir(), '.venv'),
   ];
   if (typeof app !== 'undefined' && app && app.getAppPath) {
@@ -432,7 +431,6 @@ function autoRepairLatexCode(latexCode, logContent = '') {
 
 function getAgyExecutable() {
   const possiblePaths = [
-    '/home/tontonyuta/.local/bin/agy',
     path.join(os.homedir(), '.local', 'bin', 'agy'),
     '/usr/local/bin/agy',
     '/usr/bin/agy'
@@ -2098,20 +2096,40 @@ function startInternalServer(callback) {
       return;
     }
 
-    // 5b. API: View PDF Stream (hỗ trợ hiển thị PDF Live Review / RAG PDF Viewer)
+    // 5b. API: View PDF Stream (hỗ trợ hiển thị PDF Live Review / RAG PDF Viewer - Chặn Path Traversal CWE-22)
     if (pathname.startsWith('/api/view-pdf')) {
       try {
         const parsedUrl = new URL(req.url, `http://${req.headers.host || '127.0.0.1'}`);
-        const filePath = parsedUrl.searchParams.get('path');
-        if (filePath && fs.existsSync(filePath) && filePath.toLowerCase().endsWith('.pdf')) {
-          const stat = fs.statSync(filePath);
+        const rawFilePath = parsedUrl.searchParams.get('path');
+        if (!rawFilePath) {
+          res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+          res.end('Thiếu tham số path');
+          return;
+        }
+        const resolvedPath = path.resolve(rawFilePath);
+        const allowedRoots = [
+          path.resolve(downloadsDir),
+          path.resolve(os.homedir(), 'Downloads'),
+          path.resolve(app.getPath('userData')),
+          path.resolve(os.tmpdir()),
+          path.resolve(process.cwd())
+        ];
+        const isPathSafe = allowedRoots.some(root => resolvedPath.startsWith(root + path.sep) || resolvedPath === root);
+        if (!isPathSafe) {
+          res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+          res.end('Access Denied: Path Traversal Detected (CWE-22)');
+          return;
+        }
+
+        if (fs.existsSync(resolvedPath) && resolvedPath.toLowerCase().endsWith('.pdf')) {
+          const stat = fs.statSync(resolvedPath);
           res.writeHead(200, {
             'Content-Type': 'application/pdf',
             'Content-Length': stat.size,
             'Content-Disposition': 'inline; filename="preview.pdf"',
             'Accept-Ranges': 'bytes'
           });
-          fs.createReadStream(filePath).pipe(res);
+          fs.createReadStream(resolvedPath).pipe(res);
           return;
         } else {
           res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -2170,19 +2188,39 @@ function startInternalServer(callback) {
       return;
     }
 
-    // 5d. API: View Image Stream
+    // 5d. API: View Image Stream (Bảo vệ chống Path Traversal CWE-22)
     if (pathname.startsWith('/api/view-image')) {
       try {
         const parsedUrl = new URL(req.url, `http://${req.headers.host || '127.0.0.1'}`);
-        const filePath = parsedUrl.searchParams.get('path');
-        if (filePath && fs.existsSync(filePath)) {
-          const ext = path.extname(filePath).toLowerCase();
-          const stat = fs.statSync(filePath);
+        const rawFilePath = parsedUrl.searchParams.get('path');
+        if (!rawFilePath) {
+          res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+          res.end('Thiếu tham số path');
+          return;
+        }
+        const resolvedPath = path.resolve(rawFilePath);
+        const allowedRoots = [
+          path.resolve(downloadsDir),
+          path.resolve(os.homedir(), 'Downloads'),
+          path.resolve(app.getPath('userData')),
+          path.resolve(os.tmpdir()),
+          path.resolve(process.cwd())
+        ];
+        const isPathSafe = allowedRoots.some(root => resolvedPath.startsWith(root + path.sep) || resolvedPath === root);
+        if (!isPathSafe) {
+          res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+          res.end('Access Denied: Path Traversal Detected (CWE-22)');
+          return;
+        }
+
+        if (fs.existsSync(resolvedPath)) {
+          const ext = path.extname(resolvedPath).toLowerCase();
+          const stat = fs.statSync(resolvedPath);
           res.writeHead(200, {
             'Content-Type': MIME_TYPES[ext] || 'image/png',
             'Content-Length': stat.size,
           });
-          fs.createReadStream(filePath).pipe(res);
+          fs.createReadStream(resolvedPath).pipe(res);
           return;
         } else {
           res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -5105,17 +5143,29 @@ YÊU CẦU CHO TẬP ${ep}:
       return;
     }
 
-    // 4. Serve Downloads (hỗ trợ cả thư mục con như Playlist_xxx/Tap_01.mp4 kèm Range Streaming)
+    // 4. Serve Downloads (hỗ trợ cả thư mục con như Playlist_xxx/Tap_01.mp4 kèm Range Streaming - Chặn Path Traversal CWE-22)
     if (pathname.startsWith('/downloads/')) {
       const relPath = decodeURIComponent(pathname.replace(/^\/downloads\//, ''));
-      let filePath = path.join(downloadsDir, relPath);
+      const allowedRoots = [
+        path.resolve(downloadsDir),
+        path.resolve(os.homedir(), 'Downloads'),
+        path.resolve(app.getPath('userData'), 'downloads')
+      ];
+      let filePath = path.resolve(downloadsDir, relPath);
+      const isPathSafe = allowedRoots.some(root => filePath.startsWith(root + path.sep) || filePath === root);
+      if (!isPathSafe) {
+        res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('Access Denied: Path Traversal Detected (CWE-22)');
+        return;
+      }
+
       if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
-        const userDownloads = path.join(os.homedir(), 'Downloads', relPath);
-        if (fs.existsSync(userDownloads) && fs.statSync(userDownloads).isFile()) {
+        const userDownloads = path.resolve(os.homedir(), 'Downloads', relPath);
+        if (userDownloads.startsWith(path.resolve(os.homedir(), 'Downloads') + path.sep) && fs.existsSync(userDownloads) && fs.statSync(userDownloads).isFile()) {
           filePath = userDownloads;
         } else {
-          const appDownloads = path.join(app.getPath('userData'), 'downloads', relPath);
-          if (fs.existsSync(appDownloads) && fs.statSync(appDownloads).isFile()) {
+          const appDownloads = path.resolve(app.getPath('userData'), 'downloads', relPath);
+          if (appDownloads.startsWith(path.resolve(app.getPath('userData'), 'downloads') + path.sep) && fs.existsSync(appDownloads) && fs.statSync(appDownloads).isFile()) {
             filePath = appDownloads;
           }
         }

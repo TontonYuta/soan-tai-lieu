@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import path from 'path';
+import os from 'os';
 
 import {
   generateExamPrompt,
@@ -471,10 +473,11 @@ test("17. Manim Image Support & Extended Animation Presets Verification", () => 
   assert.strictEqual(extractAttachedImageDirective(undefined), "");
   assert.strictEqual(extractAttachedImageDirective(null), "");
 
+  const sampleImgPath = path.join(os.homedir(), "Downloads", "assets", "img_123_hinh_hop.png");
   const attachedImg = {
     fileName: "hinh_hop_chu_nhat.png",
-    filePath: "/home/tontonyuta/Downloads/assets/img_123_hinh_hop.png",
-    previewUrl: "http://localhost:3000/api/view-image?path=/home/tontonyuta/Downloads/assets/img_123_hinh_hop.png",
+    filePath: sampleImgPath,
+    previewUrl: `http://localhost:3000/api/view-image?path=${encodeURIComponent(sampleImgPath)}`,
     fileSize: 102400,
     description: "Hình hộp chữ nhật ABCD.A'B'C'D' có các cạnh a, b, c",
     layoutMode: "split_left" as const

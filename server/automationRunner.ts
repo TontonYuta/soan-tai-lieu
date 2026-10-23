@@ -3,10 +3,15 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { spawn, execSync, ChildProcess } from 'child_process';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const homeDir = os.homedir();
 const extraPaths = [
-  path.join('/home/tontonyuta/soan-tai-lieu', '.venv', 'bin'),
+  path.join(process.cwd(), '.venv', 'bin'),
+  path.join(__dirname, '..', '.venv', 'bin'),
   path.join(homeDir, '.TinyTeX', 'bin', 'x86_64-linux'),
   path.join(homeDir, '.local', 'bin'),
   path.join(homeDir, '.venv', 'bin'),
@@ -298,7 +303,7 @@ export class AutomationRunner {
       path.resolve(process.cwd(), '.venv'),
       path.resolve(__dirname, '..', '.venv'),
       path.resolve(__dirname, '..', '..', '.venv'),
-      path.resolve('/home/tontonyuta/soan-tai-lieu', '.venv'),
+      path.resolve(os.homedir(), '.venv'),
     ];
 
     let venvDir = candidates[0];
