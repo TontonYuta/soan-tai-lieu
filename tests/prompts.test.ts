@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'path';
 import os from 'os';
+import { AutomationRunner } from '../server/automationRunner';
 
 import {
   generateExamPrompt,
@@ -263,24 +264,15 @@ test('10. Auto-Repair LaTeX Sanitizer for RAG Noise & ALL CAPS Subheadings', () 
 \\subsection*{LỜI GIẢI CHI TIẾT TỪNG CÂU}
 \\end{document}`;
 
-  // Áp dụng bộ lọc khử rác RAG & Title Case
-  dirtyLatex = dirtyLatex.replace(/\\cauhoi\{(\d+)\s*\(?[^}]*(?:rag|trang|page|nguồn)[^}]*\}/gi, '\\cauhoi{$1}');
-  dirtyLatex = dirtyLatex.replace(/(\\cauhoi\{\d+\})\s*\(?(?:rag|nguồn|tham khảo)\s*(?:trang|page)?\s*\d*\)?[:.-]?\s*/gi, '$1 ');
-  dirtyLatex = dirtyLatex.replace(/(\\textbf\{\s*(?:Câu|Bài)\s*\d+)\s*\(?[^}:.]*(?:rag|trang|page|nguồn)[^}:.]*\)?(\s*[:.]?\s*\})/gi, '$1$2');
-  dirtyLatex = dirtyLatex.replace(/(\\textbf\{\s*(?:Câu|Bài)\s*\d+[^}]*\})\s*\(?(?:rag|nguồn|tham khảo)\s*(?:trang|page)?\s*\d*\)?[:.-]?\s*/gi, '$1 ');
-  dirtyLatex = dirtyLatex.replace(/(\b(?:Câu|Bài)\s*\d+[:.]?)\s*\(?(?:rag|nguồn|tham khảo)\s*(?:trang|page)?\s*\d*\)?[:.-]?\s*/gi, '$1 ');
-  dirtyLatex = dirtyLatex.replace(/\s*\[(?:RAG|rag)[^\]]*\]/gi, '');
-  dirtyLatex = dirtyLatex.replace(/\s*\((?:RAG|rag)\s*(?:trang|Trang|page|Page)?\s*\d+\)/gi, '');
-  dirtyLatex = dirtyLatex.replace(/\s*\((?:trang|Trang|page|Page)\s*\d+\)/gi, '');
-  dirtyLatex = dirtyLatex.replace(/\\subsection\*\{BẢNG ĐÁP ÁN PHẦN I\}/g, '\\subsection*{Bảng đáp án Phần I}');
-  dirtyLatex = dirtyLatex.replace(/\\subsection\*\{LỜI GIẢI CHI TIẾT TỪNG CÂU\}/g, '\\subsection*{Lời giải chi tiết từng câu}');
+  // Áp dụng trực tiếp AutomationRunner.autoRepairLatexCode
+  const repaired = AutomationRunner.autoRepairLatexCode(dirtyLatex);
 
-  assert.match(dirtyLatex, /\\cauhoi\{1\} Cho hàm số/);
-  assert.match(dirtyLatex, /\\textbf\{Câu 2:\} Tìm nguyên hàm/);
-  assert.match(dirtyLatex, /\\textbf\{Câu 3:\} Giải phương trình/);
-  assert.doesNotMatch(dirtyLatex, /RAG trang/i);
-  assert.match(dirtyLatex, /\\subsection\*\{Bảng đáp án Phần I\}/);
-  assert.match(dirtyLatex, /\\subsection\*\{Lời giải chi tiết từng câu\}/);
+  assert.match(repaired, /\\cauhoi\{1\} Cho hàm số/);
+  assert.match(repaired, /\\textbf\{Câu 2:\} Tìm nguyên hàm/);
+  assert.match(repaired, /\\textbf\{Câu 3:\} Giải phương trình/);
+  assert.doesNotMatch(repaired, /RAG trang/i);
+  assert.match(repaired, /\\subsection\*\{Bảng đáp án Phần I\}/);
+  assert.match(repaired, /\\subsection\*\{Lời giải chi tiết từng câu\}/);
 });
 test("11. Adaptive Visual Layouts & Visual Macros (cauhoicohinh, khungnhap, cards)", () => {
   const wsConfig: WorksheetConfig = {

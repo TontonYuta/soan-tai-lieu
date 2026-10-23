@@ -375,6 +375,156 @@ export function vitePluginAutomation(): Plugin {
         res.end();
       });
 
+      // 6.2. API: View PDF Stream (Hỗ trợ Live Preview với phòng chống Path Traversal CWE-22)
+      server.middlewares.use('/api/view-pdf', (req, res) => {
+        try {
+          const parsedUrl = new URL(req.url || '', `http://${req.headers.host || '127.0.0.1'}`);
+          const rawFilePath = parsedUrl.searchParams.get('path');
+          if (!rawFilePath) {
+            res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+            res.end('Thiếu tham số path');
+            return;
+          }
+          const resolvedPath = path.resolve(rawFilePath);
+          const allowedRoots = [
+            path.resolve(downloadsDir),
+            path.resolve(os.homedir(), 'Downloads'),
+            path.resolve(os.tmpdir()),
+            path.resolve(process.cwd())
+          ];
+          const isPathSafe = allowedRoots.some(root => resolvedPath.startsWith(root + path.sep) || resolvedPath === root);
+          if (!isPathSafe) {
+            res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+            res.end('Access Denied: Path Traversal Detected (CWE-22)');
+            return;
+          }
+
+          if (fs.existsSync(resolvedPath) && resolvedPath.toLowerCase().endsWith('.pdf')) {
+            const stat = fs.statSync(resolvedPath);
+            res.writeHead(200, {
+              'Content-Type': 'application/pdf',
+              'Content-Length': stat.size,
+              'Content-Disposition': 'inline; filename="preview.pdf"',
+              'Accept-Ranges': 'bytes'
+            });
+            fs.createReadStream(resolvedPath).pipe(res);
+            return;
+          } else {
+            res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+            res.end('File PDF không tồn tại.');
+            return;
+          }
+        } catch (err: any) {
+          res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+          res.end(`Lỗi đọc file PDF: ${err.message}`);
+          return;
+        }
+      });
+
+      // 6.3. API: Upload Image (Hỗ trợ ImageMobject cho Manim Video)
+      server.middlewares.use('/api/upload-image', (req, res) => {
+        if (req.method === 'POST') {
+          let body = '';
+          req.on('data', chunk => { body += chunk; });
+          req.on('end', async () => {
+            try {
+              const { fileName, fileBase64, description, layoutMode } = JSON.parse(body || '{}');
+              if (!fileBase64) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: 'Thiếu dữ liệu hình ảnh' }));
+                return;
+              }
+              const assetsDir = path.join(downloadsDir, 'assets');
+              if (!fs.existsSync(assetsDir)) {
+                fs.mkdirSync(assetsDir, { recursive: true });
+              }
+              const ext = path.extname(fileName || '.png') || '.png';
+              const safeBase = path.basename(fileName || 'image', ext).replace(/[^a-zA-Z0-9_-]/g, '_');
+              const safeName = `img_${Date.now()}_${safeBase}${ext}`;
+              const filePath = path.join(assetsDir, safeName);
+              const buffer = Buffer.from(fileBase64, 'base64');
+              fs.writeFileSync(filePath, buffer);
+
+              const fileSizeStr = buffer.length > 1024 * 1024
+                ? (buffer.length / (1024 * 1024)).toFixed(1) + ' MB'
+                : Math.round(buffer.length / 1024) + ' KB';
+
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({
+                success: true,
+                fileName: fileName || safeName,
+                filePath: filePath,
+                previewUrl: `/downloads/assets/${safeName}`,
+                fileSize: fileSizeStr,
+                description: description || '',
+                layoutMode: layoutMode || 'top_card'
+              }));
+              return;
+            } catch (err: any) {
+              res.writeHead(500, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: err.message || 'Lỗi lưu hình ảnh' }));
+              return;
+            }
+          });
+          return;
+        }
+        res.statusCode = 405;
+        res.end();
+      });
+
+      // 6.4. API: View Image Stream (Bảo vệ chống Path Traversal CWE-22)
+      server.middlewares.use('/api/view-image', (req, res) => {
+        try {
+          const parsedUrl = new URL(req.url || '', `http://${req.headers.host || '127.0.0.1'}`);
+          const rawFilePath = parsedUrl.searchParams.get('path');
+          if (!rawFilePath) {
+            res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+            res.end('Thiếu tham số path');
+            return;
+          }
+          const resolvedPath = path.resolve(rawFilePath);
+          const allowedRoots = [
+            path.resolve(downloadsDir),
+            path.resolve(os.homedir(), 'Downloads'),
+            path.resolve(os.tmpdir()),
+            path.resolve(process.cwd())
+          ];
+          const isPathSafe = allowedRoots.some(root => resolvedPath.startsWith(root + path.sep) || resolvedPath === root);
+          if (!isPathSafe) {
+            res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+            res.end('Access Denied: Path Traversal Detected (CWE-22)');
+            return;
+          }
+
+          if (fs.existsSync(resolvedPath)) {
+            const ext = path.extname(resolvedPath).toLowerCase();
+            const stat = fs.statSync(resolvedPath);
+            const imageMimes: Record<string, string> = {
+              '.png': 'image/png',
+              '.jpg': 'image/jpeg',
+              '.jpeg': 'image/jpeg',
+              '.svg': 'image/svg+xml',
+              '.webp': 'image/webp',
+              '.gif': 'image/gif',
+            };
+            res.writeHead(200, {
+              'Content-Type': imageMimes[ext] || 'image/png',
+              'Content-Length': stat.size,
+            });
+            fs.createReadStream(resolvedPath).pipe(res);
+            return;
+          } else {
+            res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+            res.end('Hình ảnh không tồn tại.');
+            return;
+          }
+        } catch (err: any) {
+          res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+          res.end(`Lỗi đọc file hình ảnh: ${err.message}`);
+          return;
+        }
+      });
+
       // 7. API: Kiểm tra trạng thái hệ thống
       server.middlewares.use('/api/automate/status', (req, res) => {
         if (req.method === 'GET') {

@@ -3,15 +3,13 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { spawn, execSync, ChildProcess } from 'child_process';
-import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const moduleDir = typeof __dirname !== 'undefined' ? __dirname : process.cwd();
 
 const homeDir = os.homedir();
 const extraPaths = [
   path.join(process.cwd(), '.venv', 'bin'),
-  path.join(__dirname, '..', '.venv', 'bin'),
+  path.join(moduleDir, '..', '.venv', 'bin'),
   path.join(homeDir, '.TinyTeX', 'bin', 'x86_64-linux'),
   path.join(homeDir, '.local', 'bin'),
   path.join(homeDir, '.venv', 'bin'),
@@ -23,7 +21,7 @@ const validExtra = extraPaths.filter(p => fs.existsSync(p));
 process.env.PATH = Array.from(new Set([...validExtra, ...(process.env.PATH || '').split(':')])).filter(Boolean).join(':');
 
 export interface AutomationStepUpdate {
-  step: 'INIT' | 'CONNECTING_CHROME' | 'OPENING_GEMINI' | 'SENDING_PROMPT' | 'WAITING_GEMINI' | 'EXTRACTING_LATEX' | 'OPENING_OVERLEAF' | 'PASTING_CODE' | 'RECOMPILING' | 'DOWNLOADING_PDF' | 'RENDERING_VIDEO' | 'COMPLETED' | 'ERROR';
+  step: 'INIT' | 'CONNECTING_CHROME' | 'OPENING_GEMINI' | 'SENDING_PROMPT' | 'WAITING_GEMINI' | 'EXTRACTING_LATEX' | 'OPENING_OVERLEAF' | 'PASTING_CODE' | 'RECOMPILING' | 'COMPILING_LATEX' | 'DOWNLOADING_PDF' | 'RENDERING_VIDEO' | 'COMPLETED' | 'ERROR';
   progress: number; // 0 - 100
   message: string;
   latexCode?: string;
@@ -125,6 +123,12 @@ export interface AutomationOptions {
   voiceName?: string;
   voiceSpeed?: string;
   renderMode?: 'local' | 'overleaf';
+  rerenderOnly?: boolean;
+  action?: string;
+  contentType?: 'latex' | 'manim' | 'script';
+  customLatexCode?: string;
+  customPythonCode?: string;
+  renderQuality?: '480p' | '720p' | '1080p' | '4k';
 }
 
 
@@ -301,8 +305,8 @@ export class AutomationRunner {
     const isWin = process.platform === 'win32';
     const candidates = [
       path.resolve(process.cwd(), '.venv'),
-      path.resolve(__dirname, '..', '.venv'),
-      path.resolve(__dirname, '..', '..', '.venv'),
+      path.resolve(moduleDir, '..', '.venv'),
+      path.resolve(moduleDir, '..', '..', '.venv'),
       path.resolve(os.homedir(), '.venv'),
     ];
 
@@ -945,6 +949,108 @@ except Exception:
     return processed;
   }
 
+  public static autoRepairLatexCode(latexCode: string, logContent = ''): string {
+    let repaired = latexCode;
+
+    // 1. Chống cắt cụt: Đảm bảo có \end{document}
+    if (!repaired.includes('\\end{document}')) {
+      const openEnvs = ['enumerate', 'itemize', 'center', 'tabular', 'tabularx', 'longtable', 'multicols', 'tcolorbox'];
+      for (const env of openEnvs) {
+        const openCount = (repaired.match(new RegExp(`\\\\begin\\{${env}\\}`, 'g')) || []).length;
+        const closeCount = (repaired.match(new RegExp(`\\\\end\\{${env}\\}`, 'g')) || []).length;
+        if (openCount > closeCount) {
+          repaired += `\n\\end{${env}}`.repeat(openCount - closeCount);
+        }
+      }
+      repaired += '\n\\end{document}\n';
+    }
+
+    // 2. Tự động tiêm newunicodechar và map ký tự Unicode nếu thiếu
+    if (!repaired.includes('newunicodechar')) {
+      const unicodePreamble = `
+\\usepackage{newunicodechar}
+\\newunicodechar{↗}{\\ensuremath{\\nearrow}}
+\\newunicodechar{↘}{\\ensuremath{\\searrow}}
+\\newunicodechar{→}{\\ensuremath{\\rightarrow}}
+\\newunicodechar{←}{\\ensuremath{\\leftarrow}}
+\\newunicodechar{•}{\\textbullet}
+\\newunicodechar{≤}{\\ensuremath{\\le}}
+\\newunicodechar{≥}{\\ensuremath{\\ge}}
+\\newunicodechar{≠}{\\ensuremath{\\ne}}
+\\newunicodechar{≈}{\\ensuremath{\\approx}}
+\\newunicodechar{±}{\\ensuremath{\\pm}}
+\\newunicodechar{×}{\\ensuremath{\\times}}
+\\newunicodechar{÷}{\\ensuremath{\\div}}
+\\newunicodechar{∞}{\\ensuremath{\\infty}}
+\\newunicodechar{°}{\\ensuremath{^\\circ}}
+\\newunicodechar{℃}{\\ensuremath{^\\circ\\text{C}}}
+`;
+      if (repaired.includes('\\usepackage[utf8]{inputenc}')) {
+        repaired = repaired.replace('\\usepackage[utf8]{inputenc}', '\\usepackage[utf8]{inputenc}' + unicodePreamble);
+      } else if (repaired.includes('\\documentclass')) {
+        repaired = repaired.replace(/(\\documentclass[^\n]*\n)/, `$1\\usepackage[utf8]{inputenc}${unicodePreamble}\n`);
+      }
+    }
+
+    // 3. Tự động bổ sung các macro hỗ trợ đa môn nếu mã gọi mà preamble thiếu
+    const missingMacros: string[] = [];
+    if (repaired.includes('\\dapanHaiCot') && !repaired.includes('\\newcommand{\\dapanHaiCot}')) {
+      missingMacros.push(`\\newcommand{\\dapanHaiCot}[4]{
+  \\begin{tabularx}{\\linewidth}{XX}
+    \\textbf{A.} #1 & \\textbf{B.} #2 \\\\
+    \\textbf{C.} #3 & \\textbf{D.} #4
+  \\end{tabularx}
+}`);
+    }
+    if (repaired.includes('\\dapanMotCot') && !repaired.includes('\\newcommand{\\dapanMotCot}')) {
+      missingMacros.push(`\\newcommand{\\dapanMotCot}[4]{
+  \\begin{tabularx}{\\linewidth}{X}
+    \\textbf{A.} #1 \\\\
+    \\textbf{B.} #2 \\\\
+    \\textbf{C.} #3 \\\\
+    \\textbf{D.} #4
+  \\end{tabularx}
+}`);
+    }
+    if (repaired.includes('\\doanvan') && !repaired.includes('\\newcommand{\\doanvan}')) {
+      missingMacros.push(`\\newcommand{\\doanvan}[2]{
+  \\begin{tcolorbox}[colback=gray!5!white,colframe=gray!50!black,title={\\textbf{#1}},arc=2mm]
+    \\small\\textit{#2}
+  \\end{tcolorbox}
+}`);
+    }
+    if (missingMacros.length > 0 && repaired.includes('\\begin{document}')) {
+      repaired = repaired.replace('\\begin{document}', missingMacros.join('\n\n') + '\n\n\\begin{document}');
+    }
+
+    // 4. Sửa các ký tự đặc biệt hay gây crash trong văn bản thường
+    repaired = repaired.replace(/GD&ĐT/g, 'GD\\&ĐT');
+    repaired = repaired.replace(/(\d+)\s*%/g, '$1\\%');
+
+    // 5. Loại bỏ triệt để các nhãn rác RAG / trích dẫn số trang nội bộ trong câu hỏi & đề bài
+    repaired = repaired.replace(/\\cauhoi\{(\d+)\s*\(?[^}]*(?:rag|trang|page|nguồn)[^}]*\}/gi, '\\cauhoi{$1}');
+    repaired = repaired.replace(/(\\cauhoi\{\d+\})\s*\(?(?:rag|nguồn|tham khảo)\s*(?:trang|page)?\s*\d*\)?[:.-]?\s*/gi, '$1 ');
+    repaired = repaired.replace(/(\\textbf\{\s*(?:Câu|Bài)\s*\d+)\s*\(?[^}:.]*(?:rag|trang|page|nguồn)[^}:.]*\)?(\s*[:.]?\s*\})/gi, '$1$2');
+    repaired = repaired.replace(/(\\textbf\{\s*(?:Câu|Bài)\s*\d+[^}]*\})\s*\(?(?:rag|nguồn|tham khảo)\s*(?:trang|page)?\s*\d*\)?[:.-]?\s*/gi, '$1 ');
+    repaired = repaired.replace(/(\b(?:Câu|Bài)\s*\d+[:.]?)\s*\(?(?:rag|nguồn|tham khảo)\s*(?:trang|page)?\s*\d*\)?[:.-]?\s*/gi, '$1 ');
+    repaired = repaired.replace(/\s*\[(?:RAG|rag)[^\]]*\]/gi, '');
+    repaired = repaired.replace(/\s*\((?:RAG|rag)\s*(?:trang|Trang|page|Page)?\s*\d+\)/gi, '');
+    repaired = repaired.replace(/\s*\((?:trang|Trang|page|Page)\s*\d+\)/gi, '');
+
+    // 6. Chuẩn hóa tiêu đề mục phụ chống viết HOA TOÀN BỘ (ALL CAPS)
+    repaired = repaired.replace(/\\subsection\*\{BẢNG ĐÁP ÁN PHẦN I\}/g, '\\subsection*{Bảng đáp án Phần I}');
+    repaired = repaired.replace(/\\subsection\*\{BẢNG ĐÁP ÁN PHẦN II\}/g, '\\subsection*{Bảng đáp án Phần II}');
+    repaired = repaired.replace(/\\subsection\*\{BẢNG ĐÁP ÁN PHẦN III\}/g, '\\subsection*{Bảng đáp án Phần III}');
+    repaired = repaired.replace(/\\subsection\*\{LỜI GIẢI CHI TIẾT TỪNG CÂU\}/g, '\\subsection*{Lời giải chi tiết từng câu}');
+    repaired = repaired.replace(/\\section\*\{I\. PHẦN TRẮC NGHIỆM\}/g, '\\section*{Phần I. Trắc nghiệm}');
+    repaired = repaired.replace(/\\section\*\{II\. PHẦN TỰ LUẬN\}/g, '\\section*{Phần II. Tự luận}');
+    repaired = repaired.replace(/\\section\*\{I\. TÓM TẮT LÝ THUYẾT TRỌNG TÂM\}/g, '\\section*{Phần I. Tóm tắt lý thuyết trọng tâm}');
+    repaired = repaired.replace(/\\section\*\{II\. CÁC DẠNG BÀI TẬP VÀ PHƯƠNG PHÁP GIẢI\}/g, '\\section*{Phần II. Các dạng bài tập và phương pháp giải}');
+    repaired = repaired.replace(/\\section\*\{III\. BÀI TẬP TỰ LUYỆN\}/g, '\\section*{Phần III. Bài tập tự luyện}');
+
+    return repaired;
+  }
+
   public static parseManimError(stderr = '', stdout = '', workingDir = ''): { summary: string; detailsForAI: string } {
     const raw = (stderr + '\n' + stdout).replace(/\u001b\[[0-9;]*[a-zA-Z]/g, '');
     const lines = raw.split(/\r?\n/);
@@ -1402,6 +1508,381 @@ asyncio.run(synthesize())
     }
   }
 
+  private async runDirectRerender(
+    options: AutomationOptions,
+    downloadsDir: string,
+    onProgress: (update: AutomationStepUpdate) => void
+  ): Promise<{ success: boolean; latexCode?: string; pdfPath?: string; pdfUrl?: string; pdfPreviewUrl?: string; error?: string }> {
+    // --- PHÂN NHÁNH 1: RERENDER TÀI LIỆU PDF LATEX TRỰC TIẾP ---
+    if (options.contentType === 'latex' || Boolean(options.customLatexCode)) {
+      onProgress({
+        step: 'COMPILING_LATEX',
+        progress: 10,
+        message: '⚡ Bắt đầu Rerender tài liệu PDF trực tiếp (Chế độ Offline pdflatex)...',
+        contentType: 'latex',
+      });
+
+      let rawLatex = options.customLatexCode || '';
+      const defaultTexPath = path.join(downloadsDir, 'tailieu.tex');
+      if (!rawLatex && fs.existsSync(defaultTexPath)) {
+        rawLatex = fs.readFileSync(defaultTexPath, 'utf-8');
+      }
+
+      if (!rawLatex || (!rawLatex.includes('\\begin{document}') && !rawLatex.includes('\\documentclass'))) {
+        const errMsg = '⚠️ Không tìm thấy mã nguồn LaTeX hợp lệ để biên dịch. Vui lòng kiểm tra lại mã nguồn!';
+        onProgress({
+          step: 'ERROR',
+          progress: 0,
+          message: errMsg,
+          error: 'No valid LaTeX code',
+          contentType: 'latex',
+        });
+        return { success: false, error: errMsg };
+      }
+
+      let cleanLatex = rawLatex.replace(/```(?:latex)?/gi, '').replace(/```/g, '').trim();
+      let finalLatex = AutomationRunner.autoRepairLatexCode(cleanLatex);
+      const timestamp = Date.now();
+      const texFileName = `tailieu_${timestamp}.tex`;
+      const pdfFileName = `tailieu_${timestamp}.pdf`;
+      const targetTexPath = path.join(downloadsDir, texFileName);
+      const targetPdfPath = path.join(downloadsDir, pdfFileName);
+
+      fs.writeFileSync(targetTexPath, finalLatex, 'utf-8');
+      fs.writeFileSync(defaultTexPath, finalLatex, 'utf-8');
+
+      const compileSh = `#!/bin/bash\npdflatex -interaction=nonstopmode "${texFileName}"\npdflatex -interaction=nonstopmode "${texFileName}"\nrm -f *.aux *.log *.out *.toc\n`;
+      const compileBat = `@echo off\nchcp 65001 >nul\npdflatex -interaction=nonstopmode "${texFileName}"\npdflatex -interaction=nonstopmode "${texFileName}"\ndel *.aux *.log *.out *.toc 2>nul\n`;
+      fs.writeFileSync(path.join(downloadsDir, 'compile_latex.sh'), compileSh, 'utf-8');
+      fs.writeFileSync(path.join(downloadsDir, 'compile_latex.bat'), compileBat, 'utf-8');
+
+      const pdflatexPathFound = getPdflatexPath();
+      const pdflatexBin = (pdflatexPathFound && (fs.existsSync(pdflatexPathFound) || pdflatexPathFound === 'pdflatex')) ? pdflatexPathFound : null;
+
+      let compiledPdfPath: string | null = null;
+      if (pdflatexBin) {
+        onProgress({
+          step: 'COMPILING_LATEX',
+          progress: 30,
+          message: '⚙️ Đang biên dịch tài liệu bằng pdflatex (Lần 1)...',
+          contentType: 'latex',
+          latexCode: finalLatex,
+        });
+
+        for (let pass = 1; pass <= 2; pass++) {
+          if (this.isCancelled) return { success: false, error: 'Cancelled' };
+          if (pass === 2) {
+            onProgress({
+              step: 'COMPILING_LATEX',
+              progress: 70,
+              message: '⚙️ Đang biên dịch pdflatex lần 2 (Đồng bộ số trang, mục lục & TikZ)...',
+              contentType: 'latex',
+              latexCode: finalLatex,
+            });
+          }
+          await new Promise<void>((resPass) => {
+            const proc = spawn(pdflatexBin, [
+              '-interaction=nonstopmode',
+              `-output-directory=${downloadsDir}`,
+              targetTexPath,
+            ], { cwd: downloadsDir });
+            this.childProc = proc;
+            proc.on('close', () => {
+              this.childProc = null;
+              resPass();
+            });
+            proc.on('error', () => {
+              this.childProc = null;
+              resPass();
+            });
+          });
+        }
+
+        if (fs.existsSync(targetPdfPath)) {
+          compiledPdfPath = targetPdfPath;
+        } else {
+          // Thử Auto-Healing nếu biên dịch lần đầu thất bại
+          const logFile = path.join(downloadsDir, `tailieu_${timestamp}.log`);
+          let logContent = '';
+          if (fs.existsSync(logFile)) {
+            try { logContent = fs.readFileSync(logFile, 'utf-8'); } catch {}
+          }
+          onProgress({
+            step: 'COMPILING_LATEX',
+            progress: 85,
+            message: '🔧 Kích hoạt LaTeX Auto-Healing: Đang tự động sửa lỗi cú pháp & ký tự đặc biệt...',
+            contentType: 'latex',
+            latexCode: finalLatex,
+          });
+          const repaired = AutomationRunner.autoRepairLatexCode(finalLatex, logContent);
+          if (repaired !== finalLatex) {
+            finalLatex = repaired;
+            fs.writeFileSync(targetTexPath, finalLatex, 'utf-8');
+            fs.writeFileSync(defaultTexPath, finalLatex, 'utf-8');
+            for (let pass = 1; pass <= 2; pass++) {
+              if (this.isCancelled) return { success: false, error: 'Cancelled' };
+              await new Promise<void>((resPass) => {
+                const proc = spawn(pdflatexBin, [
+                  '-interaction=nonstopmode',
+                  `-output-directory=${downloadsDir}`,
+                  targetTexPath,
+                ], { cwd: downloadsDir });
+                this.childProc = proc;
+                proc.on('close', () => {
+                  this.childProc = null;
+                  resPass();
+                });
+                proc.on('error', () => {
+                  this.childProc = null;
+                  resPass();
+                });
+              });
+            }
+            if (fs.existsSync(targetPdfPath)) {
+              compiledPdfPath = targetPdfPath;
+            }
+          }
+        }
+
+        if (compiledPdfPath) {
+          const auxExtensions = ['.aux', '.log', '.out', '.toc', '.nav', '.snm'];
+          for (const ext of auxExtensions) {
+            const auxFile = path.join(downloadsDir, `tailieu_${timestamp}${ext}`);
+            if (fs.existsSync(auxFile)) {
+              try { fs.unlinkSync(auxFile); } catch {}
+            }
+          }
+        }
+      }
+
+      if (!compiledPdfPath) {
+        const logFile = path.join(downloadsDir, `tailieu_${timestamp}.log`);
+        let errorDetails = '';
+        if (fs.existsSync(logFile)) {
+          try {
+            const logLines = fs.readFileSync(logFile, 'utf-8').split('\n');
+            const errs = logLines.filter(l => l.startsWith('!') || l.includes('Error:')).slice(0, 4);
+            if (errs.length > 0) errorDetails = errs.join(' | ');
+          } catch {}
+        }
+
+        const errMsg = `⚠️ Không thể xuất PDF: ${errorDetails || 'Chưa phát hiện trình biên dịch pdflatex hoặc mã nguồn bị lỗi cú pháp.'}`;
+        onProgress({
+          step: 'ERROR',
+          progress: 0,
+          message: errMsg,
+          error: errorDetails || 'Compilation failed',
+          latexCode: finalLatex,
+          filePath: targetTexPath,
+          contentType: 'latex',
+        });
+        return { success: false, error: errMsg };
+      }
+
+      const pdfPreviewUrl = generatePdfPreviewImage(compiledPdfPath, downloadsDir);
+
+      onProgress({
+        step: 'COMPLETED',
+        progress: 100,
+        message: '🎉 Rerender tài liệu PDF thành công! [tailieu.pdf]',
+        latexCode: finalLatex,
+        pdfPath: compiledPdfPath,
+        pdfUrl: `/downloads/${pdfFileName}`,
+        pdfPreviewUrl,
+        filePath: targetTexPath,
+        contentType: 'latex',
+      });
+      return {
+        success: true,
+        latexCode: finalLatex,
+        pdfPath: compiledPdfPath,
+        pdfUrl: `/downloads/${pdfFileName}`,
+        pdfPreviewUrl,
+      };
+    }
+
+    // --- PHÂN NHÁNH 2: RERENDER VIDEO MANIM TRỰC TIẾP ---
+    const quality = options.renderQuality || '480p';
+    const qualityFlag = quality === '4k' ? '-qk' : quality === '480p' ? '-ql' : quality === '720p' ? '-qm' : '-qh';
+    const qualityLabel = quality === '480p' ? '480p (Kiểm thử siêu tốc)' : quality === '720p' ? '720p (HD Chuẩn)' : quality === '4k' ? '4K (Ultra HD)' : '1080p (Full HD Chuẩn nét)';
+
+    onProgress({
+      step: 'RENDERING_VIDEO',
+      progress: 10,
+      message: `⚡ Bắt đầu Rerender Video Manim CE trực tiếp [Chất lượng: ${qualityLabel}]...`,
+      contentType: 'manim',
+    });
+
+    let rawPython = options.customPythonCode || '';
+    const sceneFilePath = path.join(downloadsDir, 'scene.py');
+    if (!rawPython && fs.existsSync(sceneFilePath)) {
+      rawPython = fs.readFileSync(sceneFilePath, 'utf-8');
+    }
+
+    if (!rawPython || (!rawPython.includes('class ') && !rawPython.includes('def construct'))) {
+      const errMsg = '⚠️ Không tìm thấy mã Python Manim (scene.py) hợp lệ để Rerender. Vui lòng kiểm tra lại mã nguồn!';
+      onProgress({
+        step: 'ERROR',
+        progress: 0,
+        message: errMsg,
+        error: 'No valid Manim code',
+        contentType: 'manim',
+      });
+      return { success: false, error: errMsg };
+    }
+
+    let finalPython = AutomationRunner.prepareManimPythonCode(rawPython);
+    fs.writeFileSync(sceneFilePath, finalPython, 'utf-8');
+
+    const renderSh = `#!/bin/bash\nmanim ${qualityFlag} scene.py MainScene\n`;
+    fs.writeFileSync(path.join(downloadsDir, 'render_manim.sh'), renderSh, 'utf-8');
+
+    const manimBin = await AutomationRunner.ensureManimEnvironment((msg) => {
+      onProgress({ step: 'RENDERING_VIDEO', progress: 20, message: msg, contentType: 'manim' });
+    });
+
+    if (!manimBin) {
+      const errMsg = '⚠️ Không tìm thấy Manim CE trong môi trường Python. Vui lòng cài đặt qua pip install manim.';
+      onProgress({
+        step: 'ERROR',
+        progress: 0,
+        message: errMsg,
+        error: 'Manim binary missing',
+        contentType: 'manim',
+      });
+      return { success: false, error: errMsg };
+    }
+
+    let sceneClass = 'MainScene';
+    const sceneMatch = finalPython.match(/class\s+([A-Za-z0-9_]+)\s*\(\s*(?:ThreeDScene|MovingCameraScene|LinearTransformationScene|VectorScene|ZoomedScene|Scene)\s*\)/);
+    if (sceneMatch && sceneMatch[1]) sceneClass = sceneMatch[1];
+
+    onProgress({
+      step: 'RENDERING_VIDEO',
+      progress: 30,
+      message: `⚙️ Đang thực thi Manim CE: manim ${qualityFlag} scene.py ${sceneClass}...`,
+      manimCode: finalPython,
+      filePath: sceneFilePath,
+      contentType: 'manim',
+    });
+
+    const mediaDir = path.join(downloadsDir, 'media');
+    const renderResult = await new Promise<{ success: boolean; mp4Path?: string; error?: string }>((resRender) => {
+      const proc = spawn(manimBin, [qualityFlag, '--media_dir', mediaDir, sceneFilePath, sceneClass], { cwd: downloadsDir });
+      this.childProc = proc;
+      let stderr = '';
+      let stdout = '';
+      proc.stdout?.on('data', d => { stdout += d.toString(); });
+      proc.stderr?.on('data', d => {
+        const s = d.toString();
+        stderr += s;
+        const match = s.match(/(\d+)%/);
+        if (match) {
+          const pct = Math.min(95, 30 + Math.floor(parseInt(match[1], 10) * 0.65));
+          onProgress({
+            step: 'RENDERING_VIDEO',
+            progress: pct,
+            message: `Đang render video Manim (${quality}): ${match[1]}%...`,
+            manimCode: finalPython,
+            contentType: 'manim',
+          });
+        }
+      });
+      proc.on('close', code => {
+        this.childProc = null;
+        if (code === 0) {
+          const newest = AutomationRunner.findNewestMp4(mediaDir);
+          if (newest) return resRender({ success: true, mp4Path: newest });
+        }
+        const parsed = AutomationRunner.parseManimError(stderr, stdout, downloadsDir);
+        resRender({ success: false, error: parsed.summary });
+      });
+      proc.on('error', err => {
+        this.childProc = null;
+        resRender({ success: false, error: err.message });
+      });
+    });
+
+    if (!renderResult.success || !renderResult.mp4Path) {
+      const errMsg = `⚠️ Lỗi render Manim: ${renderResult.error || 'Biên dịch thất bại'}`;
+      onProgress({
+        step: 'ERROR',
+        progress: 0,
+        message: errMsg,
+        error: renderResult.error,
+        manimCode: finalPython,
+        filePath: sceneFilePath,
+        contentType: 'manim',
+      });
+      return { success: false, error: errMsg };
+    }
+
+    let finalVideoSource = renderResult.mp4Path;
+    let audioPath: string | undefined;
+    let audioUrl: string | undefined;
+
+    if (options.enableVoice === true) {
+      onProgress({
+        step: 'RENDERING_VIDEO',
+        progress: 96,
+        message: 'Đang khởi tạo giọng đọc AI và đồng bộ âm thanh...',
+        contentType: 'manim',
+      });
+
+      const voiceRes = await AutomationRunner.generateVoiceoverAndMux({
+        mp4Path: renderResult.mp4Path,
+        pythonCode: finalPython,
+        workingDir: downloadsDir,
+        voiceName: options.voiceName || 'vi-VN-HoaiMyNeural',
+        voiceSpeed: options.voiceSpeed || '+0%',
+        fallbackTopic: options.topic,
+        onStatus: (msg) => {
+          onProgress({
+            step: 'RENDERING_VIDEO',
+            progress: 97,
+            message: msg,
+            contentType: 'manim',
+          });
+        },
+      });
+
+      if (voiceRes.success && voiceRes.mp4Path) {
+        finalVideoSource = voiceRes.mp4Path;
+      }
+      if (voiceRes.audioPath && fs.existsSync(voiceRes.audioPath)) {
+        audioPath = voiceRes.audioPath;
+        audioUrl = `/downloads/${path.basename(voiceRes.audioPath)}`;
+      }
+    }
+
+    const videoFileName = `video_${Date.now()}.mp4`;
+    const finalVideoPath = path.join(downloadsDir, videoFileName);
+    fs.copyFileSync(finalVideoSource, finalVideoPath);
+
+    onProgress({
+      step: 'COMPLETED',
+      progress: 100,
+      message: audioPath
+        ? '🎉 Rerender video Manim MP4 kèm thuyết minh AI thành công!'
+        : '🎉 Rerender video Manim MP4 thành công!',
+      manimCode: finalPython,
+      latexCode: finalPython,
+      filePath: sceneFilePath,
+      videoPath: finalVideoPath,
+      videoUrl: `/downloads/${videoFileName}`,
+      audioPath,
+      audioUrl,
+      contentType: 'manim',
+    });
+
+    return {
+      success: true,
+      latexCode: finalPython,
+      pdfPath: finalVideoPath,
+      pdfUrl: `/downloads/${videoFileName}`,
+    };
+  }
+
   public async runPipeline(
     options: AutomationOptions,
     onProgress: (update: AutomationStepUpdate) => void
@@ -1410,6 +1891,11 @@ asyncio.run(synthesize())
     const outputDirectory = options.outputDir || path.resolve(process.cwd(), 'downloads');
     if (!fs.existsSync(outputDirectory)) {
       fs.mkdirSync(outputDirectory, { recursive: true });
+    }
+
+    // XỬ LÝ NHANH: CHẾ ĐỘ RERENDER TRỰC TIẾP (Bỏ qua trình duyệt & AI Prompt)
+    if (options.rerenderOnly || options.action === 'rerender') {
+      return await this.runDirectRerender(options, outputDirectory, onProgress);
     }
 
     const browserType = options.browserType || 'chrome';
@@ -3080,19 +3566,8 @@ YÊU CẦU CHO TẬP ${ep}:
       let finalLatex = extractedLatex || options.prompt;
       finalLatex = finalLatex.replace(/^```(?:latex|tex)?\s*/i, '').replace(/\s*```$/i, '').trim();
 
-      // Loại bỏ các nhãn rác RAG / số trang và chuẩn hóa tiêu đề
-      finalLatex = finalLatex.replace(/\\cauhoi\{(\d+)\s*\(?[^}]*(?:rag|trang|page|nguồn)[^}]*\}/gi, '\\cauhoi{$1}');
-      finalLatex = finalLatex.replace(/(\\cauhoi\{\d+\})\s*\(?(?:rag|nguồn|tham khảo)\s*(?:trang|page)?\s*\d*\)?[:.-]?\s*/gi, '$1 ');
-      finalLatex = finalLatex.replace(/(\\textbf\{\s*(?:Câu|Bài)\s*\d+)\s*\(?[^}:.]*(?:rag|trang|page|nguồn)[^}:.]*\)?(\s*[:.]?\s*\})/gi, '$1$2');
-      finalLatex = finalLatex.replace(/(\\textbf\{\s*(?:Câu|Bài)\s*\d+[^}]*\})\s*\(?(?:rag|nguồn|tham khảo)\s*(?:trang|page)?\s*\d*\)?[:.-]?\s*/gi, '$1 ');
-      finalLatex = finalLatex.replace(/(\b(?:Câu|Bài)\s*\d+[:.]?)\s*\(?(?:rag|nguồn|tham khảo)\s*(?:trang|page)?\s*\d*\)?[:.-]?\s*/gi, '$1 ');
-      finalLatex = finalLatex.replace(/\s*\[(?:RAG|rag)[^\]]*\]/gi, '');
-      finalLatex = finalLatex.replace(/\s*\((?:RAG|rag)\s*(?:trang|Trang|page|Page)?\s*\d+\)/gi, '');
-      finalLatex = finalLatex.replace(/\s*\((?:trang|Trang|page|Page)\s*\d+\)/gi, '');
-      finalLatex = finalLatex.replace(/\\subsection\*\{BẢNG ĐÁP ÁN PHẦN I\}/g, '\\subsection*{Bảng đáp án Phần I}');
-      finalLatex = finalLatex.replace(/\\subsection\*\{BẢNG ĐÁP ÁN PHẦN II\}/g, '\\subsection*{Bảng đáp án Phần II}');
-      finalLatex = finalLatex.replace(/\\subsection\*\{BẢNG ĐÁP ÁN PHẦN III\}/g, '\\subsection*{Bảng đáp án Phần III}');
-      finalLatex = finalLatex.replace(/\\subsection\*\{LỜI GIẢI CHI TIẾT TỪNG CÂU\}/g, '\\subsection*{Lời giải chi tiết từng câu}');
+      // Tự động sửa lỗi cú pháp, ký tự Unicode, loại bỏ nhãn rác RAG và chuẩn hóa tiêu đề
+      finalLatex = AutomationRunner.autoRepairLatexCode(finalLatex);
 
       const timestamp = Date.now();
       const texFileName = `tailieu_${timestamp}.tex`;
