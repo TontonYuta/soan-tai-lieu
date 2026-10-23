@@ -39,14 +39,15 @@ ${chunk}
 export const generateExamPrompt = (config: ExamConfig): string => {
   const is2025Format = config.examFormat === 'standard2025' || !config.examFormat;
   const subjectName = config.subject || 'Toán học';
+  const counts = config.counts || {} as any;
 
   let totalQuestions = 0;
   let structureDescription = "";
 
   if (is2025Format) {
-    const p1 = Number(config.counts.part1_mc || 12);
-    const p2 = Number(config.counts.part2_tf || 4);
-    const p3 = Number(config.counts.part3_sa || 6);
+    const p1 = Number(counts.part1_mc || 12);
+    const p2 = Number(counts.part2_tf || 4);
+    const p3 = Number(counts.part3_sa || 6);
     totalQuestions = p1 + p2 + p3;
     structureDescription = `
 - Cấu trúc đề thi 3 phần chuẩn Bộ GD&ĐT 2025--2026 môn ${subjectName}:
@@ -55,8 +56,8 @@ export const generateExamPrompt = (config: ExamConfig): string => {
   * PHẦN III: ${p3} câu trắc nghiệm Trả lời ngắn (điền kết quả/đáp số) - Dùng macro \\cauhoi{n} và \\traLoiNgan.
   * TỔNG CỘNG: ${totalQuestions} câu hỏi.`;
   } else {
-    const mc = Number(config.counts.mc || config.counts.part1_mc || 25);
-    const essay = Number(config.counts.essay || 3);
+    const mc = Number(counts.mc || counts.part1_mc || 25);
+    const essay = Number(counts.essay || 3);
     totalQuestions = mc + essay;
     structureDescription = `
 - Cấu trúc đề thi truyền thống môn ${subjectName}:

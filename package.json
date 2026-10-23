@@ -10,7 +10,7 @@
     "start": "vite",
     "dev": "vite",
     "build": "vite build && npm run build:electron:server",
-    "build:electron:server": "esbuild server/serverCore.ts --bundle --platform=node --format=cjs --outfile=electron/server.cjs --external:playwright-core --external:localtunnel --external:pdf-parse --external:electron",
+    "build:electron:server": "esbuild server/serverCore.ts --bundle --platform=node --format=cjs --outfile=electron/server.cjs --external:playwright-core --external:electron",
     "preview": "vite preview",
     "lint": "tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
@@ -32,6 +32,7 @@
       "dist/**/*",
       "electron/**/*",
       "node_modules/playwright-core/**/*",
+      "icon.png",
       "icon.svg",
       "package.json"
     ],

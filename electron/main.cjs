@@ -24,6 +24,10 @@ let serverInstance = null;
 let activeServerPort = null;
 
 function createWindow(port) {
+  const iconPath = fs.existsSync(path.join(__dirname, '..', 'icon.png'))
+    ? path.join(__dirname, '..', 'icon.png')
+    : path.join(__dirname, '..', 'icon.svg');
+
   mainWindow = new BrowserWindow({
     width: 1360,
     height: 900,
@@ -31,7 +35,7 @@ function createWindow(port) {
     minHeight: 700,
     title: 'Yuta!LaTeX Math Studio - Browser Automation',
     backgroundColor: '#ffffff',
-    icon: path.join(__dirname, '..', 'icon.svg'),
+    icon: iconPath,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

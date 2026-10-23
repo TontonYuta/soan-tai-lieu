@@ -315,6 +315,15 @@ export function createCoreApiHandler(options: StandaloneServerOptions = {}): Cor
     const parsedUrl = new URL(req.url || '/', `http://${host}`);
     const pathname = parsedUrl.pathname;
 
+    const checkSecurityPin = (): boolean => {
+      if (!desktopSecurityPin) return true;
+      const clientPin = (req.headers['x-security-pin'] || '').toString().trim();
+      if (clientPin === desktopSecurityPin) return true;
+      res.writeHead(401, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Unauthorized: Invalid or missing Security PIN' }));
+      return false;
+    };
+
     // If running under Connect/Vite dev middleware, delegate non-API and non-download routes immediately
     if (next && !pathname.startsWith('/api/') && !pathname.startsWith('/downloads')) {
       return next();
@@ -368,6 +377,7 @@ export function createCoreApiHandler(options: StandaloneServerOptions = {}): Cor
 
     // 2. API: Server-Sent Events Automate Stream
     if (pathname === '/api/automate/stream' && req.method === 'POST') {
+      if (!checkSecurityPin()) return;
       let body = '';
       req.on('data', (chunk) => { body += chunk; });
       req.on('end', async () => {
@@ -438,6 +448,7 @@ export function createCoreApiHandler(options: StandaloneServerOptions = {}): Cor
 
     // 4. API: Stop Automation
     if (pathname === '/api/automate/stop' && req.method === 'POST') {
+      if (!checkSecurityPin()) return;
       if (runner) {
         runner.cancel();
         runner = null;
@@ -743,6 +754,7 @@ export function createCoreApiHandler(options: StandaloneServerOptions = {}): Cor
 
     // 13. API: WAN Tunnel
     if (pathname === '/api/system/tunnel/start' && req.method === 'POST') {
+      if (!checkSecurityPin()) return;
       try {
         const currentPort = req.socket && req.socket.localPort ? req.socket.localPort : (options.port || 3000);
         const wanUrl = await startWanTunnel(currentPort);
@@ -756,6 +768,7 @@ export function createCoreApiHandler(options: StandaloneServerOptions = {}): Cor
     }
 
     if (pathname === '/api/system/tunnel/stop' && req.method === 'POST') {
+      if (!checkSecurityPin()) return;
       await stopWanTunnel();
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ success: true }));
@@ -810,6 +823,13 @@ export function createCoreApiHandler(options: StandaloneServerOptions = {}): Cor
       const quota = await getLiveAntigravityQuota(force);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(quota));
+      return;
+    }
+
+    // Guard API and downloads routes from falling through to static SPA index.html
+    if (pathname.startsWith('/api/') || pathname.startsWith('/downloads')) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Route not found' }));
       return;
     }
 
