@@ -5,6 +5,7 @@ import {
   VolumeX, Subtitles, FileText, Monitor, Film, Edit3
 } from 'lucide-react';
 import { GenerationStatus, VideoConfig } from '../types';
+import { useToast } from '../context/ToastContext';
 
 const ManimPromptModes = React.lazy(() => import('./output/ManimPromptModes'));
 
@@ -32,6 +33,7 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({
   const [isPlayingTTS, setIsPlayingTTS] = useState(false);
   const [revisionFeedback, setRevisionFeedback] = useState('');
   const [latexRevisionFeedback, setLatexRevisionFeedback] = useState('');
+  const toast = useToast();
 
   useEffect(() => {
     // Dừng âm thanh nếu nội dung đổi hoặc unmount
@@ -46,6 +48,7 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({
     if (!content) return;
     navigator.clipboard.writeText(content);
     setCopied(true);
+    toast.success('Đã sao chép nội dung prompt vào Clipboard!');
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -53,6 +56,7 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({
     if (!content) return;
     navigator.clipboard.writeText(content);
     setCopied(true);
+    toast.success('Đã sao chép prompt và chuyển hướng đến kênh Gemini!');
     setTimeout(() => setCopied(false), 2000);
     
     const targetUrl = localStorage.getItem('yuta_ai_url') || localStorage.getItem('gemini_fixed_link') || 'https://gemini.google.com/app';
@@ -71,6 +75,7 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({
     document.body.removeChild(element);
     URL.revokeObjectURL(url);
     setDownloaded(filename);
+    toast.info(`Bắt đầu tải tệp: ${filename}`);
     setTimeout(() => setDownloaded(null), 2500);
   };
 
@@ -111,7 +116,7 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({
   // Trình đọc thử lời thoại TTS (Web Speech API)
   const handleToggleTTS = () => {
     if (!('speechSynthesis' in window)) {
-      alert('Trình duyệt của bạn không hỗ trợ Web Speech Synthesis API!');
+      toast.warning('Trình duyệt của bạn không hỗ trợ Web Speech Synthesis API!');
       return;
     }
 
@@ -144,7 +149,7 @@ const OutputDisplay: React.FC<OutputDisplayProps> = ({
     }
 
     if (!voiceText) {
-      alert('Không tìm thấy đoạn lời thoại để đọc thử!');
+      toast.warning('Không tìm thấy đoạn lời thoại để đọc thử!');
       return;
     }
 

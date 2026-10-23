@@ -14,6 +14,7 @@ const VideoForm = lazy(() => import('./components/VideoForm'));
 const ProjectForm = lazy(() => import('./components/ProjectForm'));
 const AutomationModal = lazy(() => import('./components/AutomationModal'));
 const MobileRemoteHub = lazy(() => import('./components/MobileRemoteHub'));
+const CommandPalette = lazy(() => import('./components/CommandPalette'));
 
 const FormLoadingFallback: React.FC = () => (
   <div className="bg-white border-4 border-black p-8 shadow-[6px_6px_0_0_rgba(0,0,0,1)] flex items-center justify-center space-x-3 animate-pulse">
@@ -24,6 +25,7 @@ const FormLoadingFallback: React.FC = () => (
   </div>
 );
 import { AutomationClient } from './services/automationClient';
+import { useToast } from './context/ToastContext';
 import { 
   ExamConfig, 
   LearningConfig, 
@@ -59,6 +61,7 @@ const isElectron = typeof window !== 'undefined' && (
 );
 
 const App: React.FC = () => {
+  const toast = useToast();
   const [viewMode, setViewMode] = useState<'desktop' | 'mobile' | 'auto'>(() => {
     if (typeof window === 'undefined' || isElectron) return 'desktop';
     const saved = localStorage.getItem('yuta_view_mode');
@@ -72,6 +75,7 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isAutomationOpen, setIsAutomationOpen] = useState(false);
   const [automationTabMode, setAutomationTabMode] = useState<'auto' | 'rerender'>('auto');
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [headless, setHeadless] = useState<boolean>(
     localStorage.getItem('yuta_headless') === 'true'
   );
@@ -135,6 +139,18 @@ const App: React.FC = () => {
     }
   }, [globalPinnedPdf, isGlobalRagActive]);
 
+  // Global Command Palette shortcut (Cmd+K / Ctrl+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const isMobileUserAgent = typeof window !== 'undefined' && (
     /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
     window.innerWidth <= 768 ||
@@ -196,11 +212,13 @@ const App: React.FC = () => {
   const handleHeadlessToggle = (val: boolean) => {
     setHeadless(val);
     localStorage.setItem('yuta_headless', String(val));
+    toast.info(val ? 'Đã bật chế độ tự động chạy ngầm (Headless)' : 'Đã chuyển sang chế độ hiển thị cửa sổ Chrome');
   };
   
   const handleSaveLink = () => {
     localStorage.setItem('gemini_fixed_link', geminiLink);
     setIsEditingLink(false);
+    toast.success('Đã lưu kênh Gemini cố định thành công!');
   };
 
   const handleExamGenerate = (config: ExamConfig) => {
@@ -436,6 +454,7 @@ const App: React.FC = () => {
   const clearContext = () => {
     setLearningContext(null);
     setContextMetadata(null);
+    toast.info('Đã xóa ngữ cảnh nối tiếp.');
   };
 
   return (
@@ -445,7 +464,34 @@ const App: React.FC = () => {
           onSwitchToMobile={isMobileUserAgent && !isElectron ? handleSwitchToMobile : undefined}
           globalPinnedPdf={globalPinnedPdf}
           isGlobalRagActive={isGlobalRagActive}
+          onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         />
+      
+      {isCommandPaletteOpen && (
+        <Suspense fallback={null}>
+          <CommandPalette
+            isOpen={isCommandPaletteOpen}
+            onClose={() => setIsCommandPaletteOpen(false)}
+            onSelectTab={(tab) => {
+              setActiveTab(tab);
+              window.scrollTo({ top: 300, behavior: 'smooth' });
+            }}
+            onOpenAutomation={(mode) => {
+              setAutomationTabMode(mode || 'auto');
+              setIsAutomationOpen(true);
+            }}
+            onOpenGemini={() => {
+              const targetUrl = localStorage.getItem('yuta_ai_url') || localStorage.getItem('gemini_fixed_link') || 'https://gemini.google.com/app';
+              window.open(targetUrl, '_blank');
+            }}
+            onClearContext={clearContext}
+            onOpenMobileModal={() => {
+              const mobileBtn = document.querySelector('button[title*="điện thoại"]') as HTMLButtonElement;
+              if (mobileBtn) mobileBtn.click();
+            }}
+          />
+        </Suspense>
+      )}
       
       {isAutomationOpen && (
         <Suspense fallback={null}>

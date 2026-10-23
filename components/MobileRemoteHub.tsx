@@ -31,6 +31,7 @@ import {
 import { AutomationClient, AutomationProgress, SharedAutomationState, NetworkInfo } from '../services/automationClient';
 import { generateExamPrompt, generateWorksheetPrompt, generateVideoManimPrompt } from '../services/gemini';
 import { AI_PROVIDERS, getProviderUrl } from '../services/aiProviders';
+import { useToast } from '../context/ToastContext';
 
 interface MobileRemoteHubProps {
   onSwitchToDesktop?: () => void;
@@ -38,6 +39,7 @@ interface MobileRemoteHubProps {
 
 export const MobileRemoteHub: React.FC<MobileRemoteHubProps> = ({ onSwitchToDesktop }) => {
   const [activeSubTab, setActiveSubTab] = useState<'create' | 'status' | 'results'>('create');
+  const toast = useToast();
   
   // Form states
   const [workflowType, setWorkflowType] = useState<'worksheet' | 'exam' | 'video'>('worksheet');
@@ -144,7 +146,7 @@ export const MobileRemoteHub: React.FC<MobileRemoteHubProps> = ({ onSwitchToDesk
 
   const handleStartWorkflow = async () => {
     if (!topic.trim()) {
-      alert('Vui lòng nhập chủ đề hoặc yêu cầu!');
+      toast.warning('Vui lòng nhập chủ đề hoặc yêu cầu!');
       return;
     }
 

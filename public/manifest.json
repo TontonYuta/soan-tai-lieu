@@ -1,0 +1,19 @@
+{
+  "name": "Yuta LaTeX & Math Video Studio",
+  "short_name": "Yuta Studio",
+  "description": "Hệ thống Soạn thảo Toán học Chuẩn LaTeX & Tự Động Hóa 1-Click",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FFFFFF",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -11,6 +11,7 @@ import { AntigravityQuotaPanel } from './automation/AntigravityQuotaPanel';
 import { LogConsole } from './automation/LogConsole';
 import { PlaylistBar } from './automation/PlaylistBar';
 import { RerenderTab } from './automation/RerenderTab';
+import { useToast } from '../context/ToastContext';
 
 interface AutomationModalProps {
   isOpen: boolean;
@@ -87,6 +88,7 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
 
   // Quota & Limit State (Antigravity Dynamic Quota)
   const [quotaData, setQuotaData] = useState<AntigravityQuotaData | null>(null);
+  const toast = useToast();
   const [quotaWeekly, setQuotaWeekly] = useState<number>(98);
   const [quota5h, setQuota5h] = useState<number>(95);
   const [quotaStatus, setQuotaStatus] = useState<string>('🟢 Khả dụng (Antigravity Active)');
@@ -414,7 +416,7 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
     const isRevision = typeof overridePrompt === 'string' && overridePrompt.trim().length > 0;
     const activePrompt = isRevision ? (overridePrompt as string) : promptContent;
     if (!activePrompt) {
-      alert('Chưa có nội dung Prompt! Vui lòng chọn cấu hình đề và tạo prompt trước.');
+      toast.warning('Chưa có nội dung Prompt! Vui lòng chọn cấu hình đề và tạo prompt trước.');
       return;
     }
 
@@ -526,7 +528,7 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
   const handleRerenderLatexDirect = async () => {
     const codeToRun = customLatexCode.trim() || progress.latexCode || '';
     if (!codeToRun) {
-      alert('Vui lòng nhập, dán hoặc tải file mã nguồn LaTeX (tailieu.tex) để Rerender!');
+      toast.warning('Vui lòng nhập, dán hoặc tải file mã nguồn LaTeX (tailieu.tex) để Rerender!');
       return;
     }
     startTimer();
@@ -576,14 +578,14 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
         addLog(`✓ Đã dán mã LaTeX từ Clipboard (${text.length} ký tự).`);
       }
     } catch {
-      alert('Không thể đọc Clipboard. Vui lòng dán thủ công bằng Ctrl+V vào khung soạn thảo.');
+      toast.error('Không thể đọc Clipboard. Vui lòng dán thủ công bằng Ctrl+V vào khung soạn thảo.');
     }
   };
 
   const handleRerenderDirect = async (overrideQuality?: '480p' | '720p' | '1080p') => {
     const codeToRun = customPythonCode.trim() || progress.manimCode || '';
     if (!codeToRun) {
-      alert('Vui lòng nhập, dán hoặc tải file mã nguồn Python Manim (scene.py) để Rerender!');
+      toast.warning('Vui lòng nhập, dán hoặc tải file mã nguồn Python Manim (scene.py) để Rerender!');
       return;
     }
     const q = overrideQuality || rerenderQuality;
@@ -636,7 +638,7 @@ export const AutomationModal: React.FC<AutomationModalProps> = ({
         addLog(`✓ Đã dán mã từ Clipboard (${text.length} ký tự).`);
       }
     } catch {
-      alert('Không thể đọc Clipboard. Vui lòng dán thủ công bằng Ctrl+V vào khung soạn thảo.');
+      toast.error('Không thể đọc Clipboard. Vui lòng dán thủ công bằng Ctrl+V vào khung soạn thảo.');
     }
   };
 

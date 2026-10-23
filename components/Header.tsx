@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-import { FileEdit, Sparkles, Smartphone, Pin, Zap } from 'lucide-react';
+import { FileEdit, Sparkles, Smartphone, Pin, Zap, Search } from 'lucide-react';
 const MobileAccessModal = lazy(() => import('./MobileAccessModal'));
 import { AutomationClient, NetworkInfo, AntigravityQuotaData } from '../services/automationClient';
 
@@ -7,9 +7,15 @@ interface HeaderProps {
   onSwitchToMobile?: () => void;
   globalPinnedPdf?: { fileName: string; numPages?: number } | null;
   isGlobalRagActive?: boolean;
+  onOpenCommandPalette?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onSwitchToMobile, globalPinnedPdf, isGlobalRagActive = true }) => {
+const Header: React.FC<HeaderProps> = ({ 
+  onSwitchToMobile, 
+  globalPinnedPdf, 
+  isGlobalRagActive = true,
+  onOpenCommandPalette
+}) => {
   const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);
   const [networkInfo, setNetworkInfo] = useState<NetworkInfo | null>(null);
   const [quotaData, setQuotaData] = useState<AntigravityQuotaData | null>(null);
@@ -101,6 +107,21 @@ const Header: React.FC<HeaderProps> = ({ onSwitchToMobile, globalPinnedPdf, isGl
                    </span>
                  </div>
                )}
+
+                {onOpenCommandPalette && (
+                  <button
+                    type="button"
+                    onClick={onOpenCommandPalette}
+                    className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#FFED66] text-black border-4 border-black text-xs font-black uppercase tracking-wider shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all cursor-pointer"
+                    title="Mở Bảng Lệnh Nhanh (Cmd+K hoặc Ctrl+K)"
+                  >
+                    <Search className="w-3.5 h-3.5 stroke-[3]" />
+                    <span>Lệnh Nhanh</span>
+                    <span className="text-[10px] bg-black text-[#FFED66] px-1.5 py-0.2 border border-black font-mono">
+                      ⌘K
+                    </span>
+                  </button>
+                )}
 
                <button 
                   onClick={() => setIsMobileModalOpen(true)}
